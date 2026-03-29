@@ -426,6 +426,7 @@ void boot_db(bool fCopyOver)
 	load_boards();
 	save_notes();
 	load_disabled();
+	load_bot_roster();
     }
  	
  	if (fCopyOver)

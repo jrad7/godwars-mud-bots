@@ -1,0 +1,144 @@
+#BOT
+Name          Krael
+ClassPref     0
+Lifespan      0
+Chattiness    60
+Aggression    80
+Explorer      40
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Sylas
+ClassPref     1
+Lifespan      0
+Chattiness    80
+Aggression    40
+Explorer      60
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Vex
+ClassPref     2
+Lifespan      1
+Chattiness    30
+Aggression    90
+Explorer      50
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Zara
+ClassPref     0
+Lifespan      0
+Chattiness    70
+Aggression    50
+Explorer      80
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Mordain
+ClassPref     3
+Lifespan      1
+Chattiness    40
+Aggression    90
+Explorer      30
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Thresh
+ClassPref     1
+Lifespan      2
+Chattiness    80
+Aggression    30
+Explorer      50
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Kira
+ClassPref     2
+Lifespan      0
+Chattiness    50
+Aggression    60
+Explorer      90
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Nyx
+ClassPref     3
+Lifespan      1
+Chattiness    30
+Aggression    85
+Explorer      40
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Draven
+ClassPref     0
+Lifespan      2
+Chattiness    70
+Aggression    50
+Explorer      40
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Rael
+ClassPref     1
+Lifespan      0
+Chattiness    60
+Aggression    40
+Explorer      70
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Soren
+ClassPref     2
+Lifespan      1
+Chattiness    70
+Aggression    60
+Explorer      50
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+
+#BOT
+Name          Mira
+ClassPref     3
+Lifespan      2
+Chattiness    80
+Aggression    30
+Explorer      70
+TotalPlaytime 0
+OfflineUntil  0
+Retired       0
+End
+

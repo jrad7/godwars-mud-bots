@@ -20,7 +20,8 @@
 
 /* Global bot roster */
 BOT_ROSTER_ENTRY bot_roster[MAX_BOT_ROSTER];
-int              bot_roster_count = 0;
+int              bot_roster_count  = 0;
+static bool      bot_roster_dirty  = FALSE;
 
 /*
  * Default bot roster - used if bots.txt doesn't exist yet.
@@ -148,6 +149,7 @@ void save_bot_roster( void )
     }
 
     fclose( fp );
+    bot_roster_dirty = FALSE;
 }
 
 /* -----------------------------------------------------------------------
@@ -162,18 +164,6 @@ static int count_online_bots( void )
     return count;
 }
 
-static CHAR_DATA *find_bot_char( const char *name )
-{
-    CHAR_DATA *ch;
-    for ( ch = char_list; ch != NULL; ch = ch->next )
-    {
-        if ( !IS_NPC(ch) && ch->pcdata->is_bot
-          && !str_cmp( ch->pcdata->switchname, name ) )
-            return ch;
-    }
-    return NULL;
-}
-
 /* -----------------------------------------------------------------------
  * bot_login - bring a bot into the game
  * ----------------------------------------------------------------------- */
@@ -184,11 +174,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     DESCRIPTOR_DATA *d;
     CHAR_DATA       *ch;
     BOT_DATA        *bot;
-    char             strsave[MAX_STRING_LENGTH];
-    FILE            *fp;
-    bool             existing;
 
-    /* ---- Allocate descriptor ---- */
     if ( descriptor_free == NULL )
         d = alloc_perm( sizeof(*d) );
     else
@@ -201,27 +187,12 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     d->host          = str_dup( "bot" );
     d->lookup_status = STATUS_DONE;   /* no DNS lookup */
 
-    /* ---- Try to load existing player file ---- */
-    sprintf( strsave, "%s%s", PLAYER_DIR, capitalize( roster->name ) );
-    existing = ( ( fp = fopen( strsave, "r" ) ) != NULL );
-    if ( existing ) fclose( fp );
-
-    if ( existing )
+    if ( load_char_obj( d, roster->name ) )
     {
-        if ( !load_char_obj( d, roster->name ) )
-        {
-            bug( "bot_login: load_char_obj failed for %s", 0 );
-            free_string( d->host );
-            free_mem( d->outbuf, d->outsize );
-            d->next         = descriptor_free;
-            descriptor_free = d;
-            return FALSE;
-        }
         ch = d->character;
     }
     else
     {
-        /* ---- Create brand-new character ---- */
         if ( char_free == NULL )
             ch = alloc_perm( sizeof(*ch) );
         else
@@ -307,18 +278,19 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->next  = char_list;
         char_list = ch;
 
-        /* Place in school */
-        char_to_room( ch, get_room_index( ROOM_VNUM_SCHOOL ) );
+        {
+            ROOM_INDEX_DATA *start_room = get_room_index( ROOM_VNUM_SCHOOL );
+            if ( start_room == NULL ) start_room = get_room_index( ROOM_VNUM_LIMBO );
+            char_to_room( ch, start_room );
+        }
 
         save_char_obj( ch );
     }
 
-    /* ---- Mark as bot ---- */
     ch->pcdata->is_bot = TRUE;
     if ( !IS_SET(ch->extra, EXTRA_TRUSTED) )
         SET_BIT( ch->extra, EXTRA_TRUSTED );
 
-    /* ---- Allocate bot AI data ---- */
     bot = (BOT_DATA *)alloc_mem( sizeof(BOT_DATA) );
     memset( bot, 0, sizeof(BOT_DATA) );
     bot->roster          = roster;
@@ -330,22 +302,35 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     bot->idle_chat_timer = number_range( 60, 300 );
     ch->pcdata->botdata  = bot;
 
-    /* ---- Link descriptor ---- */
     d->connected  = CON_PLAYING;
     d->next       = descriptor_list;
     descriptor_list = d;
 
-    /* For existing chars loaded via load_char_obj, place in saved room */
     if ( ch->in_room == NULL )
     {
-        if ( ch->home > 0 && get_room_index(ch->home) != NULL )
-            char_to_room( ch, get_room_index(ch->home) );
-        else
-            char_to_room( ch, get_room_index(ROOM_VNUM_SCHOOL) );
+        ROOM_INDEX_DATA *dest = NULL;
+        if ( ch->home > 0 ) dest = get_room_index( ch->home );
+        if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_SCHOOL );
+        if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_LIMBO );
+        char_to_room( ch, dest );
     }
 
     ch->logon = current_time;
     roster->online = TRUE;
+
+    /* World entrance notification, same as nanny() does for real players */
+    {
+        char buf[MAX_STRING_LENGTH];
+        if ( ch->level <= 6 )
+        {
+            if ( !ragnarok )
+                sprintf( buf, "#2%s #7enters #R%s.#n", ch->name, MUDNAME );
+            else
+                sprintf( buf, "#2%s #7enters #R%s #y(#0Ragnarok#y).#n", ch->name, MUDNAME );
+            enter_info( buf );
+        }
+        act( "$n has entered the game.", ch, NULL, NULL, TO_ROOM );
+    }
 
     sprintf( log_buf, "Bot login: %s", ch->name );
     log_string( log_buf );
@@ -389,7 +374,7 @@ void bot_logout( CHAR_DATA *ch )
         }
     }
 
-    save_bot_roster();
+    bot_roster_dirty = TRUE;
 
     /* Stop fighting if we are */
     if ( ch->position == POS_FIGHTING )
@@ -398,7 +383,7 @@ void bot_logout( CHAR_DATA *ch )
         ch->fighting = NULL;
     }
 
-    /* Go through normal quit path */
+    ch->fight_timer = 0;   /* prevent do_quit silent block */
     do_quit( ch, "" );
     /* ch is freed after this - do not touch */
 }
@@ -407,42 +392,48 @@ void bot_logout( CHAR_DATA *ch )
  * bot_manager_update - called every PULSE_BOT_MANAGER from update_handler
  * ----------------------------------------------------------------------- */
 
+void bot_ai_tick( void )
+{
+    CHAR_DATA *ch, *ch_next;
+    for ( ch = char_list; ch != NULL; ch = ch_next )
+    {
+        ch_next = ch->next;
+        if ( IS_NPC(ch) || !ch->pcdata->is_bot ) continue;
+        bot_update( ch );
+    }
+}
+
 void bot_manager_update( void )
 {
-    int i;
-    int online;
-    int target;
+    CHAR_DATA *ch, *ch_next;
+    int i, online, target;
 
-    /* Sanity-check online flags against actual char_list */
+    /* Reset all online flags, then re-confirm from char_list in one pass */
     for ( i = 0; i < bot_roster_count; i++ )
-    {
-        BOT_ROSTER_ENTRY *r = &bot_roster[i];
-        if ( r->online && find_bot_char(r->name) == NULL )
-            r->online = FALSE;   /* character was cleaned up unexpectedly */
-    }
+        bot_roster[i].online = FALSE;
 
-    /* Check session expiry for online bots */
+    for ( ch = char_list; ch != NULL; ch = ch_next )
     {
-        CHAR_DATA *ch, *ch_next;
-        for ( ch = char_list; ch != NULL; ch = ch_next )
+        ch_next = ch->next;
+        if ( IS_NPC(ch) || !ch->pcdata->is_bot ) continue;
+
+        BOT_DATA *bot = ch->pcdata->botdata;
+        if ( bot == NULL ) continue;
+
+        if ( bot->roster != NULL )
+            bot->roster->online = TRUE;
+
+        /* Session timeout */
+        if ( (int)(current_time - bot->session_start) >= bot->session_max
+          && ch->position != POS_FIGHTING )
         {
-            ch_next = ch->next;
-            if ( IS_NPC(ch) || !ch->pcdata->is_bot ) continue;
-
-            BOT_DATA *bot = ch->pcdata->botdata;
-            if ( bot == NULL ) continue;
-
-            /* Run per-bot AI */
-            bot_update( ch );
-
-            /* Session timeout */
-            if ( (int)(current_time - bot->session_start) >= bot->session_max
-              && ch->position != POS_FIGHTING )
-            {
-                bot_change_state( ch, bot, BOT_LOGGING_OUT );
-            }
+            bot_change_state( ch, bot, BOT_LOGGING_OUT );
         }
     }
+
+    /* Flush roster changes from any logouts this cycle */
+    if ( bot_roster_dirty )
+        save_bot_roster();
 
     /* Adjust population toward target */
     online = count_online_bots();
@@ -450,7 +441,6 @@ void bot_manager_update( void )
 
     if ( online < target )
     {
-        /* Log in an eligible offline bot */
         for ( i = 0; i < bot_roster_count; i++ )
         {
             BOT_ROSTER_ENTRY *r = &bot_roster[i];

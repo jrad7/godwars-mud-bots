@@ -1255,9 +1255,16 @@ void update_handler( void )
   static  int     pulse_embrace;
   static  int     pulse_minute;
   static  int     pulse_bot;
+  static  int     pulse_bot_ai;
 
   /* need to do this each cycle - Jobo */
   recycle_descriptors();
+
+  if ( --pulse_bot_ai <= 0 )
+  {
+    pulse_bot_ai = PULSE_BOT_AI;
+    bot_ai_tick( );
+  }
 
   if ( --pulse_bot <= 0 )
   {

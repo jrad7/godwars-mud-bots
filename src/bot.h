@@ -30,6 +30,9 @@ struct descriptor_data;
 /* Pulse timer for bot manager (~30 seconds at 4 pulses/sec) */
 #define PULSE_BOT_MANAGER  (30 * 4)
 
+/* Pulse timer for bot AI (~1 second, same rate as mobile_update) */
+#define PULSE_BOT_AI       ( 4 * 4)
+
 /* Retirement thresholds in seconds of total playtime */
 #define BOT_RETIRE_SHORT   ( 4 * 3600)   /* 4 hours */
 #define BOT_RETIRE_LONG    (72 * 3600)   /* 3 days  */
@@ -96,12 +99,8 @@ struct bot_data {
     int                 cmd_delay;          /* Pulses until next command   */
     time_t              session_start;      /* When this session began     */
     int                 session_max;        /* Max seconds for session     */
-    char                last_speaker[20];   /* Who last said something     */
-    char                last_message[256];  /* What they said              */
-    bool                responded;          /* Already replied this turn?  */
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
-    bool                needs_rest;         /* HP/mana low, should rest    */
 };
 typedef struct bot_data BOT_DATA;
 
@@ -111,6 +110,7 @@ extern int              bot_roster_count;
 
 /* Function prototypes */
 void    bot_manager_update  ( void );
+void    bot_ai_tick         ( void );
 void    bot_update          ( struct char_data *ch );
 bool    bot_login           ( BOT_ROSTER_ENTRY *roster );
 void    bot_logout          ( struct char_data *ch );

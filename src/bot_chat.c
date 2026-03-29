@@ -13,7 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include "merc.h"
 #include "bot.h"
 
@@ -131,27 +130,6 @@ static const char *unprompted_chat[] = {
     NULL
 };
 
-/* -----------------------------------------------------------------------
- * Helper: check if message contains a keyword (case-insensitive)
- * ----------------------------------------------------------------------- */
-
-static bool msg_contains( const char *msg, const char *keyword )
-{
-    char lower_msg[MAX_INPUT_LENGTH];
-    char lower_key[MAX_INPUT_LENGTH];
-    int i;
-
-    for ( i = 0; msg[i] && i < (int)sizeof(lower_msg)-1; i++ )
-        lower_msg[i] = tolower( (unsigned char)msg[i] );
-    lower_msg[i] = '\0';
-
-    for ( i = 0; keyword[i] && i < (int)sizeof(lower_key)-1; i++ )
-        lower_key[i] = tolower( (unsigned char)keyword[i] );
-    lower_key[i] = '\0';
-
-    return strstr( lower_msg, lower_key ) != NULL;
-}
-
 /* Count entries in a NULL-terminated string array */
 static int arr_len( const char **arr )
 {
@@ -183,28 +161,28 @@ const char *bot_get_response( const char *trigger, int chattiness )
     /* Check greetings */
     for ( i = 0; greetings[i] != NULL; i++ )
     {
-        if ( msg_contains(trigger, greetings[i]) )
+        if ( !str_infix(greetings[i], trigger) )
             return arr_random( greeting_responses );
     }
 
     /* Check farewells */
     for ( i = 0; farewells[i] != NULL; i++ )
     {
-        if ( msg_contains(trigger, farewells[i]) )
+        if ( !str_infix(farewells[i], trigger) )
             return arr_random( farewell_responses );
     }
 
     /* Check how-are-you */
     for ( i = 0; howami_triggers[i] != NULL; i++ )
     {
-        if ( msg_contains(trigger, howami_triggers[i]) )
+        if ( !str_infix(howami_triggers[i], trigger) )
             return arr_random( howami_responses );
     }
 
     /* Check class questions */
     for ( i = 0; class_triggers[i] != NULL; i++ )
     {
-        if ( msg_contains(trigger, class_triggers[i]) )
+        if ( !str_infix(class_triggers[i], trigger) )
             return NULL;   /* Will be handled with class-specific reply */
     }
 
@@ -238,7 +216,7 @@ void bot_hear_say( CHAR_DATA *bot, CHAR_DATA *speaker, char *msg )
 
     /* Check if the message contains the bot's name */
     bool name_mentioned = ( bot->name != NULL
-                          && msg_contains(msg, bot->name) );
+                          && !str_infix(bot->name, msg) );
 
     /* Respond if name mentioned or by chattiness chance */
     if ( !name_mentioned && number_percent() > chattiness ) return;
@@ -248,7 +226,7 @@ void bot_hear_say( CHAR_DATA *bot, CHAR_DATA *speaker, char *msg )
         int i;
         for ( i = 0; class_triggers[i] != NULL; i++ )
         {
-            if ( msg_contains(msg, class_triggers[i]) )
+            if ( !str_infix(class_triggers[i], msg) )
             {
                 if ( bot->class == 0 )
                     sprintf( cmd, "say still deciding on a class" );

@@ -299,14 +299,6 @@ void bot_update( CHAR_DATA *ch )
     /* Reset cmd delay - human-like pause between commands */
     bot->cmd_delay = number_range( 3, 12 );
 
-    /* Handle pending response to a tell/say */
-    if ( bot->last_message[0] != '\0' && !bot->responded )
-    {
-        bot_hear_say( ch, NULL, bot->last_message );
-        bot->responded = TRUE;
-        bot->last_message[0] = '\0';
-    }
-
     /* State dispatch */
     switch ( bot->state )
     {
