@@ -269,7 +269,10 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
             ch->createtime = str_dup( ct );
             ch->lasttime   = str_dup( ct );
         }
-        ch->lasthost = str_dup( "bot" );
+        ch->lasthost             = str_dup( "bot" );
+        ch->hunting              = str_dup( "" );
+        ch->pcdata->last_decap[0] = str_dup( "" );
+        ch->pcdata->last_decap[1] = str_dup( "" );
 
         set_learnable_disciplines( ch );
         do_newbiepack( ch, "" );
