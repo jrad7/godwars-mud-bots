@@ -951,7 +951,7 @@ void recycle_descriptors()
     /*
      * Bye bye mr. Descriptor.
      */
-    close( dclose->descriptor );
+    if (dclose->descriptor >= 0) close( dclose->descriptor );
       
     /* 
      * And then we recycle

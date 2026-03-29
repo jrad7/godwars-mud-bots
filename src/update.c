@@ -26,6 +26,7 @@
 #include <time.h>
 #include <unistd.h> /* unlink */
 #include "merc.h"
+#include "bot.h"
 
 
 
@@ -1253,9 +1254,16 @@ void update_handler( void )
   static  int     pulse_ww;
   static  int     pulse_embrace;
   static  int     pulse_minute;
+  static  int     pulse_bot;
 
   /* need to do this each cycle - Jobo */
   recycle_descriptors();
+
+  if ( --pulse_bot <= 0 )
+  {
+    pulse_bot = PULSE_BOT_MANAGER;
+    bot_manager_update( );
+  }
 
   if (--pulse_minute   <= 0)
   {

@@ -26,6 +26,7 @@
 #include <string.h>
 #include <time.h>
 #include "merc.h"
+#include "bot.h"
 
 #if !defined(macintosh)
 extern	int	_filbuf		args( (FILE *) );
@@ -2347,6 +2348,12 @@ void free_char( CHAR_DATA *ch )
 	free_string( ch->pcdata->parents	);
 	free_string( ch->pcdata->cparents	);
 	free_string( ch->pcdata->marriage	);
+        /* Free bot AI data if present */
+        if (ch->pcdata->botdata != NULL)
+        {
+            free_mem(ch->pcdata->botdata, sizeof(*ch->pcdata->botdata));
+            ch->pcdata->botdata = NULL;
+        }
 	ch->pcdata->next = pcdata_free;
 	pcdata_free      = ch->pcdata;
     }

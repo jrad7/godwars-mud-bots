@@ -830,6 +830,7 @@ void game_loop_unix( int control )
 */
 	for ( d = descriptor_list; d != NULL; d = d->next )
 	{
+	    if ( d->descriptor < 0 ) continue;  /* bot: no real socket */
 	    maxdesc = UMAX( maxdesc, d->descriptor );
 	    FD_SET( d->descriptor, &in_set  );
 	    FD_SET( d->descriptor, &out_set );
@@ -854,7 +855,7 @@ void game_loop_unix( int control )
 	for ( d = descriptor_list; d != NULL; d = d_next )
 	{
 	    d_next = d->next;   
-	    if ( FD_ISSET( d->descriptor, &exc_set ) )
+	    if ( d->descriptor >= 0 && FD_ISSET( d->descriptor, &exc_set ) )
 	    {
 		FD_CLR( d->descriptor, &in_set  );
 		FD_CLR( d->descriptor, &out_set );
@@ -873,7 +874,7 @@ void game_loop_unix( int control )
 	    d_next	= d->next;
 	    d->fcommand	= FALSE;
 
-	    if ( FD_ISSET( d->descriptor, &in_set ) )
+	    if ( d->descriptor >= 0 && FD_ISSET( d->descriptor, &in_set ) )
 	    {
 		if ( d->character != NULL )
 		    d->character->timer = 0;
@@ -943,6 +944,14 @@ void game_loop_unix( int control )
 	for ( d = descriptor_list; d != NULL; d = d_next )
 	{
 	    d_next = d->next;
+
+	    /* Bot: discard output, no real socket to write to */
+	    if ( d->descriptor < 0 )
+	    {
+		d->outtop   = 0;
+		d->fcommand = FALSE;
+		continue;
+	    }
 
 	    if ( ( d->fcommand || d->outtop > 0 )
 	    &&   FD_ISSET(d->descriptor, &out_set) )

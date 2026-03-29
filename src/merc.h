@@ -122,6 +122,7 @@ typedef struct	time_info_data		TIME_INFO_DATA;
 typedef struct	weather_data		WEATHER_DATA;
 
 typedef struct  disabled_data                 DISABLED_DATA;
+typedef struct  bot_data                      BOT_DATA;
 
 /* one disabled command */
 struct disabled_data
@@ -2424,6 +2425,9 @@ struct pc_data
     int			comm;
     int                 security;       /* OLC - Builder security */
     int			bounty;
+    /* Bot system */
+    bool                is_bot;         /* TRUE if this is a bot character  */
+    BOT_DATA           *botdata;        /* Bot AI data, NULL for real players */
 };
 
 
@@ -4495,6 +4499,7 @@ void    start_editing   args( ( CHAR_DATA *ch, char *data ) );
 void    stop_editing    args( ( CHAR_DATA *ch ) );
 
 /* comm.c */
+void    init_descriptor args( ( DESCRIPTOR_DATA *dnew, int desc ) );
 void	close_socket	args( ( DESCRIPTOR_DATA *dclose ) );
 void	close_socket2	args( ( DESCRIPTOR_DATA *dclose, bool kickoff ) );
 void	write_to_buffer	args( ( DESCRIPTOR_DATA *d, const char *txt,
