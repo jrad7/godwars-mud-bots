@@ -1151,7 +1151,13 @@ void new_descriptor( int control )
         dummyarg->buf      = str_dup((char *) &sock.sin_addr);
         dummyarg->d        = dnew;
 
-        if (thread_count < 50) /* should be more than plenty */
+        if (!strncmp(buf, "127.", 4))
+        {
+          /* loopback address - skip reverse lookup to avoid hangs */
+          dnew->lookup_status = STATUS_DONE;
+          dummyarg->status = 0;
+        }
+        else if (thread_count < 50) /* should be more than plenty */
         {
           /* just use the ip, then make the thread do the lookup */
           pthread_create( &thread_lookup, &attr, (void*)&lookup_address, (void*) dummyarg);
@@ -1196,9 +1202,9 @@ void lookup_address(DUMMY_ARG *darg)
   int err;
 
   thread_count++;
-  
+
   gethostbyaddr_r( darg->buf, sizeof(darg->buf), AF_INET, &ent, buf, 16384, &from, &err);
-  
+
   if (from && from->h_name)
   {
     free_string(darg->d->host);
