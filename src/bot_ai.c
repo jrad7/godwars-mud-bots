@@ -29,6 +29,17 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
     interpret( ch, buf );
 }
 
+/* Queue a navigation command to be executed before normal AI resumes */
+static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
+{
+    if ( bot->nav_n < 4 )
+    {
+        strncpy( bot->nav_cmds[bot->nav_n], cmd, sizeof(bot->nav_cmds[0])-1 );
+        bot->nav_cmds[bot->nav_n][sizeof(bot->nav_cmds[0])-1] = '\0';
+        bot->nav_n++;
+    }
+}
+
 /* -----------------------------------------------------------------------
  * bot_change_state - transition to a new AI state
  * ----------------------------------------------------------------------- */
@@ -49,6 +60,14 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_GRINDING:
         bot->state_timer = number_range( 80, 240 );   /* 20-60 seconds */
         bot->grind_attempts = 0;
+        /* Navigate to newbie area: recall -> up -> south */
+        if ( ch->level <= 20 )
+        {
+            bot->nav_n = 0;
+            bot_nav_queue( bot, "recall" );
+            bot_nav_queue( bot, "up" );
+            bot_nav_queue( bot, "south" );
+        }
         break;
     case BOT_RESTING:
         bot->state_timer = number_range( 40, 120 );
@@ -298,6 +317,24 @@ void bot_update( CHAR_DATA *ch )
 
     /* Reset cmd delay - human-like pause between commands */
     bot->cmd_delay = number_range( 3, 12 );
+
+    /* Drain navigation queue before normal AI */
+    if ( bot->nav_n > 0 )
+    {
+        int j;
+        if ( ch->position == POS_FIGHTING )
+            return;   /* keep queue intact, retry after combat ends */
+        if ( ch->position < POS_STANDING )
+        {
+            bot_cmd( ch, "stand" );
+            return;
+        }
+        bot_cmd( ch, bot->nav_cmds[0] );
+        for ( j = 0; j < bot->nav_n - 1; j++ )
+            strcpy( bot->nav_cmds[j], bot->nav_cmds[j+1] );
+        bot->nav_n--;
+        return;
+    }
 
     /* State dispatch */
     switch ( bot->state )

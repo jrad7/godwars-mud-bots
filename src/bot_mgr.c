@@ -273,6 +273,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
 
         set_learnable_disciplines( ch );
         do_newbiepack( ch, "" );
+        do_wear( ch, "all" );
 
         /* Add to char_list */
         ch->next  = char_list;
@@ -294,13 +295,14 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     bot = (BOT_DATA *)alloc_mem( sizeof(BOT_DATA) );
     memset( bot, 0, sizeof(BOT_DATA) );
     bot->roster          = roster;
-    bot->state           = BOT_IDLE;
-    bot->state_timer     = number_range( 20, 80 );
     bot->cmd_delay       = number_range(  4, 20 );
     bot->session_start   = current_time;
     bot->session_max     = number_range( BOT_SESSION_MIN, BOT_SESSION_MAX );
     bot->idle_chat_timer = number_range( 60, 300 );
     ch->pcdata->botdata  = bot;
+
+    /* Start grinding immediately so the nav queue fires right away */
+    bot_change_state( ch, bot, BOT_GRINDING );
 
     d->connected  = CON_PLAYING;
     d->next       = descriptor_list;
@@ -314,6 +316,10 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_LIMBO );
         char_to_room( ch, dest );
     }
+
+    /* Ensure recall destination is set - new chars have home=0 */
+    if ( ch->home == 0 )
+        ch->home = 3001;
 
     ch->logon = current_time;
     roster->online = TRUE;
