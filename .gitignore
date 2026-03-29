@@ -1,0 +1,16 @@
+# Compiled object files
+src/*.o
+
+# Compiled binary
+src/dystopia
+src/startup
+
+# Logs
+log/*.log
+log/*
+
+# Player files (runtime data)
+player/*
+
+# Windows build artifacts
+*.exe
