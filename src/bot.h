@@ -13,13 +13,16 @@
 struct char_data;
 struct descriptor_data;
 
+/* Set to 1 to enable verbose bot debug logging, 0 to disable */
+#define BOT_DEBUG  0
+
 /* Sentinel value for bot descriptors - means no real socket */
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 
 /* Population settings */
 #define MAX_BOT_ROSTER      20
 #define BOT_MIN_ONLINE       1
-#define BOT_MAX_ONLINE       3
+#define BOT_MAX_ONLINE       1
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */

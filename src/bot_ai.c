@@ -17,6 +17,9 @@
 #include "merc.h"
 #include "bot.h"
 
+/* Forward declaration - defined in kav_fight.c */
+void do_stance( CHAR_DATA *ch, char *argument );
+
 /* -----------------------------------------------------------------------
  * bot_cmd - inject a command into a bot as if it typed it
  * ----------------------------------------------------------------------- */
@@ -41,11 +44,66 @@ static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 }
 
 /* -----------------------------------------------------------------------
+ * Area zone rules - restrict bot movement in specific areas
+ *
+ * Add a row for each zone:  { first_vnum, last_vnum, forbidden_dirs }
+ * forbidden_dirs is a bitmask of DIR_* bits (1<<DIR_NORTH etc.).
+ * Use 0 in last row as terminator.
+ * ----------------------------------------------------------------------- */
+
+#define DIRMASK(d)  (1 << (d))
+
+static const struct {
+    int   vnum_lo;
+    int   vnum_hi;
+    int   forbidden_dirs;  /* bitmask of 1<<DIR_* */
+} bot_area_rules[] = {
+    /* Mud School / newbie arena (3700-3760): don't go up (exits back to temple) */
+    { 3700, 3760, DIRMASK(DIR_UP) },
+
+    { 0, 0, 0 }   /* terminator */
+};
+
+/* Returns TRUE if the bot is allowed to move in the given direction */
+static bool bot_dir_allowed( CHAR_DATA *ch, int door )
+{
+    int vnum, i;
+    if ( ch->in_room == NULL ) return TRUE;
+    vnum = ch->in_room->vnum;
+    for ( i = 0; bot_area_rules[i].vnum_lo != 0; i++ )
+    {
+        if ( vnum >= bot_area_rules[i].vnum_lo
+          && vnum <= bot_area_rules[i].vnum_hi )
+        {
+            if ( IS_SET( bot_area_rules[i].forbidden_dirs, DIRMASK(door) ) )
+                return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+/* -----------------------------------------------------------------------
  * bot_change_state - transition to a new AI state
  * ----------------------------------------------------------------------- */
 
 void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 {
+#if BOT_DEBUG
+    if ( bot->state != new_state )
+    {
+        const char *state_names[] = {
+            "IDLE", "EXPLORING", "GRINDING", "TRAINING",
+            "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT"
+        };
+        char buf[MAX_STRING_LENGTH];
+        sprintf( buf, "BOT DEBUG: %s changing state from %s to %s",
+            ch->name,
+            bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
+            new_state <= BOT_LOGGING_OUT ? state_names[new_state] : "UNKNOWN" );
+        log_string( buf );
+    }
+#endif
+
     bot->state       = new_state;
     bot->cmd_delay   = number_range( 1, 3 );
 
@@ -110,6 +168,7 @@ static void bot_try_move( CHAR_DATA *ch )
         door = number_range( 0, 5 );
         if ( ch->in_room == NULL ) return;
 
+        if ( !bot_dir_allowed( ch, door ) )              continue;
         pexit = ch->in_room->exit[door];
         if ( pexit == NULL || pexit->to_room == NULL ) continue;
         if ( IS_SET(pexit->exit_info, EX_CLOSED) )      continue;
@@ -131,11 +190,66 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
     {
         if ( !IS_NPC(victim) )   continue;   /* Don't attack players */
         if ( victim->fighting )  continue;   /* Skip mobs already in combat */
-        if ( victim->level > ch->level + 4 ) continue;  /* Too strong */
+        if ( victim->level > ch->level + 15 ) continue; /* Too strong */
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;
 }
+
+/*
+ * Pick the basic stance (1-5: viper, crane, crab, mongoose, bull) that
+ * the bot should train next - whichever has the lowest XP below 200.
+ * Returns the stance index (1-5) or 0 if all are mastered.
+ */
+static int bot_pick_training_stance( CHAR_DATA *ch )
+{
+    /* Basic stance names match stance[] indices 1-5 */
+    static const int  basic[]  = { 1, 2, 3, 4, 5 };
+    static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull", NULL };
+    int best_idx  = 0;
+    int best_xp   = 201;   /* sentinel: any unmastered beats this */
+    int i;
+
+    (void)names;   /* used via bot_cmd below */
+
+    for ( i = 0; i < 5; i++ )
+    {
+        int xp = ch->stance[ basic[i] ];
+        if ( xp < 0 ) xp = 0;   /* -1 means locked, treat as 0 */
+        if ( xp < 200 && xp < best_xp )
+        {
+            best_xp  = xp;
+            best_idx = i;
+        }
+    }
+    if ( best_xp == 201 ) return 0;   /* all mastered */
+    return best_idx + 1;              /* 1-based slot in basic[] */
+}
+
+/* Activate the best training stance via do_stance, or plain stance if all done */
+static void bot_set_training_stance( CHAR_DATA *ch )
+{
+    static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull" };
+    int pick;
+
+    /* Only change stance when relaxed (stance[0] == -1) */
+    if ( ch->stance[0] != -1 ) return;
+
+    pick = bot_pick_training_stance( ch );
+    if ( pick == 0 )
+    {
+        /* All basics mastered - just use generic fighting stance */
+        do_stance( ch, "" );
+    }
+    else
+    {
+        char buf[32];
+        strncpy( buf, names[ pick - 1 ], sizeof(buf) - 1 );
+        buf[ sizeof(buf) - 1 ] = '\0';
+        do_stance( ch, buf );
+    }
+}
+
 
 /* -----------------------------------------------------------------------
  * STATE HANDLERS
@@ -212,18 +326,29 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Already fighting - let violence_update handle it */
+    /* Already fighting - make sure we have a stance active */
     if ( ch->position == POS_FIGHTING )
     {
+        if ( ch->stance[0] == -1 )
+            bot_set_training_stance( ch );   /* enter stance mid-fight */
         bot->grind_attempts = 0;
         return;
     }
 
-    /* Find something to kill */
+    /* Between fights: relax stance so we can switch to the next
+     * training stance before the next kill */
+    if ( ch->stance[0] != -1 )
+    {
+        do_stance( ch, "" );   /* toggles back to relaxed (-1) */
+        return;
+    }
+
+    /* Find something to kill, then adopt stance and engage */
     victim = bot_find_mob_target( ch );
     if ( victim != NULL )
     {
         char cmd[MAX_INPUT_LENGTH];
+        bot_set_training_stance( ch );          /* choose stance first */
         sprintf( cmd, "kill %s", victim->name );
         bot_cmd( ch, cmd );
         bot->grind_attempts = 0;
@@ -323,9 +448,8 @@ void bot_update( CHAR_DATA *ch )
     if ( bot->nav_n > 0 )
     {
         int j;
+#if BOT_DEBUG
         ROOM_INDEX_DATA *before_room = ch->in_room;
-
-        /* Debug: log state before executing nav command */
         sprintf( log_buf,
             "BOT_NAV %s: pos=%d room=%d cmd='%s' exits[N=%s E=%s S=%s W=%s U=%s D=%s]",
             ch->name, ch->position,
@@ -339,26 +463,32 @@ void bot_update( CHAR_DATA *ch )
             (before_room && before_room->exit[DIR_DOWN]  && before_room->exit[DIR_DOWN]->to_room)  ? "y" : "n"
         );
         log_string( log_buf );
+#endif
 
         if ( ch->position == POS_FIGHTING )
         {
+#if BOT_DEBUG
             log_string( "BOT_NAV: blocked - fighting" );
+#endif
             return;   /* keep queue intact, retry after combat ends */
         }
         if ( ch->position < POS_STANDING )
         {
+#if BOT_DEBUG
             log_string( "BOT_NAV: blocked - not standing, issuing stand" );
+#endif
             bot_cmd( ch, "stand" );
             return;
         }
 
         bot_cmd( ch, bot->nav_cmds[0] );
 
-        /* Debug: log where the bot ended up */
+#if BOT_DEBUG
         sprintf( log_buf, "BOT_NAV %s: after cmd='%s' now in room=%d",
             ch->name, bot->nav_cmds[0],
             ch->in_room ? ch->in_room->vnum : -1 );
         log_string( log_buf );
+#endif
 
         for ( j = 0; j < bot->nav_n - 1; j++ )
             strcpy( bot->nav_cmds[j], bot->nav_cmds[j+1] );

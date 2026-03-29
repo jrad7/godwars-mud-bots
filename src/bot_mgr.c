@@ -215,7 +215,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->desc                 = d;
         ch->name                 = str_dup( roster->name );
         ch->pcdata->switchname   = str_dup( roster->name );
-        ch->act                  = PLR_BLANK | PLR_COMBINE | PLR_PROMPT;
+        ch->act                  = PLR_BLANK | PLR_COMBINE | PLR_PROMPT | PLR_HOLYLIGHT;
         ch->pcdata->board        = &boards[DEFAULT_BOARD];
 
         /* Basic stats */
@@ -227,11 +227,11 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->pcdata->perm_wis     = number_range( 12, 16 );
         ch->pcdata->perm_dex     = number_range( 12, 16 );
         ch->pcdata->perm_con     = number_range( 12, 16 );
-        ch->max_hit              = number_range( 800, 1200 );
+        ch->max_hit              = 5000;
         ch->hit                  = ch->max_hit;
-        ch->max_mana             = number_range( 600, 1000 );
+        ch->max_mana             = 5000;
         ch->mana                 = ch->max_mana;
-        ch->max_move             = number_range( 800, 1200 );
+        ch->max_move             = 5000;
         ch->move                 = ch->max_move;
         ch->gold                 = number_range( 100, 500 );
         ch->pcdata->condition[0] = 48;
@@ -274,10 +274,6 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->pcdata->last_decap[0] = str_dup( "" );
         ch->pcdata->last_decap[1] = str_dup( "" );
 
-        set_learnable_disciplines( ch );
-        do_newbiepack( ch, "" );
-        do_wear( ch, "all" );
-
         /* Add to char_list */
         ch->next  = char_list;
         char_list = ch;
@@ -287,6 +283,33 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
             if ( start_room == NULL ) start_room = get_room_index( ROOM_VNUM_LIMBO );
             char_to_room( ch, start_room );
         }
+
+        set_learnable_disciplines( ch );
+        ch->form = 1048575;
+        do_newbiepack( ch, "" );
+        do_wear( ch, "all" );
+
+#if BOT_DEBUG
+        {
+            OBJ_DATA *obj;
+            char buf[MAX_STRING_LENGTH];
+            int count_eq = 0, count_inv = 0;
+            sprintf( buf, "BOT DEBUG: %s EQ=[", ch->name );
+            for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+            {
+                if ( obj->wear_loc != WEAR_NONE ) { strcat( buf, obj->short_descr ); strcat( buf, ", " ); count_eq++; }
+            }
+            if (count_eq == 0) strcat( buf, "none" );
+            strcat( buf, "] INV=[" );
+            for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+            {
+                if ( obj->wear_loc == WEAR_NONE ) { strcat( buf, obj->short_descr ); strcat( buf, ", " ); count_inv++; }
+            }
+            if (count_inv == 0) strcat( buf, "none" );
+            strcat( buf, "]" );
+            log_string( buf );
+        }
+#endif
 
         save_char_obj( ch );
     }
@@ -319,6 +342,41 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_LIMBO );
         char_to_room( ch, dest );
     }
+
+    /* Ensure the bot has a valid physical form (hands, etc) to wear gear */
+    if ( ch->form == 0 )
+        ch->form = 1048575;
+
+    /* Sanity check: if bot loaded from file but has no gear, give them a newbie pack */
+    if ( ch->carrying == NULL && ch->level == 1 )
+    {
+        do_newbiepack( ch, "" );
+    }
+    
+    /* Always attempt to wear any unequipped gear upon login */
+    do_wear( ch, "all" );
+
+#if BOT_DEBUG
+    {
+        OBJ_DATA *obj;
+        char buf[MAX_STRING_LENGTH];
+        int count_eq = 0, count_inv = 0;
+        sprintf( buf, "BOT DEBUG: %s (Loaded) EQ=[", ch->name );
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        {
+            if ( obj->wear_loc != WEAR_NONE ) { strcat( buf, obj->short_descr ); strcat( buf, ", " ); count_eq++; }
+        }
+        if (count_eq == 0) strcat( buf, "none" );
+        strcat( buf, "] INV=[" );
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        {
+            if ( obj->wear_loc == WEAR_NONE ) { strcat( buf, obj->short_descr ); strcat( buf, ", " ); count_inv++; }
+        }
+        if (count_inv == 0) strcat( buf, "none" );
+        strcat( buf, "]" );
+        log_string( buf );
+    }
+#endif
 
     /* Ensure recall destination is set - new chars have home=0 */
     if ( ch->home == 0 )

@@ -3189,6 +3189,22 @@ void send_to_char( const char *txt, CHAR_DATA *ch )
     CHAR_DATA *wizard;
     CHAR_DATA *familiar;
 
+    if ( txt != NULL && ch != NULL && !IS_NPC(ch) && ch->pcdata != NULL && ch->pcdata->is_bot )
+    {
+        if ( txt[0] != '\0' && str_cmp(txt, "\n\r") )
+        {
+            char buf[MAX_STRING_LENGTH * 2];
+            sprintf(buf, "[BOT MSG -> %s]: %s", ch->name, txt);
+            
+            /* Strip trailing newlines for cleaner logging */
+            int len = strlen(buf);
+            while(len > 0 && (buf[len-1] == '\r' || buf[len-1] == '\n'))
+                buf[--len] = '\0';
+                
+            log_string(buf);
+        }
+    }
+
     if ( ch->desc == NULL && IS_NPC(ch) && (wizard = ch->wizard) != NULL )
     {
 	if (!IS_NPC(wizard) && (familiar = wizard->pcdata->familiar) != NULL 
@@ -3401,6 +3417,17 @@ void act( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2,
 	}
 
 	buf[0]   = UPPER(buf[0]);
+	
+    if ( !IS_NPC(to) && to->pcdata != NULL && to->pcdata->is_bot )
+    {
+        char logb[MAX_STRING_LENGTH * 2];
+        sprintf(logb, "[BOT ACT -> %s]: %s", to->name, buf);
+        int len = strlen(logb);
+        while(len > 0 && (logb[len-1] == '\r' || logb[len-1] == '\n'))
+            logb[--len] = '\0';
+        log_string(logb);
+    }
+
 	if (to->desc && (to->desc->connected == CON_PLAYING))
 	write_to_buffer( to->desc, buf, point - buf );
 
@@ -3602,6 +3629,17 @@ void act2( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2
 	}
 
 	buf[0]   = UPPER(buf[0]);
+	
+    if ( !IS_NPC(to) && to->pcdata != NULL && to->pcdata->is_bot )
+    {
+        char logb[MAX_STRING_LENGTH * 2];
+        sprintf(logb, "[BOT ACT2 -> %s]: %s", to->name, buf);
+        int len = strlen(logb);
+        while(len > 0 && (logb[len-1] == '\r' || logb[len-1] == '\n'))
+            logb[--len] = '\0';
+        log_string(logb);
+    }
+
 	write_to_buffer( to->desc, buf, point - buf );
 
 	if (is_fam) to = to_old;

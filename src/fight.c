@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 #include "merc.h"
+#include "bot.h"
 
 #define MAX_SLAY_TYPES 3
 #define MONK_AUTODROP 12
@@ -3117,6 +3118,28 @@ void raw_kill( CHAR_DATA *victim )
   victim->carry_number = 0;
   do_call(victim,"all");
   save_char_obj( victim );
+
+  /* Bot death recovery:
+   * - If any gear was recalled back to inventory, wear it.
+   * - If the bot has nothing at all (gear was lost/destroyed),
+   *   issue a fresh newbie pack so they are never naked.
+   * - Switch to BOT_RESTING so the AI sleeps until healthy,
+   *   then transitions back to grinding automatically. */
+  if ( !IS_NPC(victim)
+    && victim->pcdata != NULL
+    && victim->pcdata->is_bot
+    && victim->pcdata->botdata != NULL )
+  {
+      BOT_DATA *bot = victim->pcdata->botdata;
+      if ( victim->carrying == NULL )
+      {
+          /* No gear at all - give a fresh newbie pack */
+          do_newbiepack( victim, "" );
+      }
+      do_wear( victim, "all" );
+      bot_change_state( victim, bot, BOT_RESTING );
+  }
+
   return;
 }
 
