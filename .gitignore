@@ -16,3 +16,7 @@ player/*
 *.exe
 
 leader.txt
+notes/Immortal
+src/crash.txt
+txt/bugs.txt
+

@@ -30,8 +30,8 @@ struct descriptor_data;
 /* Pulse timer for bot manager (~30 seconds at 4 pulses/sec) */
 #define PULSE_BOT_MANAGER  (30 * 4)
 
-/* Pulse timer for bot AI (~1 second, same rate as mobile_update) */
-#define PULSE_BOT_AI       ( 4 * 4)
+/* Pulse timer for bot AI (every second) */
+#define PULSE_BOT_AI       ( 1 * PULSE_PER_SECOND)
 
 /* Retirement thresholds in seconds of total playtime */
 #define BOT_RETIRE_SHORT   ( 4 * 3600)   /* 4 hours */
@@ -101,7 +101,7 @@ struct bot_data {
     int                 session_max;        /* Max seconds for session     */
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
-    char                nav_cmds[4][32];   /* Queued navigation commands  */
+    char                nav_cmds[8][32];   /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
 };
 typedef struct bot_data BOT_DATA;

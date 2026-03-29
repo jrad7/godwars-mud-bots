@@ -37,3 +37,12 @@
 [*****] BUG: Str_cmp: null astr.
 [*****] BUG: Str_cmp: null astr.
 [*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.
+[*****] BUG: Str_cmp: null astr.

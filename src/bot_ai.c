@@ -32,7 +32,7 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
 /* Queue a navigation command to be executed before normal AI resumes */
 static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 {
-    if ( bot->nav_n < 4 )
+    if ( bot->nav_n < 8 )
     {
         strncpy( bot->nav_cmds[bot->nav_n], cmd, sizeof(bot->nav_cmds[0])-1 );
         bot->nav_cmds[bot->nav_n][sizeof(bot->nav_cmds[0])-1] = '\0';
@@ -47,33 +47,34 @@ static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 {
     bot->state       = new_state;
-    bot->cmd_delay   = number_range( 4, 16 );  /* 1-4 second delay */
+    bot->cmd_delay   = number_range( 1, 3 );
 
     switch ( new_state )
     {
     case BOT_IDLE:
-        bot->state_timer = number_range( 40, 120 );   /* 10-30 seconds */
+        bot->state_timer = number_range( 10, 30 );    /* 10-30 seconds */
         break;
     case BOT_EXPLORING:
-        bot->state_timer = number_range( 20, 60 );
+        bot->state_timer = number_range( 20, 60 );    /* 20-60 seconds */
         break;
     case BOT_GRINDING:
-        bot->state_timer = number_range( 80, 240 );   /* 20-60 seconds */
+        bot->state_timer = number_range( 60, 180 );   /* 1-3 minutes */
         bot->grind_attempts = 0;
-        /* Navigate to newbie area: recall -> up -> south */
+        /* Navigate to newbie area: recall -> up -> open door -> south */
         if ( ch->level <= 20 )
         {
             bot->nav_n = 0;
             bot_nav_queue( bot, "recall" );
             bot_nav_queue( bot, "up" );
+            bot_nav_queue( bot, "open door" );
             bot_nav_queue( bot, "south" );
         }
         break;
     case BOT_RESTING:
-        bot->state_timer = number_range( 40, 120 );
+        bot->state_timer = number_range( 20, 60 );    /* 20-60 seconds */
         break;
     case BOT_LOGGING_OUT:
-        bot->state_timer = number_range( 4, 20 );     /* Short - quit soon */
+        bot->state_timer = number_range( 3, 8 );      /* 3-8 seconds */
         break;
     default:
         bot->state_timer = number_range( 40, 120 );
@@ -147,7 +148,7 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
     if ( bot->idle_chat_timer <= 0 )
     {
         bot_unprompted_chat( ch, bot );
-        bot->idle_chat_timer = number_range( 120, 480 );  /* 30-120 seconds */
+        bot->idle_chat_timer = number_range( 30, 120 );   /* 30-120 seconds */
     }
 
     /* Random look or social */
@@ -316,20 +317,49 @@ void bot_update( CHAR_DATA *ch )
     if ( bot->cmd_delay > 0 ) { bot->cmd_delay--; return; }  /* Wait before acting */
 
     /* Reset cmd delay - human-like pause between commands */
-    bot->cmd_delay = number_range( 3, 12 );
+    bot->cmd_delay = number_range( 1, 4 );
 
     /* Drain navigation queue before normal AI */
     if ( bot->nav_n > 0 )
     {
         int j;
+        ROOM_INDEX_DATA *before_room = ch->in_room;
+
+        /* Debug: log state before executing nav command */
+        sprintf( log_buf,
+            "BOT_NAV %s: pos=%d room=%d cmd='%s' exits[N=%s E=%s S=%s W=%s U=%s D=%s]",
+            ch->name, ch->position,
+            before_room ? before_room->vnum : -1,
+            bot->nav_cmds[0],
+            (before_room && before_room->exit[DIR_NORTH] && before_room->exit[DIR_NORTH]->to_room) ? "y" : "n",
+            (before_room && before_room->exit[DIR_EAST]  && before_room->exit[DIR_EAST]->to_room)  ? "y" : "n",
+            (before_room && before_room->exit[DIR_SOUTH] && before_room->exit[DIR_SOUTH]->to_room) ? "y" : "n",
+            (before_room && before_room->exit[DIR_WEST]  && before_room->exit[DIR_WEST]->to_room)  ? "y" : "n",
+            (before_room && before_room->exit[DIR_UP]    && before_room->exit[DIR_UP]->to_room)    ? "y" : "n",
+            (before_room && before_room->exit[DIR_DOWN]  && before_room->exit[DIR_DOWN]->to_room)  ? "y" : "n"
+        );
+        log_string( log_buf );
+
         if ( ch->position == POS_FIGHTING )
+        {
+            log_string( "BOT_NAV: blocked - fighting" );
             return;   /* keep queue intact, retry after combat ends */
+        }
         if ( ch->position < POS_STANDING )
         {
+            log_string( "BOT_NAV: blocked - not standing, issuing stand" );
             bot_cmd( ch, "stand" );
             return;
         }
+
         bot_cmd( ch, bot->nav_cmds[0] );
+
+        /* Debug: log where the bot ended up */
+        sprintf( log_buf, "BOT_NAV %s: after cmd='%s' now in room=%d",
+            ch->name, bot->nav_cmds[0],
+            ch->in_room ? ch->in_room->vnum : -1 );
+        log_string( log_buf );
+
         for ( j = 0; j < bot->nav_n - 1; j++ )
             strcpy( bot->nav_cmds[j], bot->nav_cmds[j+1] );
         bot->nav_n--;

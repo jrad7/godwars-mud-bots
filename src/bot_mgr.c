@@ -295,10 +295,10 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     bot = (BOT_DATA *)alloc_mem( sizeof(BOT_DATA) );
     memset( bot, 0, sizeof(BOT_DATA) );
     bot->roster          = roster;
-    bot->cmd_delay       = number_range(  4, 20 );
+    bot->cmd_delay       = number_range(  1, 4 );
     bot->session_start   = current_time;
     bot->session_max     = number_range( BOT_SESSION_MIN, BOT_SESSION_MAX );
-    bot->idle_chat_timer = number_range( 60, 300 );
+    bot->idle_chat_timer = number_range( 30, 120 );
     ch->pcdata->botdata  = bot;
 
     /* Start grinding immediately so the nav queue fires right away */
