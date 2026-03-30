@@ -147,6 +147,19 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
  * State helpers
  * ----------------------------------------------------------------------- */
 
+/* Map BOT_CLASS_* preference to the selfclass argument string */
+static const char *bot_class_name( int class_pref )
+{
+    switch ( class_pref )
+    {
+    case BOT_CLASS_VAMPIRE: return "vampire";
+    case BOT_CLASS_MONK:    return "monk";
+    case BOT_CLASS_NINJA:   return "ninja";
+    case BOT_CLASS_DEMON:   return "demon";
+    default:                return "demon";
+    }
+}
+
 /*
  * Returns TRUE if the bot has exp worth spending on stats or class rank.
  */
@@ -154,6 +167,8 @@ static bool bot_should_train( CHAR_DATA *ch )
 {
     int hp_cap = UMIN( 120000, 20000 + 4000 * ch->pkill );
 
+    if ( ch->level == 2 && ch->max_hit >= 2000 )               return TRUE;
+    if ( ch->level == 3 && ch->class == 0 )                     return TRUE;
     if ( ch->max_hit  < hp_cap         && ch->exp >= ch->max_hit  + 1 ) return TRUE;
     if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
       && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
@@ -184,6 +199,24 @@ static bool bot_should_train( CHAR_DATA *ch )
 static bool bot_do_train( CHAR_DATA *ch )
 {
     int hp_cap = UMIN( 120000, 20000 + 4000 * ch->pkill );
+
+    /* Step 1: train avatar once at level 2 with enough hp */
+    if ( ch->level == 2 && ch->max_hit >= 2000 )
+    {
+        bot_cmd( ch, "train avatar" );
+        return TRUE;
+    }
+
+    /* Step 2: select class once avatar (level 3), no class yet */
+    if ( ch->level == 3 && ch->class == 0 )
+    {
+        BOT_DATA *bot = ch->pcdata->botdata;
+        int pref = ( bot && bot->roster ) ? bot->roster->class_pref : BOT_CLASS_DEMON;
+        char cmd[64];
+        sprintf( cmd, "selfclass %s", bot_class_name(pref) );
+        bot_cmd( ch, cmd );
+        return TRUE;
+    }
 
     /* Vampire age progression */
     if ( IS_CLASS(ch, CLASS_VAMPIRE) )

@@ -156,43 +156,6 @@ void save_bot_roster( void )
  * Internal helpers
  * ----------------------------------------------------------------------- */
 
-/*
- * Map a BOT_CLASS_* preference to a CLASS_* value and apply class-specific
- * setup (disciplines, beast score, etc.) to a freshly created bot character.
- * Only call this for new bots that have no class yet (ch->class == 0).
- */
-static void bot_apply_class( CHAR_DATA *ch, int class_pref )
-{
-    switch ( class_pref )
-    {
-    case BOT_CLASS_VAMPIRE:
-        ch->class = CLASS_VAMPIRE;
-        ch->beast = 30;
-        set_learnable_disciplines( ch );
-        break;
-
-    case BOT_CLASS_MONK:
-        ch->class = CLASS_MONK;
-        /* no special disciplines for monk */
-        break;
-
-    case BOT_CLASS_NINJA:
-        ch->class = CLASS_NINJA;
-        /* no special disciplines for ninja */
-        break;
-
-    case BOT_CLASS_DEMON:
-        ch->class = CLASS_DEMON;
-        set_learnable_disciplines( ch );
-        break;
-
-    default:
-        /* Fallback: pick demon */
-        ch->class = CLASS_DEMON;
-        set_learnable_disciplines( ch );
-        break;
-    }
-}
 
 static int count_online_bots( void )
 {
@@ -385,12 +348,6 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     if ( ch->form == 0 )
         ch->form = 1048575;
 
-    /* Apply class for any bot that lacks one (new bots or old saves pre-class) */
-    if ( ch->class == 0 )
-    {
-        if ( ch->level < 3 ) ch->level = 3;
-        bot_apply_class( ch, roster->class_pref );
-    }
     save_char_obj( ch );
 
     /* Sanity check: if bot loaded from file but has no gear, give them a newbie pack */
