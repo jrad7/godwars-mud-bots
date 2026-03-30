@@ -2808,8 +2808,24 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     /* "any" = pick a random bot now and auto-reassign on each logout */
     if ( !str_cmp( arg, "any" ) )
     {
+        bool already_watching = FALSE;
+        for ( d = descriptor_list; d != NULL; d = d->next )
+        {
+            if ( d->snoop_by == ch->desc
+              && d->character != NULL
+              && !IS_NPC(d->character)
+              && d->character->pcdata->is_bot )
+            {
+                already_watching = TRUE;
+                break;
+            }
+        }
+
         ch->pcdata->bot_watch_any = TRUE;
-        if ( bot_watch_assign_random( ch, NULL ) )
+        
+        if ( already_watching )
+            send_to_char( "Auto-watch enabled. You will be reassigned when your current bot logs out.\n\r", ch );
+        else if ( bot_watch_assign_random( ch, NULL ) )
             send_to_char( "Auto-watch enabled. Type 'watchbot off' to stop.\n\r", ch );
         else
             send_to_char( "No bots are online right now. You will be assigned one when one logs in.\n\r", ch );
@@ -2844,6 +2860,18 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     {
         send_to_char( "That bot is already being watched.\n\r", ch );
         return;
+    }
+
+    /* Unhook any previous bot watch first */
+    for ( d = descriptor_list; d != NULL; d = d->next )
+    {
+        if ( d->snoop_by == ch->desc
+          && d->character != NULL
+          && !IS_NPC(d->character)
+          && d->character->pcdata->is_bot )
+        {
+            d->snoop_by = NULL;
+        }
     }
 
     ch->pcdata->bot_watch_any = FALSE;

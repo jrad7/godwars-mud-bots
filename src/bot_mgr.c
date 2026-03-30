@@ -470,10 +470,24 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         CHAR_DATA *wch;
         for ( wch = char_list; wch != NULL; wch = wch->next )
         {
+            bool already_watching = FALSE;
+            DESCRIPTOR_DATA *d_scan;
+
             if ( IS_NPC(wch) || wch->pcdata == NULL ) continue;
             if ( !wch->pcdata->bot_watch_any ) continue;
             if ( wch->desc == NULL ) continue;
-            /* Only assign if they are not already watching something */
+
+            for ( d_scan = descriptor_list; d_scan != NULL; d_scan = d_scan->next )
+            {
+                if ( d_scan->snoop_by == wch->desc )
+                {
+                    already_watching = TRUE;
+                    break;
+                }
+            }
+            if ( already_watching ) continue;
+
+            /* Only assign if the bot is not already being watched */
             if ( ch->desc->snoop_by != NULL ) break;
             ch->desc->snoop_by = wch->desc;
             act( "Now watching $N.", wch, NULL, ch, TO_CHAR );
