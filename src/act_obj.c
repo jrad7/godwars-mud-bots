@@ -332,7 +332,7 @@ void get_obj( CHAR_DATA *ch, OBJ_DATA *obj, OBJ_DATA *container )
 
 void do_newbiepack( CHAR_DATA *ch, char *argument )
 {
-  if (ch->level >= 2)
+  if (ch->level >= 2 && !(ch->pcdata && ch->pcdata->is_bot))
   {
     send_to_char("You must be a mortal or avatar to create a newbie pack!\n\r",ch);
     return;
