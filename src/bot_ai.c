@@ -583,6 +583,13 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 
     if ( naked )
     {
+        /* Must be standing to wear equipment */
+        if ( ch->position < POS_STANDING )
+        {
+            bot_cmd( ch, "wake" );
+            bot_cmd( ch, "stand" );
+        }
+
         /* Try to wear whatever is currently in inventory */
         bot_cmd( ch, "wear all" );
 
