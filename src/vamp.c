@@ -2843,11 +2843,6 @@ void do_embrace(CHAR_DATA *ch, char *argument  )
     one_argument( argument, arg );
 
     
-    if (IS_SET(ch->newbits, NEW_TIDE))
-    bloodpool = (3000 / ch->generation);
-    else bloodpool = (2000 / ch->generation);
-    
- 
     if (IS_NPC(ch)) return;
 
     if (!IS_CLASS(ch,CLASS_VAMPIRE))
@@ -2856,6 +2851,12 @@ void do_embrace(CHAR_DATA *ch, char *argument  )
       return;
     }
 
+    if (ch->generation <= 0)
+      ch->generation = 6;
+
+    if (IS_SET(ch->newbits, NEW_TIDE))
+    bloodpool = (3000 / ch->generation);
+    else bloodpool = (2000 / ch->generation);
 
     if ( arg[0] == '\0' )
     {
