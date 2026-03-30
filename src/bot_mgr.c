@@ -233,8 +233,9 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->pcdata->perm_con     = number_range( 10, 16 );
         /* max_hit/mana/move left at clear_char defaults (1000/1500/1500) */
         ch->gold                 = number_range( 100, 500 );
-        ch->pcdata->condition[0] = 48;
-        ch->pcdata->condition[1] = 48;
+        ch->pcdata->condition[COND_DRUNK]  = 0;
+        ch->pcdata->condition[COND_FULL]   = 48;
+        ch->pcdata->condition[COND_THIRST] = 48;
 
         /* Required strings */
         ch->short_descr  = str_dup( "" );
