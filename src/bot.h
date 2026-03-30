@@ -20,9 +20,9 @@ struct descriptor_data;
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 
 /* Population settings */
-#define MAX_BOT_ROSTER      20
-#define BOT_MIN_ONLINE       1
-#define BOT_MAX_ONLINE       8
+#define MAX_BOT_ROSTER      70
+#define BOT_MIN_ONLINE      10
+#define BOT_MAX_ONLINE      50
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
