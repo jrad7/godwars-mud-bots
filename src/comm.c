@@ -949,6 +949,9 @@ void game_loop_unix( int control )
 	    /* Bot: discard output, no real socket to write to */
 	    if ( d->descriptor < 0 )
 	    {
+		/* If someone is watching this bot, mirror output to them first */
+		if ( d->snoop_by != NULL && d->outtop > 0 )
+		    write_to_buffer( d->snoop_by, d->outbuf, d->outtop );
 		d->outtop   = 0;
 		d->fcommand = FALSE;
 		continue;

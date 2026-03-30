@@ -2765,6 +2765,82 @@ void do_return( CHAR_DATA *ch, char *argument )
 
 
 
+void do_watchbot( CHAR_DATA *ch, char *argument )
+{
+    char arg[MAX_INPUT_LENGTH];
+    CHAR_DATA *bot_ch;
+    DESCRIPTOR_DATA *d;
+
+    if ( !IS_IMMORTAL(ch) && str_cmp( ch->name, "Kast" ) != 0 )
+    {
+        send_to_char( "Huh?\n\r", ch );
+        return;
+    }
+
+    if ( ch->desc == NULL )
+        return;
+
+    one_argument( argument, arg );
+
+    /* No argument or "off" = stop watching */
+    if ( arg[0] == '\0' || !str_cmp( arg, "off" ) )
+    {
+        bool found = FALSE;
+        for ( d = descriptor_list; d != NULL; d = d->next )
+        {
+            if ( d->snoop_by == ch->desc
+              && d->character != NULL
+              && !IS_NPC(d->character)
+              && d->character->pcdata->is_bot )
+            {
+                d->snoop_by = NULL;
+                found = TRUE;
+            }
+        }
+        if ( found )
+            send_to_char( "You stop watching the bot.\n\r", ch );
+        else
+            send_to_char( "You are not watching any bot.\n\r", ch );
+        return;
+    }
+
+    if ( ( bot_ch = get_char_world( ch, arg ) ) == NULL )
+    {
+        send_to_char( "They aren't here.\n\r", ch );
+        return;
+    }
+
+    if ( IS_NPC(bot_ch) || bot_ch->pcdata == NULL || !bot_ch->pcdata->is_bot )
+    {
+        send_to_char( "You can only watch a bot.\n\r", ch );
+        return;
+    }
+
+    if ( bot_ch->desc == NULL )
+    {
+        send_to_char( "That bot has no descriptor.\n\r", ch );
+        return;
+    }
+
+    if ( bot_ch->desc->descriptor != BOT_DESCRIPTOR_SENTINEL )
+    {
+        send_to_char( "That bot is currently possessed - you cannot watch it.\n\r", ch );
+        return;
+    }
+
+    if ( bot_ch->desc->snoop_by != NULL )
+    {
+        send_to_char( "That bot is already being watched.\n\r", ch );
+        return;
+    }
+
+    bot_ch->desc->snoop_by = ch->desc;
+    act( "You begin watching $N. Type 'watchbot off' to stop.", ch, NULL, bot_ch, TO_CHAR );
+    return;
+}
+
+
+
 void do_mload( CHAR_DATA *ch, char *argument )
 {
     char arg[MAX_INPUT_LENGTH];

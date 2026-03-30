@@ -43,6 +43,15 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
     char buf[MAX_INPUT_LENGTH];
     strncpy( buf, cmd, sizeof(buf)-1 );
     buf[sizeof(buf)-1] = '\0';
+
+    /* If a player is watching this bot, echo the command before executing */
+    if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+    {
+        char echo[MAX_INPUT_LENGTH + 16];
+        snprintf( echo, sizeof(echo), "[BOT> %s]\n\r", buf );
+        write_to_buffer( ch->desc->snoop_by, echo, 0 );
+    }
+
     interpret( ch, buf );
 }
 
