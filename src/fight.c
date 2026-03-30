@@ -32,6 +32,29 @@
 
 
 /*
+ * Grinding Mobs Configuration
+ * Change these multipliers and add new vnum ranges to adjust grinding areas.
+ */
+#define GRIND_XP_MULT_NUM      3
+#define GRIND_XP_MULT_DEN      2
+#define GRIND_CP_MULT_NUM      3
+#define GRIND_CP_MULT_DEN      2
+
+bool is_grind_mob(CHAR_DATA *victim)
+{
+    int vnum;
+    if (!victim || !IS_NPC(victim) || !victim->pIndexData) return FALSE;
+        
+    vnum = victim->pIndexData->vnum;
+    
+    if (vnum >= 3700 && vnum <= 3760) return TRUE; /* School */
+    if (vnum >= 100 && vnum <= 129)   return TRUE; /* Smurf */
+    if (vnum >= 9201 && vnum <= 9260) return TRUE; /* Canyon */
+    
+    return FALSE;
+}
+
+/*
  * Local functions.
  */
 void  autodrop        args((CHAR_DATA *ch));
@@ -2159,14 +2182,19 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
       {
         if (IS_NPC(victim) && !IS_SET(victim->act, ACT_NOEXP))
         {
+          int cp_gain = victim->level * 2;
+          if (is_grind_mob(victim))
+          {
+              cp_gain = (cp_gain * GRIND_CP_MULT_NUM) / GRIND_CP_MULT_DEN;
+          }
           if (IS_CLASS(ch, CLASS_DEMON)) 
           {
-            ch->pcdata->stats[DEMON_CURRENT] += victim->level*2;
-            ch->pcdata->stats[DEMON_TOTAL] += victim->level*2;
+            ch->pcdata->stats[DEMON_CURRENT] += cp_gain;
+            ch->pcdata->stats[DEMON_TOTAL] += cp_gain;
           }
           else
-            ch->pcdata->stats[DROW_POWER] += victim->level*2;
-          sprintf(buf,"You gain #y(#C%d#y)#n class points.\n\r", victim->level*2);
+            ch->pcdata->stats[DROW_POWER] += cp_gain;
+          sprintf(buf,"You gain #y(#C%d#y)#n class points.\n\r", cp_gain);
           if (!IS_SET(ch->act, PLR_BRIEF4)) send_to_char(buf,ch);
         }
       }
@@ -3390,6 +3418,12 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   if( xp < 0 ) xp = 0;
   if (xp > 0 && xp < 4000) xp = number_range(3000,5000);
   if (IS_NPC(victim) && (IS_SET(victim->act, ACT_NOEXP))) return 0;
+  
+  if (is_grind_mob(victim))
+  {
+      xp = (xp * GRIND_XP_MULT_NUM) / GRIND_XP_MULT_DEN;
+  }
+  
   return (int) xp;
 }
 

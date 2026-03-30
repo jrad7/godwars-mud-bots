@@ -17,7 +17,7 @@ An acolyte of Overlord Frag is here, grinning at you.
 He is big and bad.  Don't mess with him.
 ~
 67 136 1000 S
-10 -10 -20 1d1+29999 2d4+30
+10 -10 -20 5d1+149995 1d4+15
 0 0
 0 0 1
 #3701
@@ -30,7 +30,7 @@ Perhaps now would be a good time to flee from him!!!  If you don't flee, you
 would really suffer the consequences.
 ~
 67 8 0 S
-3 20 -99 1d1+50 1d1+0
+3 20 -99 5d1+250 1d1+0
 0 0
 0 0 0
 #3702
@@ -42,7 +42,7 @@ He looks mean, but you feel comfortable that you can kill him, especially since
 he is leashed up, and you are not.
 ~
 3 0 0 S
-4 20 10 1d1+10 1d3+0
+4 20 10 5d1+50 1d3+0
 100 0
 0 0 0
 #3703
@@ -54,7 +54,7 @@ He looks wimpy.  You feel comfortable that you can kill him, especially since
 he is leashed up, and you are not.
 ~
 131 0 0 S
-6 20 10 1d1+10 1d3+0
+6 20 10 5d1+50 1d3+0
 100 0
 0 0 0
 #3704
@@ -66,7 +66,7 @@ He looks mean, but you feel comfortable that you can kill him, especially since
 he is leashed up, and you are not.
 ~
 35 0 0 S
-14 20 10 1d1+10 1d3+0
+14 20 10 5d1+50 1d3+0
 100 0
 0 0 0
 #3705
@@ -78,7 +78,7 @@ He looks mean, but you feel comfortable that you can kill him, especially since
 he is leashed up, and you are not.
 ~
 163 0 0 S
-8 20 10 1d1+10 1d3+0
+8 20 10 5d1+50 1d3+0
 100 0
 0 0 0
 #3706
@@ -90,7 +90,7 @@ He looks mean, and you just might have a small problem killing him, but he
 looks like a great prize!!!
 ~
 3 512 0 S
-13 19 9 2d2+20 1d4+1
+13 19 9 10d2+100 1d4+0
 200 0
 0 0 0
 #3707
@@ -101,7 +101,7 @@ An adept of Overlord Kahn is here, contemplating your progress.
 He is big and bad.  Don't mess with him.
 ~
 67 136 1000 S
-5 -10 -20 1d1+29999 2d4+30
+5 -10 -20 5d1+149995 1d4+15
 0 0
 0 0 1
 #3709
@@ -112,7 +112,7 @@ A rabbit is bouncing around here.
 The rabbit smiles at you, completely harmless!
 ~
 193 0 100 S
-8 20 10 1d1+10 1d3+0
+8 20 10 5d1+50 1d3+0
 10 0
 0 0 0
 #3710
@@ -123,7 +123,7 @@ A lizard slithers up to you.
 It smiles at you, and tries to eat your leg.
 ~
 65 0 -100 S
-24 19 9 2d2+20 1d4+1
+24 19 9 10d2+100 1d4+0
 10 0
 0 0 0
 #3711
@@ -134,7 +134,7 @@ A boar tries to run you over.
 It grunts at you.
 ~
 65 0 0 S
-24 18 8 3d3+30 1d6+1
+24 18 8 15d3+150 1d6+0
 10 0
 0 0 0
 #3712
@@ -145,7 +145,7 @@ A fox is here staring at you.
 His fur might be worth money.
 ~
 193 0 100 S
-6 20 10 1d1+10 1d3+0
+6 20 10 5d1+50 1d3+0
 10 0
 0 0 0
 #3713
@@ -156,7 +156,7 @@ A snail is trying to get out of your way.
 You don't see much but slime about it.
 ~
 65 0 0 S
-8 21 10 1d1+0 1d1+0
+8 21 10 5d1+0 1d1+0
 2 0
 0 0 0
 #3714
@@ -167,7 +167,7 @@ A beast tries to feed off of you.
 It looks mean.  You'd better run.
 ~
 97 0 0 S
-14 16 6 5d5+55 1d6+3
+14 16 6 25d5+275 1d6+1
 50 0
 0 0 0
 #3715
@@ -178,7 +178,7 @@ A bear is here growling at you.
 The bear must be bigger than you!  It wants to rip your head off.
 ~
 65 0 0 S
-10 17 7 4d4+44 1d6+2
+10 17 7 20d4+220 1d6+1
 40 0
 0 0 0
 #3716
@@ -189,7 +189,7 @@ A wolf is here snarling at you.
 The wolf doesn't want to be bothered.
 ~
 65 0 0 S
-15 17 7 4d4+44 1d6+2
+15 17 7 20d4+220 1d6+1
 40 0
 0 0 0
 #3717
@@ -200,7 +200,7 @@ An adept of Frag is here, grinning and selling you things.
 He is big and bad.  Don't mess with him.
 ~
 67 136 1000 S
-65 -10 -20 1d1+29999 2d4+30
+65 -10 -20 5d1+149995 1d4+15
 0 0
 0 0 1
 #3718
@@ -211,7 +211,7 @@ An adept of Furey is here, training young students.
 He is big and bad.  Don't mess with him.
 ~
 579 136 1000 S
-65 -10 -20 1d1+29999 2d4+30
+65 -10 -20 5d1+149995 1d4+15
 0 0
 0 0 1
 #3719
@@ -222,7 +222,7 @@ The priest of Hatchet is ready to help you practice.
 He is big and bad.  Don't mess with him.
 ~
 1091 136 1000 S
-17 -10 -20 1d1+29999 2d4+30
+17 -10 -20 5d1+149995 1d4+15
 0 0
 0 0 1
 #3720
@@ -234,7 +234,7 @@ This horrible creature is your final test for mud school.  Kill him, and the
 diploma is yours.
 ~
 3 512 0 S
-5 18 8 2d4+30 1d6+1
+5 18 8 10d4+150 1d6+0
 300 0
 0 0 0
 #3721
@@ -253,7 +253,7 @@ ask him about the smurf village, the gnomes, the shire, or the dwarven
 drop-off centre?
 ~
 131 16936 1000 S
-26 2 2 1d1+30000 1d8+32
+26 2 2 5d1+150000 1d8+16
 100000 0
 0 0 1
 #0
@@ -651,7 +651,8 @@ T
 >ENTER<~
 The spirit says 'Welcome to mud school, $n!'
 
-The spirit says 'If you need any help, just ask.'~
+
+The spirit says 'If you need any help, just ask.'~
 copy~
 all~
 1048576 0 3721
@@ -695,147 +696,176 @@ T
 |axe*executioner*~
 The spirit says 'Here you go $n, maybe this axe will help!'.
 
-^MThe spirit gives $n $p.~
+
+^MThe spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this axe will help!'.
 
-^MThe spirit gives you $p.~
+
+^MThe spirit gives you $p.~
 all~
 1048608 3005 3721
 T
 |banner*light*~
 The spirit says 'Here you go $n, maybe this war banner will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this war banner will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 3716 3721
 T
 |breastplate*~
 The spirit says 'Here you go $n, maybe this breastplate will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this breastplate will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30333 3721
 T
 |helmet*~
 The spirit says 'Here you go $n, maybe this helmet will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this helmet will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30334 3721
 T
 |sleeves*~
 The spirit says 'Here you go $n, maybe this sleeves will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this sleeves will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30335 3721
 T
 |leggings*~
 The spirit says 'Here you go $n, maybe this leggings will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this leggings will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30336 3721
 T
 |gauntlets*~
 The spirit says 'Here you go $n, maybe this gauntlets will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this gauntlets will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30337 3721
 T
 |boots*~
 The spirit says 'Here you go $n, maybe this boots will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this boots will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30338 3721
 T
 |bracer*~
 The spirit says 'Here you go $n, maybe this bracer will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this bracer will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30339 3721
 T
 |longsword*~
 The spirit says 'Here you go $n, maybe this longsword will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this longsword will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30340 3721
 T
 |buckler*~
 The spirit says 'Here you go $n, maybe this buckler will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this buckler will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30341 3721
 T
 |ring*~
 The spirit says 'Here you go $n, maybe this ring will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this ring will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30342 3721
 T
 |collar*~
 The spirit says 'Here you go $n, maybe this collar will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this collar will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 30343 3721
 T
 |backpack*~
 The spirit says 'Here you go $n, maybe this backpack will help!'.
 
-The spirit gives $n $p.~
+
+The spirit gives $n $p.~
 The spirit says 'Here you go $n, maybe this backpack will help!'.
 
-The spirit gives you $p.~
+
+The spirit gives you $p.~
 all~
 1048608 1345 3721
 T
 |smurf*~
 The spirit says 'To get to the smurf village from recall,'.
 
-The spirit says 'Go 2 south, 3 west, and keep going north!'.~
+
+The spirit says 'Go 2 south, 3 west, and keep going north!'.~
 copy~
 all~
 1048576 0 3721
@@ -843,7 +873,8 @@ T
 |gnome*~
 The spirit says 'To get to the gnome village from recall,'.
 
-The spirit says 'Go 2 south, 5 east, and then go south.'.~
+
+The spirit says 'Go 2 south, 5 east, and then go south.'.~
 copy~
 all~
 1048576 0 3721
@@ -851,7 +882,8 @@ T
 |shire*~
 The spirit says 'To get to the shire from recall,'.
 
-The spirit says 'Go 2 south, 5 west, and then keep going north.'.~
+
+The spirit says 'Go 2 south, 5 west, and then keep going north.'.~
 copy~
 all~
 1048576 0 3721
@@ -859,7 +891,8 @@ T
 |dwarven*drop*~
 The spirit says 'To get to the dwarven drop-off centre from recall,'.
 
-The spirit says 'Go 2 south, 6 east, 1 down, then go south.'.~
+
+The spirit says 'Go 2 south, 6 east, 1 down, then go south.'.~
 copy~
 all~
 1048576 0 3721
