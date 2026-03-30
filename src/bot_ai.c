@@ -47,8 +47,10 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
     /* If a player is watching this bot, echo the command before executing */
     if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
     {
-        char echo[MAX_INPUT_LENGTH + 16];
-        snprintf( echo, sizeof(echo), "[BOT> %s]\n\r", buf );
+        char echo[MAX_INPUT_LENGTH + 128];
+        snprintf( echo, sizeof(echo), "<%dhp %dm %dmv %dxp> %s> %s\n\r", 
+                  ch->hit, ch->mana, ch->move, ch->exp,
+                  ch->name, buf );
         write_to_buffer( ch->desc->snoop_by, echo, 0 );
     }
 
