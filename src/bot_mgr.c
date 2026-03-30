@@ -174,6 +174,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     DESCRIPTOR_DATA *d;
     CHAR_DATA       *ch;
     BOT_DATA        *bot;
+    bool            is_new_bot = FALSE;
 
     if ( descriptor_free == NULL )
         d = alloc_perm( sizeof(*d) );
@@ -193,6 +194,8 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     }
     else
     {
+        is_new_bot = TRUE;
+
         if ( char_free == NULL )
             ch = alloc_perm( sizeof(*ch) );
         else
@@ -274,10 +277,6 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->pcdata->last_decap[0] = str_dup( "" );
         ch->pcdata->last_decap[1] = str_dup( "" );
 
-        /* Add to char_list */
-        ch->next  = char_list;
-        char_list = ch;
-
         {
             ROOM_INDEX_DATA *start_room = get_room_index( ROOM_VNUM_SCHOOL );
             if ( start_room == NULL ) start_room = get_room_index( ROOM_VNUM_LIMBO );
@@ -314,6 +313,10 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         save_char_obj( ch );
     }
 
+    /* Add to char_list for both NEW and RETURNING bots */
+    ch->next  = char_list;
+    char_list = ch;
+
     ch->pcdata->is_bot = TRUE;
     if ( !IS_SET(ch->extra, EXTRA_TRUSTED) )
         SET_BIT( ch->extra, EXTRA_TRUSTED );
@@ -341,6 +344,10 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_SCHOOL );
         if ( dest == NULL ) dest = get_room_index( ROOM_VNUM_LIMBO );
         char_to_room( ch, dest );
+    }
+    else if ( !is_new_bot )
+    {
+        char_to_room( ch, ch->in_room );
     }
 
     /* Ensure the bot has a valid physical form (hands, etc) to wear gear */

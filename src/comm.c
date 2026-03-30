@@ -62,6 +62,7 @@
 #endif
 
 #include "merc.h"
+#include "bot.h"
 
 
 /*
@@ -3193,6 +3194,7 @@ void send_to_char( const char *txt, CHAR_DATA *ch )
     {
         if ( txt[0] != '\0' && str_cmp(txt, "\n\r") )
         {
+#if BOT_DEBUG
             char buf[MAX_STRING_LENGTH * 2];
             sprintf(buf, "[BOT MSG -> %s]: %s", ch->name, txt);
             
@@ -3202,6 +3204,7 @@ void send_to_char( const char *txt, CHAR_DATA *ch )
                 buf[--len] = '\0';
                 
             log_string(buf);
+#endif
         }
     }
 
@@ -3420,12 +3423,14 @@ void act( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2,
 	
     if ( !IS_NPC(to) && to->pcdata != NULL && to->pcdata->is_bot )
     {
+#if BOT_DEBUG
         char logb[MAX_STRING_LENGTH * 2];
         sprintf(logb, "[BOT ACT -> %s]: %s", to->name, buf);
         int len = strlen(logb);
         while(len > 0 && (logb[len-1] == '\r' || logb[len-1] == '\n'))
             logb[--len] = '\0';
         log_string(logb);
+#endif
     }
 
 	if (to->desc && (to->desc->connected == CON_PLAYING))
@@ -3632,12 +3637,14 @@ void act2( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2
 	
     if ( !IS_NPC(to) && to->pcdata != NULL && to->pcdata->is_bot )
     {
+#if BOT_DEBUG
         char logb[MAX_STRING_LENGTH * 2];
         sprintf(logb, "[BOT ACT2 -> %s]: %s", to->name, buf);
         int len = strlen(logb);
         while(len > 0 && (logb[len-1] == '\r' || logb[len-1] == '\n'))
             logb[--len] = '\0';
         log_string(logb);
+#endif
     }
 
 	write_to_buffer( to->desc, buf, point - buf );
