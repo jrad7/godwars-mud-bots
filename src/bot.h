@@ -22,7 +22,7 @@ struct descriptor_data;
 /* Population settings */
 #define MAX_BOT_ROSTER      20
 #define BOT_MIN_ONLINE       1
-#define BOT_MAX_ONLINE       3
+#define BOT_MAX_ONLINE       7
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
