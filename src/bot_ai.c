@@ -108,7 +108,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 #endif
 
     bot->state       = new_state;
-    bot->cmd_delay   = number_range( 1, 3 );
+    bot->cmd_delay   = number_range( 1, 2 );
 
     switch ( new_state )
     {
@@ -862,7 +862,7 @@ void bot_update( CHAR_DATA *ch )
     if ( bot->cmd_delay > 0 ) { bot->cmd_delay--; return; }  /* Wait before acting */
 
     /* Reset cmd delay - human-like pause between commands */
-    bot->cmd_delay = number_range( 1, 4 );
+    bot->cmd_delay = number_range( 1, 2 );
 
     /* Drain navigation queue before normal AI */
     if ( bot->nav_n > 0 )
