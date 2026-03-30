@@ -2786,6 +2786,7 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     if ( arg[0] == '\0' || !str_cmp( arg, "off" ) )
     {
         bool found = FALSE;
+        ch->pcdata->bot_watch_any = FALSE;
         for ( d = descriptor_list; d != NULL; d = d->next )
         {
             if ( d->snoop_by == ch->desc
@@ -2801,6 +2802,17 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
             send_to_char( "You stop watching the bot.\n\r", ch );
         else
             send_to_char( "You are not watching any bot.\n\r", ch );
+        return;
+    }
+
+    /* "any" = pick a random bot now and auto-reassign on each logout */
+    if ( !str_cmp( arg, "any" ) )
+    {
+        ch->pcdata->bot_watch_any = TRUE;
+        if ( bot_watch_assign_random( ch, NULL ) )
+            send_to_char( "Auto-watch enabled. Type 'watchbot off' to stop.\n\r", ch );
+        else
+            send_to_char( "No bots are online right now. You will be assigned one when one logs in.\n\r", ch );
         return;
     }
 
@@ -2834,6 +2846,7 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
         return;
     }
 
+    ch->pcdata->bot_watch_any = FALSE;
     bot_ch->desc->snoop_by = ch->desc;
     act( "You begin watching $N. Type 'watchbot off' to stop.", ch, NULL, bot_ch, TO_CHAR );
     return;

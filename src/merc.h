@@ -2428,6 +2428,7 @@ struct pc_data
     /* Bot system */
     bool                is_bot;         /* TRUE if this is a bot character  */
     BOT_DATA           *botdata;        /* Bot AI data, NULL for real players */
+    bool                bot_watch_any;  /* TRUE = auto-reassign to next bot when current logs out */
 };
 
 

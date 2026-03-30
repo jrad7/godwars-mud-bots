@@ -464,6 +464,60 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     sprintf( log_buf, "Bot login: %s", ch->name );
     log_string( log_buf );
 
+    /* If a player is waiting in auto-watch mode with no bot to watch, assign them now */
+    if ( ch->desc != NULL )
+    {
+        CHAR_DATA *wch;
+        for ( wch = char_list; wch != NULL; wch = wch->next )
+        {
+            if ( IS_NPC(wch) || wch->pcdata == NULL ) continue;
+            if ( !wch->pcdata->bot_watch_any ) continue;
+            if ( wch->desc == NULL ) continue;
+            /* Only assign if they are not already watching something */
+            if ( ch->desc->snoop_by != NULL ) break;
+            ch->desc->snoop_by = wch->desc;
+            act( "Now watching $N.", wch, NULL, ch, TO_CHAR );
+            break;
+        }
+    }
+
+    return TRUE;
+}
+
+/* -----------------------------------------------------------------------
+ * bot_watch_assign_random - point a watcher's snoop to a random available bot
+ *
+ * Scans char_list for bots with a sentinel descriptor and no current watcher.
+ * Picks one at random (reservoir sample) and sets its snoop_by.
+ * Returns TRUE and sends a notice to the watcher if a bot was found.
+ * ----------------------------------------------------------------------- */
+bool bot_watch_assign_random( CHAR_DATA *watcher, CHAR_DATA *skip )
+{
+    CHAR_DATA *ch;
+    CHAR_DATA *pick = NULL;
+    int        count = 0;
+
+    if ( watcher->desc == NULL )
+        return FALSE;
+
+    for ( ch = char_list; ch != NULL; ch = ch->next )
+    {
+        if ( IS_NPC(ch) || !ch->pcdata->is_bot ) continue;
+        if ( ch == skip ) continue;
+        if ( ch->desc == NULL ) continue;
+        if ( ch->desc->descriptor != BOT_DESCRIPTOR_SENTINEL ) continue;
+        if ( ch->desc->snoop_by != NULL ) continue;
+
+        count++;
+        if ( number_range( 1, count ) == 1 )
+            pick = ch;
+    }
+
+    if ( pick == NULL )
+        return FALSE;
+
+    pick->desc->snoop_by = watcher->desc;
+    act( "Now watching $N.", watcher, NULL, pick, TO_CHAR );
     return TRUE;
 }
 
@@ -510,6 +564,31 @@ void bot_logout( CHAR_DATA *ch )
     {
         do_flee( ch, "" );
         ch->fighting = NULL;
+    }
+
+    /* If a player is watching this bot in auto-any mode, reassign them now,
+       before do_quit/close_socket clears snoop_by and frees the descriptor. */
+    if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+    {
+        DESCRIPTOR_DATA *watcher_desc = ch->desc->snoop_by;
+        CHAR_DATA       *watcher      = watcher_desc->original
+                                        ? watcher_desc->original
+                                        : watcher_desc->character;
+
+        ch->desc->snoop_by = NULL;   /* detach before do_quit tears things down */
+
+        if ( watcher != NULL && watcher->pcdata != NULL
+          && watcher->pcdata->bot_watch_any )
+        {
+            if ( !bot_watch_assign_random( watcher, ch ) )
+                write_to_buffer( watcher_desc,
+                    "Bot logged out. No other bots online to watch.\n\r", 0 );
+        }
+        else
+        {
+            write_to_buffer( watcher_desc,
+                "Bot logged out.\n\r", 0 );
+        }
     }
 
     ch->fight_timer = 0;   /* prevent do_quit silent block */
