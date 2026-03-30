@@ -207,4 +207,5 @@ static bool bot_foo_between_fights( CHAR_DATA *ch )
 | [bot_ai_vampire.c](bot_ai_vampire.c) | Vampire | All five (fully implemented) |
 | [bot_ai_monk.c](bot_ai_monk.c) | Monk | `between_fights` (autostance) |
 | [bot_ai_ninja.c](bot_ai_ninja.c) | Ninja | `should_train`, `do_train` (belt progression) |
-| [bot_ai_demon.c](bot_ai_demon.c) | Demon | None (all NULL stub) |
+| [bot_ai_demon.c](bot_ai_demon.c) | Demon | All four: `should_train`, `do_train`, `buff_check`, `combat_action` |
+| [bot_ai_ninja.c](bot_ai_ninja.c) | Ninja | All four: `should_train`, `do_train`, `buff_check`, `combat_action` |
