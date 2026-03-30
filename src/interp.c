@@ -1109,6 +1109,7 @@ LOG_NORMAL, 8, DISC_VAMP_THAN, 3 }, */
     { "slookup",		do_slookup,	POS_DEAD,	 	 8,  LOG_NORMAL, 0,0,0 },
     { "snoop",		do_snoop,	POS_DEAD,	 	 8,  LOG_NORMAL, 0,0,0	},
     { "switch",		do_switch,	POS_DEAD,	 	 8,  LOG_ALWAYS, 0,0,0	},
+    { "possess",	do_possess,	POS_DEAD,	 	 8,  LOG_ALWAYS, 0,0,0	},
     { "samtalk",		do_hightalk,POS_DEAD,	 	 1,  LOG_NORMAL, 16,0,0 },
     { "magetalk",		do_magetalk,POS_DEAD,	 	 2,  LOG_NORMAL, 2,0,0	},
     { "vtalk",		do_vamptalk,POS_DEAD,	 	 1,  LOG_NORMAL, 0,0,0	},

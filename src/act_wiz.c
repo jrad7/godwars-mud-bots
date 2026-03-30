@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 #include "merc.h"
+#include "bot.h"
 #include <unistd.h>
 
 
@@ -2636,6 +2637,85 @@ void do_switch( CHAR_DATA *ch, char *argument )
 
 
 
+void do_possess( CHAR_DATA *ch, char *argument )
+{
+    char arg[MAX_INPUT_LENGTH];
+    CHAR_DATA *bot_ch;
+    DESCRIPTOR_DATA *d_bot, *d_prev, *d_iter;
+
+    if ( !IS_IMMORTAL(ch) && str_cmp( ch->name, "Kast" ) != 0 )
+    {
+        send_to_char( "Huh?\n\r", ch );
+        return;
+    }
+
+    one_argument( argument, arg );
+
+    if ( arg[0] == '\0' )
+    {
+        send_to_char( "Possess which bot?\n\r", ch );
+        return;
+    }
+
+    if ( ch->desc == NULL )
+        return;
+
+    if ( ch->desc->original != NULL )
+    {
+        send_to_char( "You are already switched.\n\r", ch );
+        return;
+    }
+
+    if ( ( bot_ch = get_char_world( ch, arg ) ) == NULL )
+    {
+        send_to_char( "They aren't here.\n\r", ch );
+        return;
+    }
+
+    if ( IS_NPC(bot_ch) || bot_ch->pcdata == NULL || !bot_ch->pcdata->is_bot )
+    {
+        send_to_char( "You can only possess a bot.\n\r", ch );
+        return;
+    }
+
+    if ( bot_ch->desc == NULL || bot_ch->desc->descriptor != BOT_DESCRIPTOR_SENTINEL )
+    {
+        send_to_char( "That bot is already being possessed.\n\r", ch );
+        return;
+    }
+
+    /* Remove the bot's fake descriptor from descriptor_list and recycle it */
+    d_bot  = bot_ch->desc;
+    d_prev = NULL;
+    for ( d_iter = descriptor_list; d_iter != NULL; d_iter = d_iter->next )
+    {
+        if ( d_iter == d_bot )
+        {
+            if ( d_prev != NULL )
+                d_prev->next = d_bot->next;
+            else
+                descriptor_list = d_bot->next;
+            break;
+        }
+        d_prev = d_iter;
+    }
+    d_bot->next     = descriptor_free;
+    descriptor_free = d_bot;
+
+    /* Swap the player's real descriptor into the bot's body */
+    SET_BIT(ch->extra, EXTRA_SWITCH);
+    ch->desc->character = bot_ch;
+    ch->desc->original  = ch;
+    bot_ch->desc        = ch->desc;
+    ch->desc            = NULL;
+
+    act( "$n's eyes glaze over as $e slips into $N's mind.", ch, NULL, bot_ch, TO_ROOM );
+    send_to_char( "You slip into the bot's mind. Type 'immreturn' to leave.\n\r", bot_ch );
+    return;
+}
+
+
+
 void do_return( CHAR_DATA *ch, char *argument )
 {
     char buf[MAX_STRING_LENGTH];
@@ -2656,8 +2736,30 @@ void do_return( CHAR_DATA *ch, char *argument )
     REMOVE_BIT(ch->desc->original->extra, EXTRA_SWITCH);
     ch->desc->character       = ch->desc->original;
     ch->desc->original        = NULL;
-    ch->desc->character->desc = ch->desc; 
+    ch->desc->character->desc = ch->desc;
     ch->desc                  = NULL;
+
+    /* If we just left a bot body, restore its fake sentinel descriptor
+       so the AI heartbeat can pick it back up. */
+    if ( !IS_NPC(ch) && ch->pcdata != NULL && ch->pcdata->is_bot )
+    {
+        DESCRIPTOR_DATA *d_new;
+        if ( descriptor_free == NULL )
+            d_new = alloc_perm( sizeof(*d_new) );
+        else
+        {
+            d_new           = descriptor_free;
+            descriptor_free = descriptor_free->next;
+        }
+        init_descriptor( d_new, BOT_DESCRIPTOR_SENTINEL );
+        d_new->host          = str_dup( "bot" );
+        d_new->lookup_status = STATUS_DONE;
+        d_new->connected     = CON_PLAYING;
+        d_new->character     = ch;
+        ch->desc             = d_new;
+        d_new->next          = descriptor_list;
+        descriptor_list      = d_new;
+    }
     return;
 }
 

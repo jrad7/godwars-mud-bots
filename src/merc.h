@@ -4033,6 +4033,7 @@ DECLARE_DO_FUN( do_summon	);
 DECLARE_DO_FUN(	do_nosummon	);
 DECLARE_DO_FUN( do_notravel	);
 DECLARE_DO_FUN(	do_switch	);
+DECLARE_DO_FUN(	do_possess	);
 DECLARE_DO_FUN( do_embrace      );
 DECLARE_DO_FUN( do_diablerise   );
 DECLARE_DO_FUN( do_entrance     );

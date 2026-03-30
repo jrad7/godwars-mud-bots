@@ -469,6 +469,9 @@ void bot_ai_tick( void )
     {
         ch_next = ch->next;
         if ( IS_NPC(ch) || !ch->pcdata->is_bot ) continue;
+        /* Skip if a real player has taken over this bot via do_possess */
+        if ( ch->desc != NULL && ch->desc->descriptor != BOT_DESCRIPTOR_SENTINEL )
+            continue;
         bot_update( ch );
     }
 }
