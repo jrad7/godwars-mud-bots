@@ -1645,6 +1645,7 @@ void area_update( void )
 	/*
 	 * Check age and reset.
 	 * Note: Mud School resets every 3 minutes (not 15).
+	 * Note: Smurf Village (bot grinding area) also resets every 3 minutes.
 	 */
 	if ( pArea->nplayer == 0 || pArea->age >= 15 )
 	{
@@ -1653,6 +1654,9 @@ void area_update( void )
 	    reset_area( pArea );
 	    pArea->age = number_range( 0, 3 );
 	    pRoomIndex = get_room_index( ROOM_VNUM_SCHOOL );
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 3;
+	    pRoomIndex = get_room_index( 104 );  /* Smurf Village entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
 		pArea->age = 15 - 3;
 	}
