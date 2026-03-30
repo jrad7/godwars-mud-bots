@@ -17,6 +17,9 @@
 #include "merc.h"
 #include "bot.h"
 
+/* Defined locally in fight.c - index into ch->stance[] for autostance setting */
+#define MONK_AUTODROP  12
+
 /* Forward declaration - defined in kav_fight.c */
 void do_stance( CHAR_DATA *ch, char *argument );
 
