@@ -128,6 +128,9 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
             bot_nav_queue( bot, "south" );
         }
         break;
+    case BOT_TRAINING:
+        bot->state_timer = number_range( 5, 15 );     /* short burst, then back to grind */
+        break;
     case BOT_RESTING:
         bot->state_timer = number_range( 20, 60 );    /* 20-60 seconds */
         break;
@@ -143,6 +146,100 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 /* -----------------------------------------------------------------------
  * State helpers
  * ----------------------------------------------------------------------- */
+
+/*
+ * Returns TRUE if the bot has exp worth spending on stats or class rank.
+ */
+static bool bot_should_train( CHAR_DATA *ch )
+{
+    int hp_cap = UMIN( 120000, 20000 + 4000 * ch->pkill );
+
+    if ( ch->max_hit  < hp_cap         && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+    if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
+      && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
+    if ( ch->max_move < 10000          && ch->exp >= ch->max_move + 1 ) return TRUE;
+
+    /* Vampire age milestones */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    {
+        if ( ch->pcdata->rank <= AGE_NEONATE && ch->exp >= 1500000  ) return TRUE;
+        if ( ch->pcdata->rank == AGE_ANCILLA && ch->exp >= 7500000  ) return TRUE;
+        if ( ch->pcdata->rank == AGE_ELDER   && ch->exp >= 15000000 ) return TRUE;
+        if ( ch->pcdata->rank == AGE_METHUSELAH && ch->exp >= 30000000 ) return TRUE;
+        if ( ch->pcdata->rank == AGE_LA_MAGRA   && ch->exp >= 60000000 ) return TRUE;
+    }
+
+    /* Ninja belt milestones (cheapest is 5M) */
+    if ( IS_CLASS(ch, CLASS_NINJA) && ch->pcdata->rank < BELT_TEN
+      && ch->exp >= 5000000 )
+        return TRUE;
+
+    return FALSE;
+}
+
+/*
+ * Execute one round of training commands.
+ * Returns TRUE if at least one train command was issued.
+ */
+static bool bot_do_train( CHAR_DATA *ch )
+{
+    int hp_cap = UMIN( 120000, 20000 + 4000 * ch->pkill );
+
+    /* Vampire age progression */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    {
+        if ( ch->pcdata->rank <= AGE_NEONATE && ch->exp >= 1500000 )
+            { bot_cmd( ch, "train ancilla" );    return TRUE; }
+        if ( ch->pcdata->rank == AGE_ANCILLA && ch->exp >= 7500000 )
+            { bot_cmd( ch, "train elder" );      return TRUE; }
+        if ( ch->pcdata->rank == AGE_ELDER && ch->exp >= 15000000 )
+            { bot_cmd( ch, "train methuselah" ); return TRUE; }
+        if ( ch->pcdata->rank == AGE_METHUSELAH && ch->exp >= 30000000 )
+            { bot_cmd( ch, "train lamagra" );    return TRUE; }
+        if ( ch->pcdata->rank == AGE_LA_MAGRA && ch->exp >= 60000000 )
+            { bot_cmd( ch, "train trueblood" );  return TRUE; }
+    }
+
+    /* Ninja belt progression */
+    if ( IS_CLASS(ch, CLASS_NINJA) )
+    {
+        static const struct { int from_rank; int cost; const char *cmd; } belts[] = {
+            { 0,         5000000,  "train belt1"  },
+            { BELT_ONE,  10000000, "train belt2"  },
+            { BELT_TWO,  15000000, "train belt3"  },
+            { BELT_THREE,20000000, "train belt4"  },
+            { BELT_FOUR, 25000000, "train belt5"  },
+            { BELT_FIVE, 30000000, "train belt6"  },
+            { BELT_SIX,  35000000, "train belt7"  },
+            { BELT_SEVEN,40000000, "train belt8"  },
+            { BELT_EIGHT,45000000, "train belt9"  },
+            { BELT_NINE, 50000000, "train belt10" },
+            { -1, 0, NULL }
+        };
+        int i;
+        for ( i = 0; belts[i].from_rank >= 0; i++ )
+        {
+            if ( ch->pcdata->rank == belts[i].from_rank
+              && ch->exp >= belts[i].cost )
+            { bot_cmd( ch, belts[i].cmd ); return TRUE; }
+        }
+    }
+
+    /* Primary: dump all available exp into hp */
+    if ( ch->max_hit < hp_cap && ch->exp >= ch->max_hit + 1 )
+        { bot_cmd( ch, "train hp all" );   return TRUE; }
+
+    /* Secondary: keep mana at parity with hp */
+    if ( ch->max_mana < ch->max_hit && ch->max_mana < hp_cap
+      && ch->exp >= ch->max_mana + 1 )
+        { bot_cmd( ch, "train mana all" ); return TRUE; }
+
+    /* Tertiary: keep move above a floor */
+    if ( ch->max_move < 10000 && ch->exp >= ch->max_move + 1 )
+        { bot_cmd( ch, "train move all" ); return TRUE; }
+
+    return FALSE;
+}
 
 static bool bot_is_healthy( CHAR_DATA *ch )
 {
@@ -287,6 +384,11 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
             bot_change_state( ch, bot, BOT_RESTING );
             return;
         }
+        if ( bot_should_train(ch) )
+        {
+            bot_change_state( ch, bot, BOT_TRAINING );
+            return;
+        }
         /* Weighted state pick */
         int roll = number_range( 1, 100 );
         if ( roll <= 40 )
@@ -364,7 +466,12 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     }
 
     if ( bot->state_timer <= 0 )
-        bot_change_state( ch, bot, BOT_IDLE );
+    {
+        if ( bot_should_train(ch) )
+            bot_change_state( ch, bot, BOT_TRAINING );
+        else
+            bot_change_state( ch, bot, BOT_IDLE );
+    }
 }
 
 static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
@@ -398,6 +505,20 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
             bot_cmd( ch, "stand" );
         bot_change_state( ch, bot, BOT_IDLE );
     }
+}
+
+static void bot_state_training( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    /* Abort if attacked */
+    if ( ch->position == POS_FIGHTING )
+    {
+        bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    /* Attempt to train; if nothing left or timer expired, resume grinding */
+    if ( !bot_do_train(ch) || bot->state_timer <= 0 )
+        bot_change_state( ch, bot, BOT_GRINDING );
 }
 
 static void bot_state_logging_out( CHAR_DATA *ch, BOT_DATA *bot )
@@ -502,6 +623,7 @@ void bot_update( CHAR_DATA *ch )
     case BOT_IDLE:        bot_state_idle(       ch, bot ); break;
     case BOT_EXPLORING:   bot_state_exploring(  ch, bot ); break;
     case BOT_GRINDING:    bot_state_grinding(   ch, bot ); break;
+    case BOT_TRAINING:    bot_state_training(   ch, bot ); break;
     case BOT_RESTING:     bot_state_resting(    ch, bot ); break;
     case BOT_LOGGING_OUT: bot_state_logging_out(ch, bot ); break;
     default:

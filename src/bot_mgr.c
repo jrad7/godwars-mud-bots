@@ -156,6 +156,44 @@ void save_bot_roster( void )
  * Internal helpers
  * ----------------------------------------------------------------------- */
 
+/*
+ * Map a BOT_CLASS_* preference to a CLASS_* value and apply class-specific
+ * setup (disciplines, beast score, etc.) to a freshly created bot character.
+ * Only call this for new bots that have no class yet (ch->class == 0).
+ */
+static void bot_apply_class( CHAR_DATA *ch, int class_pref )
+{
+    switch ( class_pref )
+    {
+    case BOT_CLASS_VAMPIRE:
+        ch->class = CLASS_VAMPIRE;
+        ch->beast = 30;
+        set_learnable_disciplines( ch );
+        break;
+
+    case BOT_CLASS_MONK:
+        ch->class = CLASS_MONK;
+        /* no special disciplines for monk */
+        break;
+
+    case BOT_CLASS_NINJA:
+        ch->class = CLASS_NINJA;
+        /* no special disciplines for ninja */
+        break;
+
+    case BOT_CLASS_DEMON:
+        ch->class = CLASS_DEMON;
+        set_learnable_disciplines( ch );
+        break;
+
+    default:
+        /* Fallback: pick demon */
+        ch->class = CLASS_DEMON;
+        set_learnable_disciplines( ch );
+        break;
+    }
+}
+
 static int count_online_bots( void )
 {
     int count = 0, i;
@@ -225,17 +263,12 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->sex                  = number_range( 1, 2 );
         ch->level                = 1;
         ch->trust                = 0;
-        ch->pcdata->perm_str     = number_range( 12, 16 );
-        ch->pcdata->perm_int     = number_range( 12, 16 );
-        ch->pcdata->perm_wis     = number_range( 12, 16 );
-        ch->pcdata->perm_dex     = number_range( 12, 16 );
-        ch->pcdata->perm_con     = number_range( 12, 16 );
-        ch->max_hit              = 5000;
-        ch->hit                  = ch->max_hit;
-        ch->max_mana             = 5000;
-        ch->mana                 = ch->max_mana;
-        ch->max_move             = 5000;
-        ch->move                 = ch->max_move;
+        ch->pcdata->perm_str     = number_range( 10, 16 );
+        ch->pcdata->perm_int     = number_range( 10, 16 );
+        ch->pcdata->perm_wis     = number_range( 10, 16 );
+        ch->pcdata->perm_dex     = number_range( 10, 16 );
+        ch->pcdata->perm_con     = number_range( 10, 16 );
+        /* max_hit/mana/move left at clear_char defaults (1000/1500/1500) */
         ch->gold                 = number_range( 100, 500 );
         ch->pcdata->condition[0] = 48;
         ch->pcdata->condition[1] = 48;
@@ -283,7 +316,6 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
             char_to_room( ch, start_room );
         }
 
-        set_learnable_disciplines( ch );
         ch->form = 1048575;
         do_newbiepack( ch, "" );
         do_wear( ch, "all" );
@@ -310,7 +342,6 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         }
 #endif
 
-        save_char_obj( ch );
     }
 
     /* Add to char_list for both NEW and RETURNING bots */
@@ -353,6 +384,14 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     /* Ensure the bot has a valid physical form (hands, etc) to wear gear */
     if ( ch->form == 0 )
         ch->form = 1048575;
+
+    /* Apply class for any bot that lacks one (new bots or old saves pre-class) */
+    if ( ch->class == 0 )
+    {
+        if ( ch->level < 3 ) ch->level = 3;
+        bot_apply_class( ch, roster->class_pref );
+    }
+    save_char_obj( ch );
 
     /* Sanity check: if bot loaded from file but has no gear, give them a newbie pack */
     if ( ch->carrying == NULL && ch->level == 1 )
@@ -515,9 +554,19 @@ void bot_manager_update( void )
 
     if ( online < target )
     {
-        for ( i = 0; i < bot_roster_count; i++ )
+        /* Build a shuffled index list so selection is random each tick */
+        int order[MAX_BOT_ROSTER];
+        int n = bot_roster_count;
+        for ( i = 0; i < n; i++ ) order[i] = i;
+        for ( i = n - 1; i > 0; i-- )
         {
-            BOT_ROSTER_ENTRY *r = &bot_roster[i];
+            int j = number_range( 0, i );
+            int tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        }
+
+        for ( i = 0; i < n; i++ )
+        {
+            BOT_ROSTER_ENTRY *r = &bot_roster[ order[i] ];
             if ( r->retired || r->online ) continue;
             if ( r->offline_until != 0 && current_time < r->offline_until ) continue;
 
