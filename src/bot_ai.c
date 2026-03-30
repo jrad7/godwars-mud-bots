@@ -58,7 +58,7 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
 /* Queue a navigation command to be executed before normal AI resumes */
 static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 {
-    if ( bot->nav_n < 8 )
+    if ( bot->nav_n < 24 )
     {
         strncpy( bot->nav_cmds[bot->nav_n], cmd, sizeof(bot->nav_cmds[0])-1 );
         bot->nav_cmds[bot->nav_n][sizeof(bot->nav_cmds[0])-1] = '\0';
@@ -83,6 +83,8 @@ static const struct {
 } bot_area_rules[] = {
     /* Mud School / newbie arena (3700-3760): don't go up (exits back to temple) */
     { 3700, 3760, DIRMASK(DIR_UP) },
+    /* Elemental Canyon entrance (9201): don't go north back out to the world */
+    { 9201, 9201, DIRMASK(DIR_NORTH) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -141,18 +143,19 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_GRINDING:
         bot->state_timer = number_range( 60, 180 );   /* 1-3 minutes */
         bot->grind_attempts = 0;
-        /* Navigate to newbie area or next tier area */
+        /* Navigate to grinding area based on power tier */
         if ( ch->max_hit < 5000 )
         {
+            /* Tier 1 - newbie area: recall -> up -> open door -> south */
             bot->nav_n = 0;
             bot_nav_queue( bot, "recall" );
             bot_nav_queue( bot, "up" );
             bot_nav_queue( bot, "open door" );
             bot_nav_queue( bot, "south" );
         }
-        else
+        else if ( ch->max_hit < 30000 )
         {
-            /* Navigate to Smurf Village: recall -> 2 south -> 3 west -> north */
+            /* Tier 2 - Smurf Village: recall -> 2S -> 3W -> N */
             bot->nav_n = 0;
             bot_nav_queue( bot, "recall" );
             bot_nav_queue( bot, "south" );
@@ -161,6 +164,31 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
             bot_nav_queue( bot, "west" );
             bot_nav_queue( bot, "west" );
             bot_nav_queue( bot, "north" );
+        }
+        else
+        {
+            /* Tier 3 - Elemental Canyon: recall(3001) -> 2S -> 6E -> 4S -> 2E -> S -> 2E -> D -> S */
+            bot->nav_n = 0;
+            bot_nav_queue( bot, "recall" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "east" );
+            bot_nav_queue( bot, "down" );
+            bot_nav_queue( bot, "south" );
         }
         break;
     case BOT_TRAINING:

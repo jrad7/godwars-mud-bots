@@ -1659,6 +1659,9 @@ void area_update( void )
 	    pRoomIndex = get_room_index( 104 );  /* Smurf Village entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
 		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 9201 );  /* Elemental Canyon entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	}
     }
 

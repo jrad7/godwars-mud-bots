@@ -104,7 +104,7 @@ struct bot_data {
     int                 session_max;        /* Max seconds for session     */
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
-    char                nav_cmds[8][32];   /* Queued navigation commands  */
+    char                nav_cmds[24][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
 };
 typedef struct bot_data BOT_DATA;
