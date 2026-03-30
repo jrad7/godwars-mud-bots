@@ -113,6 +113,32 @@ typedef struct bot_data BOT_DATA;
 extern BOT_ROSTER_ENTRY bot_roster[MAX_BOT_ROSTER];
 extern int              bot_roster_count;
 
+/* -----------------------------------------------------------------------
+ * Class AI vtable - one entry per BOT_CLASS_*
+ *
+ * Each class implements the hooks that apply; unused hooks are NULL.
+ * The generic state machine in bot_ai.c dispatches through this table,
+ * so adding a new class never requires touching the state handlers.
+ *
+ * Hooks that return bool send at most one command per call and return
+ * TRUE when they do, so the caller knows to stop processing that tick.
+ * ----------------------------------------------------------------------- */
+typedef struct {
+    /* TRUE if the class has exp worth spending (age/rank/skills) */
+    bool (*should_train)   (struct char_data *ch);
+    /* Execute one class-specific training step; TRUE = command sent */
+    bool (*do_train)       (struct char_data *ch);
+    /* Apply missing passive buffs; TRUE = command sent */
+    bool (*buff_check)     (struct char_data *ch);
+    /* Fire one offensive ability per combat tick */
+    void (*combat_action)  (struct char_data *ch);
+    /* Between-fight setup (stances, toggles, etc.); TRUE = command sent */
+    bool (*between_fights) (struct char_data *ch);
+} BOT_CLASS_AI;
+
+/* Indexed by BOT_CLASS_* - initialised in bot_ai.c */
+extern const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT];
+
 /* Function prototypes */
 void    bot_manager_update  ( void );
 void    bot_ai_tick         ( void );

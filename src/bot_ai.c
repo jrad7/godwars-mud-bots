@@ -17,14 +17,22 @@
 #include "merc.h"
 #include "bot.h"
 
-/* Defined locally in fight.c - index into ch->stance[] for autostance setting */
-#define MONK_AUTODROP  12
+/* Class AI vtables - defined in bot_ai_{class}.c, registered below */
+extern const BOT_CLASS_AI bot_vamp_ai;
+extern const BOT_CLASS_AI bot_monk_ai;
+extern const BOT_CLASS_AI bot_ninja_ai;
+extern const BOT_CLASS_AI bot_demon_ai;
 
-/* Forward declaration - defined in kav_fight.c */
-void do_stance( CHAR_DATA *ch, char *argument );
-
-/* Forward declarations for bot_ai.c */
-static int bot_vamp_pick_research( CHAR_DATA *ch );
+/*
+ * bot_class_ai - vtable table indexed by BOT_CLASS_*
+ * Add a row here when registering a new class.
+ */
+const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
+    &bot_vamp_ai,   /* BOT_CLASS_VAMPIRE */
+    &bot_monk_ai,   /* BOT_CLASS_MONK    */
+    &bot_ninja_ai,  /* BOT_CLASS_NINJA   */
+    &bot_demon_ai   /* BOT_CLASS_DEMON   */
+};
 
 /* -----------------------------------------------------------------------
  * bot_cmd - inject a command into a bot as if it typed it
@@ -192,29 +200,15 @@ static bool bot_should_train( CHAR_DATA *ch )
       && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
     if ( ch->max_move < 10000          && ch->exp >= ch->max_move + 1 ) return TRUE;
 
-    /* Vampire age milestones */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    /* Delegate class-specific rank/skill checks to the class AI */
     {
-        if ( ch->pcdata->rank <= AGE_NEONATE && ch->exp >= 1500000  ) return TRUE;
-        if ( ch->pcdata->rank == AGE_ANCILLA && ch->exp >= 7500000  ) return TRUE;
-        if ( ch->pcdata->rank == AGE_ELDER   && ch->exp >= 15000000 ) return TRUE;
-        if ( ch->pcdata->rank == AGE_METHUSELAH && ch->exp >= 30000000 ) return TRUE;
-        if ( ch->pcdata->rank == AGE_LA_MAGRA   && ch->exp >= 60000000 ) return TRUE;
-    }
-
-    /* Ninja belt milestones (cheapest is 5M) */
-    if ( IS_CLASS(ch, CLASS_NINJA) && ch->pcdata->rank < BELT_TEN
-      && ch->exp >= 5000000 )
-        return TRUE;
-
-    /* Vampire discipline: research is done and ready to train */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
-    {
-        if ( ch->pcdata->disc_points == 999 )
-            return TRUE;  /* research finished - time to train */
-        if ( ch->pcdata->disc_research == -1
-          && bot_vamp_pick_research(ch) != -1 )
-            return TRUE;  /* not researching yet - start a new one */
+        BOT_DATA *bot = ch->pcdata->botdata;
+        if ( bot && bot->roster )
+        {
+            const BOT_CLASS_AI *ai = bot_class_ai[bot->roster->class_pref];
+            if ( ai && ai->should_train && ai->should_train(ch) )
+                return TRUE;
+        }
     }
 
     return FALSE;
@@ -246,71 +240,15 @@ static bool bot_do_train( CHAR_DATA *ch )
         return TRUE;
     }
 
-    /* Vampire age progression */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    /* Class-specific rank/skill progression (age, belts, disciplines, etc.) */
     {
-        if ( ch->pcdata->rank <= AGE_NEONATE && ch->exp >= 1500000 )
-            { bot_cmd( ch, "train ancilla" );    return TRUE; }
-        if ( ch->pcdata->rank == AGE_ANCILLA && ch->exp >= 7500000 )
-            { bot_cmd( ch, "train elder" );      return TRUE; }
-        if ( ch->pcdata->rank == AGE_ELDER && ch->exp >= 15000000 )
-            { bot_cmd( ch, "train methuselah" ); return TRUE; }
-        if ( ch->pcdata->rank == AGE_METHUSELAH && ch->exp >= 30000000 )
-            { bot_cmd( ch, "train lamagra" );    return TRUE; }
-        if ( ch->pcdata->rank == AGE_LA_MAGRA && ch->exp >= 60000000 )
-            { bot_cmd( ch, "train trueblood" );  return TRUE; }
-    }
-
-    /* Ninja belt progression */
-    if ( IS_CLASS(ch, CLASS_NINJA) )
-    {
-        static const struct { int from_rank; int cost; const char *cmd; } belts[] = {
-            { 0,         5000000,  "train belt1"  },
-            { BELT_ONE,  10000000, "train belt2"  },
-            { BELT_TWO,  15000000, "train belt3"  },
-            { BELT_THREE,20000000, "train belt4"  },
-            { BELT_FOUR, 25000000, "train belt5"  },
-            { BELT_FIVE, 30000000, "train belt6"  },
-            { BELT_SIX,  35000000, "train belt7"  },
-            { BELT_SEVEN,40000000, "train belt8"  },
-            { BELT_EIGHT,45000000, "train belt9"  },
-            { BELT_NINE, 50000000, "train belt10" },
-            { -1, 0, NULL }
-        };
-        int i;
-        for ( i = 0; belts[i].from_rank >= 0; i++ )
+        BOT_DATA *bot = ch->pcdata->botdata;
+        if ( bot && bot->roster )
         {
-            if ( ch->pcdata->rank == belts[i].from_rank
-              && ch->exp >= belts[i].cost )
-            { bot_cmd( ch, belts[i].cmd ); return TRUE; }
-        }
-    }
-
-    /* Vampire discipline: research → train loop */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
-    {
-        /* Research complete - spend the point */
-        if ( ch->pcdata->disc_points == 999 && ch->pcdata->disc_research > 0 )
-        {
-            char cmd[64];
-            sprintf( cmd, "train %s", discipline[ch->pcdata->disc_research] );
-            bot_cmd( ch, cmd );
-            return TRUE;
-        }
-
-        /* No active research - start the next one in priority order */
-        if ( ch->pcdata->disc_research == -1 )
-        {
-            int disc = bot_vamp_pick_research(ch);
-            if ( disc > 0 )
-            {
-                char cmd[64];
-                sprintf( cmd, "research %s", discipline[disc] );
-                bot_cmd( ch, cmd );
+            const BOT_CLASS_AI *ai = bot_class_ai[bot->roster->class_pref];
+            if ( ai && ai->do_train && ai->do_train(ch) )
                 return TRUE;
-            }
         }
-        /* Still accumulating research points - just keep grinding mobs */
     }
 
     /* Primary: dump all available exp into hp */
@@ -379,258 +317,6 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;
-}
-
-/*
- * Pick the next basic stance to train, in a fixed order:
- * viper -> crane -> crab -> mongoose -> bull.
- * Returns the 1-based slot (1-5, matching STANCE_* constants) or 0 if all mastered.
- */
-static int bot_pick_training_stance( CHAR_DATA *ch )
-{
-    static const int basic[] = { 1, 2, 3, 4, 5 };
-    int i;
-
-    for ( i = 0; i < 5; i++ )
-    {
-        int xp = ch->stance[ basic[i] ];
-        if ( xp < 0 ) xp = 0;   /* -1 means locked, treat as 0 */
-        if ( xp < 200 )
-            return i + 1;   /* 1-based slot */
-    }
-    return 0;   /* all mastered */
-}
-
-/*
- * Set the bot's autostance (MONK_AUTODROP) to the current training stance
- * via do_autostance(), so the combat engine's autodrop() handles entry.
- * Called between fights when the bot is relaxed.
- * Stays on the current stance until it reaches 200 XP, then advances.
- */
-static void bot_set_autostance( CHAR_DATA *ch )
-{
-    static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull" };
-    int current = ch->stance[MONK_AUTODROP];
-    int pick;
-
-    /* Stick with the current stance until it's fully mastered */
-    if ( current >= STANCE_VIPER && current <= STANCE_BULL
-      && ch->stance[current] < 200 )
-        return;
-
-    /* Current stance mastered (or not set) - advance to next unmastered */
-    pick = bot_pick_training_stance( ch );
-    if ( pick == 0 )
-        return;   /* all mastered — keep whatever autostance was last set */
-
-    if ( ch->stance[MONK_AUTODROP] == pick )
-        return;
-
-    do_autostance( ch, (char *)names[ pick - 1 ] );
-}
-
-
-/* -----------------------------------------------------------------------
- * VAMPIRE CLASS AI
- * ----------------------------------------------------------------------- */
-
-/*
- * Returns the DISC_VAMP_* index of the next discipline the vampire bot
- * should research, or -1 if nothing left to advance within rank limits.
- *
- * Priority: core combat passives → unlock key powers → max out.
- */
-static int bot_vamp_pick_research( CHAR_DATA *ch )
-{
-    /* Discipline cap based on vampire age rank */
-    int maxlevel;
-    if ( ch->pcdata->rank <= AGE_NEONATE )      maxlevel = 5;
-    else if ( ch->pcdata->rank == AGE_ANCILLA ) maxlevel = 7;
-    else if ( ch->pcdata->rank == AGE_ELDER )   maxlevel = 9;
-    else                                         maxlevel = 10;
-
-    /*
-     * Priority table: {disc_index, target_level}
-     * The bot advances each discipline to 'target' before moving on.
-     * Rows with the same disc_index at a higher target extend the goal
-     * once lower-priority entries are satisfied.
-     */
-    static const struct { int disc; int target; } prio[] = {
-        /* Core combat passives - all benefit from being as high as possible */
-        { DISC_VAMP_POTE, 5  },   /* Potence:  multiplies unarmed damage   */
-        { DISC_VAMP_CELE, 5  },   /* Celerity: dodge chance + extra hits    */
-        { DISC_VAMP_FORT, 5  },   /* Fortitude: passive damage reduction    */
-        /* Protean 2: unlock claws (primary melee weapon) */
-        { DISC_VAMP_PROT, 2  },
-        /* Obtenebration 1 (shroud) and 5 (lamprey drain attack) */
-        { DISC_VAMP_OBTE, 5  },
-        /* Presence 1-2: awe combat aura + mindblast stun */
-        { DISC_VAMP_PRES, 2  },
-        /* Auspex 1: truesight (see invisible) */
-        { DISC_VAMP_AUSP, 1  },
-        /* Thaumaturgy 4: theft of vitae (steal blood in combat) */
-        { DISC_VAMP_THAU, 4  },
-        /* Quietus 4: assassinate (high single-hit damage) */
-        { DISC_VAMP_QUIE, 4  },
-        /* Serpentis 4: tendrils (combat attack) */
-        { DISC_VAMP_SERP, 4  },
-        /* Thanatosis 4-5: withering debuff + drainlife */
-        { DISC_VAMP_THAN, 5  },
-        /* Obfuscate 1: vanish (emergency escape) */
-        { DISC_VAMP_OBFU, 1  },
-        /* Necromancy 4: spirit guard (defensive buff) */
-        { DISC_VAMP_NECR, 4  },
-        /* Second pass: max out the combat cores */
-        { DISC_VAMP_POTE, 10 },
-        { DISC_VAMP_CELE, 10 },
-        { DISC_VAMP_FORT, 10 },
-        { DISC_VAMP_PROT, 10 },
-        { DISC_VAMP_OBTE, 10 },
-        { DISC_VAMP_PRES, 10 },
-        { -1, 0 }
-    };
-
-    int i;
-    for ( i = 0; prio[i].disc != -1; i++ )
-    {
-        int disc   = prio[i].disc;
-        int target = prio[i].target;
-
-        /* Never exceed rank-based cap */
-        if ( target > maxlevel ) target = maxlevel;
-
-        /* power < 0 means not available to this character */
-        if ( ch->power[disc] < 0 ) continue;
-
-        /* Already at or past target for this priority entry */
-        if ( ch->power[disc] >= target ) continue;
-
-        /* Already at max level regardless of priority */
-        if ( ch->power[disc] >= 10 ) continue;
-
-        return disc;
-    }
-
-    return -1;  /* nothing left to advance within current rank */
-}
-
-/*
- * Check that all passive vampire buffs are active.
- * Issues at most one command per call; returns TRUE if a command was sent.
- * Safe to call when not in combat.
- */
-static bool bot_vamp_buff_check( CHAR_DATA *ch )
-{
-    if ( !IS_CLASS(ch, CLASS_VAMPIRE) ) return FALSE;
-
-    /* Truesight (Auspex 1) - see invisible / detect hidden */
-    if ( ch->power[DISC_VAMP_AUSP] >= 1
-      && !IS_SET(ch->act, PLR_HOLYLIGHT) )
-    { bot_cmd( ch, "truesight" ); return TRUE; }
-
-    /* Awe (Presence 1) - combat aura, intimidates opponents */
-    if ( ch->power[DISC_VAMP_PRES] >= 1
-      && !IS_EXTRA(ch, EXTRA_AWE) )
-    { bot_cmd( ch, "awe" ); return TRUE; }
-
-    /* Claws (Protean 2) - primary melee weapon for vampires */
-    if ( ch->power[DISC_VAMP_PROT] >= 2
-      && !IS_VAMPAFF(ch, VAM_CLAWS) )
-    { bot_cmd( ch, "claws" ); return TRUE; }
-
-    /* Spirit Guard (Necromancy 4) - defensive buff vs. attacks */
-    if ( ch->power[DISC_VAMP_NECR] >= 4
-      && !IS_SET(ch->flag2, AFF_SPIRITGUARD) )
-    { bot_cmd( ch, "spiritguard" ); return TRUE; }
-
-    return FALSE;
-}
-
-/*
- * Fire one combat ability this tick.
- * Called each pulse while the vampire bot is in POS_FIGHTING.
- * Uses number_percent() to spread ability usage naturally.
- */
-static void bot_vamp_combat_action( CHAR_DATA *ch )
-{
-    CHAR_DATA *target = ch->fighting;
-    int blood;
-    int roll;
-    char cmd[MAX_INPUT_LENGTH];
-    const char *tname;
-
-    if ( target == NULL ) return;
-    if ( ch->pcdata == NULL ) return;
-
-    blood = ch->pcdata->condition[COND_THIRST];
-    roll  = number_range( 1, 100 );
-    tname = IS_NPC(target) ? target->short_descr : target->name;
-
-    /* Priority 0: steal blood when running dry (Thaumaturgy 4)
-     * Blood fuels most discipline abilities so keep it topped up. */
-    if ( ch->power[DISC_VAMP_THAU] >= 4 && blood < 100 )
-    {
-        sprintf( cmd, "theft %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 1 (25%): drainlife - deals damage and recovers HP */
-    if ( ch->power[DISC_VAMP_THAN] >= 5 && roll <= 25 )
-    {
-        sprintf( cmd, "drainlife %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 2 (40%): assassinate - heavy single-hit burst */
-    if ( ch->power[DISC_VAMP_QUIE] >= 4 && roll <= 40 )
-    {
-        sprintf( cmd, "assassinate %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 3 (55%): lamprey - shadow drain (Obtenebration) */
-    if ( ch->power[DISC_VAMP_OBTE] >= 5 && roll <= 55 )
-    {
-        sprintf( cmd, "lamprey %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 4 (65%): tendrils - serpentis melee attack */
-    if ( ch->power[DISC_VAMP_SERP] >= 4 && roll <= 65 )
-    {
-        sprintf( cmd, "tendrils %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 5 (75%): withering - reduces target's stats */
-    if ( ch->power[DISC_VAMP_THAN] >= 4 && roll <= 75 )
-    {
-        sprintf( cmd, "withering %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 6 (85%): scream - room-wide sonic damage (costs 50 blood) */
-    if ( ch->power[DISC_VAMP_MELP] >= 1 && blood >= 50 && roll <= 85 )
-    {
-        bot_cmd( ch, "scream" );
-        return;
-    }
-
-    /* Priority 7 (90%): mindblast - mental stun attack */
-    if ( ch->power[DISC_VAMP_PRES] >= 2 && roll <= 90 )
-    {
-        sprintf( cmd, "mindblast %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Fallback: basic combat continues via normal multi_hit loop */
 }
 
 /* -----------------------------------------------------------------------
@@ -713,37 +399,27 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Already fighting */
-    if ( ch->position == POS_FIGHTING )
+    /* Resolve the class AI vtable for this bot */
     {
-        if ( IS_CLASS(ch, CLASS_VAMPIRE) )
-        {
-            /* Fire a class ability this combat tick */
-            bot_vamp_combat_action( ch );
-        }
-        /* Stance entry is handled by autodrop() in the combat engine */
-        bot->grind_attempts = 0;
-        return;
-    }
+        const BOT_CLASS_AI *ai = NULL;
+        if ( bot->roster )
+            ai = bot_class_ai[bot->roster->class_pref];
 
-    /* Between fights: activate passive buffs before the next kill */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
-    {
-        if ( bot_vamp_buff_check(ch) )
-            return;  /* issued a buff command this tick */
-    }
-    else
-    {
-        /* Non-vampire: stay in stance between fights. Only relax on the one
-         * tick when a stance is mastered and we need to advance to the next
-         * one, so autodrop() can enter the new stance on the next fight. */
-        int prev = ch->stance[MONK_AUTODROP];
-        bot_set_autostance( ch );
-        if ( ch->stance[MONK_AUTODROP] != prev && ch->stance[0] != -1 )
+        /* Already fighting */
+        if ( ch->position == POS_FIGHTING )
         {
-            do_stance( ch, "" );   /* relax once so autodrop re-enters new stance */
+            if ( ai && ai->combat_action )
+                ai->combat_action( ch );
+            /* Stance entry is handled by autodrop() in the combat engine */
+            bot->grind_attempts = 0;
             return;
         }
+
+        /* Between fights: buffs first, then any between-fight setup */
+        if ( ai && ai->buff_check && ai->buff_check(ch) )
+            return;   /* issued a buff command this tick */
+        if ( ai && ai->between_fights && ai->between_fights(ch) )
+            return;   /* issued a setup command this tick */
     }
 
     /* Find something to kill */
