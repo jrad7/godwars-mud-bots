@@ -20,6 +20,9 @@
 /* Forward declaration - defined in kav_fight.c */
 void do_stance( CHAR_DATA *ch, char *argument );
 
+/* Forward declarations for bot_ai.c */
+static int bot_vamp_pick_research( CHAR_DATA *ch );
+
 /* -----------------------------------------------------------------------
  * bot_cmd - inject a command into a bot as if it typed it
  * ----------------------------------------------------------------------- */
