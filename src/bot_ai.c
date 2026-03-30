@@ -382,51 +382,47 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
 }
 
 /*
- * Pick the basic stance (1-5: viper, crane, crab, mongoose, bull) that
- * the bot should train next - whichever has the lowest XP below 200.
- * Returns the stance index (1-5) or 0 if all are mastered.
+ * Pick the next basic stance to train, in a fixed order:
+ * viper -> crane -> crab -> mongoose -> bull.
+ * Returns the 1-based slot (1-5, matching STANCE_* constants) or 0 if all mastered.
  */
 static int bot_pick_training_stance( CHAR_DATA *ch )
 {
-    /* Basic stance names match stance[] indices 1-5 */
-    static const int  basic[]  = { 1, 2, 3, 4, 5 };
-    static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull", NULL };
-    int best_idx  = 0;
-    int best_xp   = 201;   /* sentinel: any unmastered beats this */
+    static const int basic[] = { 1, 2, 3, 4, 5 };
     int i;
-
-    (void)names;   /* used via bot_cmd below */
 
     for ( i = 0; i < 5; i++ )
     {
         int xp = ch->stance[ basic[i] ];
         if ( xp < 0 ) xp = 0;   /* -1 means locked, treat as 0 */
-        if ( xp < 200 && xp < best_xp )
-        {
-            best_xp  = xp;
-            best_idx = i;
-        }
+        if ( xp < 200 )
+            return i + 1;   /* 1-based slot */
     }
-    if ( best_xp == 201 ) return 0;   /* all mastered */
-    return best_idx + 1;              /* 1-based slot in basic[] */
+    return 0;   /* all mastered */
 }
 
 /*
  * Set the bot's autostance (MONK_AUTODROP) to the current training stance
  * via do_autostance(), so the combat engine's autodrop() handles entry.
  * Called between fights when the bot is relaxed.
- * When all basics are mastered the autostance is left unchanged.
+ * Stays on the current stance until it reaches 200 XP, then advances.
  */
 static void bot_set_autostance( CHAR_DATA *ch )
 {
     static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull" };
+    int current = ch->stance[MONK_AUTODROP];
     int pick;
 
+    /* Stick with the current stance until it's fully mastered */
+    if ( current >= STANCE_VIPER && current <= STANCE_BULL
+      && ch->stance[current] < 200 )
+        return;
+
+    /* Current stance mastered (or not set) - advance to next unmastered */
     pick = bot_pick_training_stance( ch );
     if ( pick == 0 )
         return;   /* all mastered — keep whatever autostance was last set */
 
-    /* Only issue the command if autostance needs to change */
     if ( ch->stance[MONK_AUTODROP] == pick )
         return;
 
