@@ -118,14 +118,26 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_GRINDING:
         bot->state_timer = number_range( 60, 180 );   /* 1-3 minutes */
         bot->grind_attempts = 0;
-        /* Navigate to newbie area: recall -> up -> open door -> south */
-        if ( ch->level <= 20 )
+        /* Navigate to newbie area or next tier area */
+        if ( ch->max_hit < 5000 )
         {
             bot->nav_n = 0;
             bot_nav_queue( bot, "recall" );
             bot_nav_queue( bot, "up" );
             bot_nav_queue( bot, "open door" );
             bot_nav_queue( bot, "south" );
+        }
+        else
+        {
+            /* Navigate to Smurf Village: recall -> 2 south -> 3 west -> north */
+            bot->nav_n = 0;
+            bot_nav_queue( bot, "recall" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "south" );
+            bot_nav_queue( bot, "west" );
+            bot_nav_queue( bot, "west" );
+            bot_nav_queue( bot, "west" );
+            bot_nav_queue( bot, "north" );
         }
         break;
     case BOT_TRAINING:
