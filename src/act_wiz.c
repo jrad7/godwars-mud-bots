@@ -2653,7 +2653,7 @@ void do_possess( CHAR_DATA *ch, char *argument )
 
     if ( arg[0] == '\0' )
     {
-        send_to_char( "Possess which bot?\n\r", ch );
+        send_to_char( "Takeover which bot?\n\r", ch );
         return;
     }
 
