@@ -560,6 +560,52 @@ static void bot_state_logging_out( CHAR_DATA *ch, BOT_DATA *bot )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_ensure_geared - ensures the bot isn't naked, spawning gear if needed
+ * ----------------------------------------------------------------------- */
+static void bot_ensure_geared( CHAR_DATA *ch )
+{
+    int i;
+    bool naked = TRUE;
+
+    /* Don't try to gear up mid-combat */
+    if ( ch->position == POS_FIGHTING )
+        return;
+
+    /* Check if any gear is worn */
+    for ( i = 0; i < MAX_WEAR; i++ )
+    {
+        if ( get_eq_char( ch, i ) != NULL )
+        {
+            naked = FALSE;
+            break;
+        }
+    }
+
+    if ( naked )
+    {
+        /* Try to wear whatever is currently in inventory */
+        bot_cmd( ch, "wear all" );
+
+        /* Re-check if they managed to put anything on */
+        for ( i = 0; i < MAX_WEAR; i++ )
+        {
+            if ( get_eq_char( ch, i ) != NULL )
+            {
+                naked = FALSE;
+                break;
+            }
+        }
+
+        if ( naked )
+        {
+            /* Still naked, must have lost it all! Spawn newbie pack and wear. */
+            do_newbiepack( ch, "" );
+            bot_cmd( ch, "wear all" );
+        }
+    }
+}
+
+/* -----------------------------------------------------------------------
  * bot_update - main per-bot update, called each PULSE_BOT_MANAGER
  * ----------------------------------------------------------------------- */
 
@@ -570,6 +616,10 @@ void bot_update( CHAR_DATA *ch )
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
+
+    /* Make sure we are geared (must be done before timers that might return early) */
+    bot_ensure_geared( ch );
+
 
     /* Decrement timers */
     bot->state_timer--;
