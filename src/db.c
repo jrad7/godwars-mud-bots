@@ -1655,10 +1655,10 @@ void area_update( void )
 	    pArea->age = number_range( 0, 3 );
 	    pRoomIndex = get_room_index( ROOM_VNUM_SCHOOL );
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
-		pArea->age = 15 - 3;
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	    pRoomIndex = get_room_index( 104 );  /* Smurf Village entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
-		pArea->age = 15 - 3;
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	}
     }
 
