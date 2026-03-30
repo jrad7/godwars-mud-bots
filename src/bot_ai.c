@@ -135,13 +135,13 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     switch ( new_state )
     {
     case BOT_IDLE:
-        bot->state_timer = number_range( 10, 30 );    /* 10-30 seconds */
+        bot->state_timer = number_range( 1, 2 );    /* 1-2 seconds */
         break;
     case BOT_EXPLORING:
-        bot->state_timer = number_range( 20, 60 );    /* 20-60 seconds */
+        bot->state_timer = number_range( 1, 2 );    /* 1-2 seconds */
         break;
     case BOT_GRINDING:
-        bot->state_timer = number_range( 60, 180 );   /* 1-3 minutes */
+        bot->state_timer = number_range( 120, 180 );   /* 2-3 minutes */
         bot->grind_attempts = 0;
         /* Navigate to grinding area based on power tier */
         if ( ch->max_hit < 5000 )
@@ -195,7 +195,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( 5, 15 );     /* short burst, then back to grind */
         break;
     case BOT_RESTING:
-        bot->state_timer = number_range( 20, 60 );    /* 20-60 seconds */
+        bot->state_timer = number_range( 60, 120 );    /* 2-3 minutes */
         break;
     case BOT_LOGGING_OUT:
         bot->state_timer = number_range( 3, 8 );      /* 3-8 seconds */
