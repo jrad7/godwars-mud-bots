@@ -233,6 +233,12 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->pcdata->perm_con     = number_range( 10, 16 );
         /* max_hit/mana/move left at clear_char defaults (1000/1500/1500) */
         ch->gold                 = number_range( 100, 500 );
+        /* Mastery stances must be -1 (unlearned), not 0 — getMight checks != -1 */
+        ch->stance[19]           = -1;
+        ch->stance[20]           = -1;
+        ch->stance[21]           = -1;
+        ch->stance[22]           = -1;
+        ch->stance[23]           = -1;
         ch->pcdata->condition[COND_DRUNK]  = 0;
         ch->pcdata->condition[COND_FULL]   = 48;
         ch->pcdata->condition[COND_THIRST] = 48;

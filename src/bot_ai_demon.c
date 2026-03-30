@@ -13,6 +13,9 @@
 #else
 #include <sys/types.h>
 #endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "merc.h"
 #include "bot.h"
 
