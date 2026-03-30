@@ -408,28 +408,26 @@ static int bot_pick_training_stance( CHAR_DATA *ch )
     return best_idx + 1;              /* 1-based slot in basic[] */
 }
 
-/* Activate the best training stance via do_stance, or plain stance if all done */
-static void bot_set_training_stance( CHAR_DATA *ch )
+/*
+ * Set the bot's autostance (MONK_AUTODROP) to the current training stance
+ * via do_autostance(), so the combat engine's autodrop() handles entry.
+ * Called between fights when the bot is relaxed.
+ * When all basics are mastered the autostance is left unchanged.
+ */
+static void bot_set_autostance( CHAR_DATA *ch )
 {
     static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull" };
     int pick;
 
-    /* Only change stance when relaxed (stance[0] == -1) */
-    if ( ch->stance[0] != -1 ) return;
-
     pick = bot_pick_training_stance( ch );
     if ( pick == 0 )
-    {
-        /* All basics mastered - just use generic fighting stance */
-        do_stance( ch, "" );
-    }
-    else
-    {
-        char buf[32];
-        strncpy( buf, names[ pick - 1 ], sizeof(buf) - 1 );
-        buf[ sizeof(buf) - 1 ] = '\0';
-        do_stance( ch, buf );
-    }
+        return;   /* all mastered — keep whatever autostance was last set */
+
+    /* Only issue the command if autostance needs to change */
+    if ( ch->stance[MONK_AUTODROP] == pick )
+        return;
+
+    do_autostance( ch, (char *)names[ pick - 1 ] );
 }
 
 
@@ -724,11 +722,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             /* Fire a class ability this combat tick */
             bot_vamp_combat_action( ch );
         }
-        else
-        {
-            if ( ch->stance[0] == -1 )
-                bot_set_training_stance( ch );   /* enter stance mid-fight */
-        }
+        /* Stance entry is handled by autodrop() in the combat engine */
         bot->grind_attempts = 0;
         return;
     }
@@ -741,13 +735,14 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     }
     else
     {
-        /* Non-vampire: relax stance so we can switch to the next
-         * training stance before the next kill */
+        /* Non-vampire: relax after combat so autodrop() can re-trigger
+         * for the next fight, then keep autostance up to date. */
         if ( ch->stance[0] != -1 )
         {
             do_stance( ch, "" );   /* toggles back to relaxed (-1) */
             return;
         }
+        bot_set_autostance( ch );   /* update MONK_AUTODROP if stance changed */
     }
 
     /* Find something to kill */
@@ -755,8 +750,6 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     if ( victim != NULL )
     {
         char cmd[MAX_INPUT_LENGTH];
-        if ( !IS_CLASS(ch, CLASS_VAMPIRE) )
-            bot_set_training_stance( ch );       /* stance for non-vampires */
         sprintf( cmd, "kill %s", victim->name );
         bot_cmd( ch, cmd );
         bot->grind_attempts = 0;
