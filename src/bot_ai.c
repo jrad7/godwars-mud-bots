@@ -734,14 +734,16 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     }
     else
     {
-        /* Non-vampire: relax after combat so autodrop() can re-trigger
-         * for the next fight, then keep autostance up to date. */
-        if ( ch->stance[0] != -1 )
+        /* Non-vampire: stay in stance between fights. Only relax on the one
+         * tick when a stance is mastered and we need to advance to the next
+         * one, so autodrop() can enter the new stance on the next fight. */
+        int prev = ch->stance[MONK_AUTODROP];
+        bot_set_autostance( ch );
+        if ( ch->stance[MONK_AUTODROP] != prev && ch->stance[0] != -1 )
         {
-            do_stance( ch, "" );   /* toggles back to relaxed (-1) */
+            do_stance( ch, "" );   /* relax once so autodrop re-enters new stance */
             return;
         }
-        bot_set_autostance( ch );   /* update MONK_AUTODROP if stance changed */
     }
 
     /* Find something to kill */
