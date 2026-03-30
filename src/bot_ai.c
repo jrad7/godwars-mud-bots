@@ -189,6 +189,16 @@ static bool bot_should_train( CHAR_DATA *ch )
       && ch->exp >= 5000000 )
         return TRUE;
 
+    /* Vampire discipline: research is done and ready to train */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    {
+        if ( ch->pcdata->disc_points == 999 )
+            return TRUE;  /* research finished - time to train */
+        if ( ch->pcdata->disc_research == -1
+          && bot_vamp_pick_research(ch) != -1 )
+            return TRUE;  /* not researching yet - start a new one */
+    }
+
     return FALSE;
 }
 
@@ -256,6 +266,33 @@ static bool bot_do_train( CHAR_DATA *ch )
               && ch->exp >= belts[i].cost )
             { bot_cmd( ch, belts[i].cmd ); return TRUE; }
         }
+    }
+
+    /* Vampire discipline: research → train loop */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    {
+        /* Research complete - spend the point */
+        if ( ch->pcdata->disc_points == 999 && ch->pcdata->disc_research > 0 )
+        {
+            char cmd[64];
+            sprintf( cmd, "train %s", discipline[ch->pcdata->disc_research] );
+            bot_cmd( ch, cmd );
+            return TRUE;
+        }
+
+        /* No active research - start the next one in priority order */
+        if ( ch->pcdata->disc_research == -1 )
+        {
+            int disc = bot_vamp_pick_research(ch);
+            if ( disc > 0 )
+            {
+                char cmd[64];
+                sprintf( cmd, "research %s", discipline[disc] );
+                bot_cmd( ch, cmd );
+                return TRUE;
+            }
+        }
+        /* Still accumulating research points - just keep grinding mobs */
     }
 
     /* Primary: dump all available exp into hp */
@@ -382,6 +419,209 @@ static void bot_set_training_stance( CHAR_DATA *ch )
 
 
 /* -----------------------------------------------------------------------
+ * VAMPIRE CLASS AI
+ * ----------------------------------------------------------------------- */
+
+/*
+ * Returns the DISC_VAMP_* index of the next discipline the vampire bot
+ * should research, or -1 if nothing left to advance within rank limits.
+ *
+ * Priority: core combat passives → unlock key powers → max out.
+ */
+static int bot_vamp_pick_research( CHAR_DATA *ch )
+{
+    /* Discipline cap based on vampire age rank */
+    int maxlevel;
+    if ( ch->pcdata->rank <= AGE_NEONATE )      maxlevel = 5;
+    else if ( ch->pcdata->rank == AGE_ANCILLA ) maxlevel = 7;
+    else if ( ch->pcdata->rank == AGE_ELDER )   maxlevel = 9;
+    else                                         maxlevel = 10;
+
+    /*
+     * Priority table: {disc_index, target_level}
+     * The bot advances each discipline to 'target' before moving on.
+     * Rows with the same disc_index at a higher target extend the goal
+     * once lower-priority entries are satisfied.
+     */
+    static const struct { int disc; int target; } prio[] = {
+        /* Core combat passives - all benefit from being as high as possible */
+        { DISC_VAMP_POTE, 5  },   /* Potence:  multiplies unarmed damage   */
+        { DISC_VAMP_CELE, 5  },   /* Celerity: dodge chance + extra hits    */
+        { DISC_VAMP_FORT, 5  },   /* Fortitude: passive damage reduction    */
+        /* Protean 2: unlock claws (primary melee weapon) */
+        { DISC_VAMP_PROT, 2  },
+        /* Obtenebration 1 (shroud) and 5 (lamprey drain attack) */
+        { DISC_VAMP_OBTE, 5  },
+        /* Presence 1-2: awe combat aura + mindblast stun */
+        { DISC_VAMP_PRES, 2  },
+        /* Auspex 1: truesight (see invisible) */
+        { DISC_VAMP_AUSP, 1  },
+        /* Thaumaturgy 4: theft of vitae (steal blood in combat) */
+        { DISC_VAMP_THAU, 4  },
+        /* Quietus 4: assassinate (high single-hit damage) */
+        { DISC_VAMP_QUIE, 4  },
+        /* Serpentis 4: tendrils (combat attack) */
+        { DISC_VAMP_SERP, 4  },
+        /* Thanatosis 4-5: withering debuff + drainlife */
+        { DISC_VAMP_THAN, 5  },
+        /* Obfuscate 1: vanish (emergency escape) */
+        { DISC_VAMP_OBFU, 1  },
+        /* Necromancy 4: spirit guard (defensive buff) */
+        { DISC_VAMP_NECR, 4  },
+        /* Second pass: max out the combat cores */
+        { DISC_VAMP_POTE, 10 },
+        { DISC_VAMP_CELE, 10 },
+        { DISC_VAMP_FORT, 10 },
+        { DISC_VAMP_PROT, 10 },
+        { DISC_VAMP_OBTE, 10 },
+        { DISC_VAMP_PRES, 10 },
+        { -1, 0 }
+    };
+
+    int i;
+    for ( i = 0; prio[i].disc != -1; i++ )
+    {
+        int disc   = prio[i].disc;
+        int target = prio[i].target;
+
+        /* Never exceed rank-based cap */
+        if ( target > maxlevel ) target = maxlevel;
+
+        /* power < 0 means not available to this character */
+        if ( ch->power[disc] < 0 ) continue;
+
+        /* Already at or past target for this priority entry */
+        if ( ch->power[disc] >= target ) continue;
+
+        /* Already at max level regardless of priority */
+        if ( ch->power[disc] >= 10 ) continue;
+
+        return disc;
+    }
+
+    return -1;  /* nothing left to advance within current rank */
+}
+
+/*
+ * Check that all passive vampire buffs are active.
+ * Issues at most one command per call; returns TRUE if a command was sent.
+ * Safe to call when not in combat.
+ */
+static bool bot_vamp_buff_check( CHAR_DATA *ch )
+{
+    if ( !IS_CLASS(ch, CLASS_VAMPIRE) ) return FALSE;
+
+    /* Truesight (Auspex 1) - see invisible / detect hidden */
+    if ( ch->power[DISC_VAMP_AUSP] >= 1
+      && !IS_SET(ch->act, PLR_HOLYLIGHT) )
+    { bot_cmd( ch, "truesight" ); return TRUE; }
+
+    /* Awe (Presence 1) - combat aura, intimidates opponents */
+    if ( ch->power[DISC_VAMP_PRES] >= 1
+      && !IS_EXTRA(ch, EXTRA_AWE) )
+    { bot_cmd( ch, "awe" ); return TRUE; }
+
+    /* Claws (Protean 2) - primary melee weapon for vampires */
+    if ( ch->power[DISC_VAMP_PROT] >= 2
+      && !IS_VAMPAFF(ch, VAM_CLAWS) )
+    { bot_cmd( ch, "claws" ); return TRUE; }
+
+    /* Spirit Guard (Necromancy 4) - defensive buff vs. attacks */
+    if ( ch->power[DISC_VAMP_NECR] >= 4
+      && !IS_SET(ch->flag2, AFF_SPIRITGUARD) )
+    { bot_cmd( ch, "spiritguard" ); return TRUE; }
+
+    return FALSE;
+}
+
+/*
+ * Fire one combat ability this tick.
+ * Called each pulse while the vampire bot is in POS_FIGHTING.
+ * Uses number_percent() to spread ability usage naturally.
+ */
+static void bot_vamp_combat_action( CHAR_DATA *ch )
+{
+    CHAR_DATA *target = ch->fighting;
+    int blood;
+    int roll;
+    char cmd[MAX_INPUT_LENGTH];
+    const char *tname;
+
+    if ( target == NULL ) return;
+    if ( ch->pcdata == NULL ) return;
+
+    blood = ch->pcdata->condition[COND_THIRST];
+    roll  = number_range( 1, 100 );
+    tname = IS_NPC(target) ? target->short_descr : target->name;
+
+    /* Priority 0: steal blood when running dry (Thaumaturgy 4)
+     * Blood fuels most discipline abilities so keep it topped up. */
+    if ( ch->power[DISC_VAMP_THAU] >= 4 && blood < 100 )
+    {
+        sprintf( cmd, "theft %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 1 (25%): drainlife - deals damage and recovers HP */
+    if ( ch->power[DISC_VAMP_THAN] >= 5 && roll <= 25 )
+    {
+        sprintf( cmd, "drainlife %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 2 (40%): assassinate - heavy single-hit burst */
+    if ( ch->power[DISC_VAMP_QUIE] >= 4 && roll <= 40 )
+    {
+        sprintf( cmd, "assassinate %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 3 (55%): lamprey - shadow drain (Obtenebration) */
+    if ( ch->power[DISC_VAMP_OBTE] >= 5 && roll <= 55 )
+    {
+        sprintf( cmd, "lamprey %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 4 (65%): tendrils - serpentis melee attack */
+    if ( ch->power[DISC_VAMP_SERP] >= 4 && roll <= 65 )
+    {
+        sprintf( cmd, "tendrils %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 5 (75%): withering - reduces target's stats */
+    if ( ch->power[DISC_VAMP_THAN] >= 4 && roll <= 75 )
+    {
+        sprintf( cmd, "withering %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Priority 6 (85%): scream - room-wide sonic damage (costs 50 blood) */
+    if ( ch->power[DISC_VAMP_MELP] >= 1 && blood >= 50 && roll <= 85 )
+    {
+        bot_cmd( ch, "scream" );
+        return;
+    }
+
+    /* Priority 7 (90%): mindblast - mental stun attack */
+    if ( ch->power[DISC_VAMP_PRES] >= 2 && roll <= 90 )
+    {
+        sprintf( cmd, "mindblast %s", tname );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Fallback: basic combat continues via normal multi_hit loop */
+}
+
+/* -----------------------------------------------------------------------
  * STATE HANDLERS
  * ----------------------------------------------------------------------- */
 
@@ -461,29 +701,47 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Already fighting - make sure we have a stance active */
+    /* Already fighting */
     if ( ch->position == POS_FIGHTING )
     {
-        if ( ch->stance[0] == -1 )
-            bot_set_training_stance( ch );   /* enter stance mid-fight */
+        if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+        {
+            /* Fire a class ability this combat tick */
+            bot_vamp_combat_action( ch );
+        }
+        else
+        {
+            if ( ch->stance[0] == -1 )
+                bot_set_training_stance( ch );   /* enter stance mid-fight */
+        }
         bot->grind_attempts = 0;
         return;
     }
 
-    /* Between fights: relax stance so we can switch to the next
-     * training stance before the next kill */
-    if ( ch->stance[0] != -1 )
+    /* Between fights: activate passive buffs before the next kill */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
     {
-        do_stance( ch, "" );   /* toggles back to relaxed (-1) */
-        return;
+        if ( bot_vamp_buff_check(ch) )
+            return;  /* issued a buff command this tick */
+    }
+    else
+    {
+        /* Non-vampire: relax stance so we can switch to the next
+         * training stance before the next kill */
+        if ( ch->stance[0] != -1 )
+        {
+            do_stance( ch, "" );   /* toggles back to relaxed (-1) */
+            return;
+        }
     }
 
-    /* Find something to kill, then adopt stance and engage */
+    /* Find something to kill */
     victim = bot_find_mob_target( ch );
     if ( victim != NULL )
     {
         char cmd[MAX_INPUT_LENGTH];
-        bot_set_training_stance( ch );          /* choose stance first */
+        if ( !IS_CLASS(ch, CLASS_VAMPIRE) )
+            bot_set_training_stance( ch );       /* stance for non-vampires */
         sprintf( cmd, "kill %s", victim->name );
         bot_cmd( ch, cmd );
         bot->grind_attempts = 0;
