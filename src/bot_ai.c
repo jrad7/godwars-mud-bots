@@ -117,6 +117,8 @@ static bool bot_dir_allowed( CHAR_DATA *ch, int door )
     return TRUE;
 }
 
+static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch );
+
 /* -----------------------------------------------------------------------
  * bot_change_state - transition to a new AI state
  * ----------------------------------------------------------------------- */
