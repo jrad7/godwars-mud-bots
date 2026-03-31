@@ -337,8 +337,12 @@ void do_newbiepack( CHAR_DATA *ch, char *argument )
     send_to_char("You must be a mortal or avatar to create a newbie pack!\n\r",ch);
     return;
   }
-  else if (ch->level == 1)
+
+  /* Bots get gear at any level; regular players only at level 1 */
+  if (ch->level == 1 || (ch->pcdata && ch->pcdata->is_bot))
   {
+        int saved_level = ch->level;
+        int saved_trust = ch->trust;
         ch->level = 12;
         ch->trust = 12;
         do_oload(ch,"30333");
@@ -357,8 +361,8 @@ void do_newbiepack( CHAR_DATA *ch, char *argument )
         do_oload(ch,"30343");
         do_oload(ch,"2622");
         do_oload(ch,"2204");
-        ch->level = 1;
-        ch->trust = 0;
+        ch->level = saved_level;
+        ch->trust = saved_trust;
   }
   return;
 }

@@ -144,6 +144,12 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     bot->state       = new_state;
     bot->cmd_delay   = number_range( 1, 2 );
 
+    /* Clear any pending nav commands on state change -- stale nav from a
+     * previous GRINDING state would otherwise block the state machine from
+     * running (e.g. after death, bot sits issuing "stand" forever). */
+    if ( new_state != BOT_GRINDING )
+        bot->nav_n = 0;
+
     switch ( new_state )
     {
     case BOT_IDLE:
