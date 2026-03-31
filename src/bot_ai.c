@@ -509,30 +509,16 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 
 static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
 {
-    /* Stand and fight back if attacked */
+    /* Fight back if attacked */
     if ( ch->position == POS_FIGHTING )
     {
         bot_change_state( ch, bot, BOT_IDLE );
         return;
     }
 
-    /* Sit to recover -- sleeping while naked regen is worse than sitting geared */
-    if ( ch->position == POS_STANDING )
-        bot_cmd( ch, "sit" );
-
-    /* Once recovered, stand up */
-    if ( bot_is_healthy(ch) && bot->state_timer <= 0 )
-    {
-        if ( ch->position != POS_STANDING )
-            bot_cmd( ch, "stand" );
+    /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
+    if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
         bot_change_state( ch, bot, BOT_IDLE );
-    }
-    else if ( bot->state_timer <= 0 && !bot_needs_rest(ch) )
-    {
-        if ( ch->position != POS_STANDING )
-            bot_cmd( ch, "stand" );
-        bot_change_state( ch, bot, BOT_IDLE );
-    }
 }
 
 static void bot_state_training( CHAR_DATA *ch, BOT_DATA *bot )
