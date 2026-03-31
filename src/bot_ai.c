@@ -516,14 +516,9 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Sit or sleep to recover */
+    /* Sit to recover -- sleeping while naked regen is worse than sitting geared */
     if ( ch->position == POS_STANDING )
-    {
-        if ( ch->hit < ch->max_hit / 2 )
-            bot_cmd( ch, "sleep" );
-        else
-            bot_cmd( ch, "sit" );
-    }
+        bot_cmd( ch, "sit" );
 
     /* Once recovered, stand up */
     if ( bot_is_healthy(ch) && bot->state_timer <= 0 )
@@ -603,28 +598,14 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 
     if ( naked )
     {
-        /* Call do_wear directly to bypass the position check in interpret().
-         * Using bot_cmd("wear all") would require waking the bot first, which
-         * then causes bot_state_resting to immediately re-issue "sleep" since
-         * it sees a standing bot with low HP -- creating an infinite loop. */
+        /* Must be standing to receive and wear gear. Call do_stand directly
+         * rather than through bot_cmd to avoid the snoop echo noise. */
+        if ( ch->position < POS_STANDING )
+            do_stand( ch, "" );
+
+        /* Always spawn a fresh newbie pack to guarantee a full set, then wear. */
+        do_newbiepack( ch, "" );
         do_wear( ch, "all" );
-
-        /* Re-check if they managed to put anything on */
-        for ( i = 0; i < MAX_WEAR; i++ )
-        {
-            if ( get_eq_char( ch, i ) != NULL )
-            {
-                naked = FALSE;
-                break;
-            }
-        }
-
-        if ( naked )
-        {
-            /* Still naked, must have lost it all! Spawn newbie pack and wear. */
-            do_newbiepack( ch, "" );
-            do_wear( ch, "all" );
-        }
     }
 }
 
