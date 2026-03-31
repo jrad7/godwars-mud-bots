@@ -207,7 +207,8 @@ void char_update( void )
        * void, autosave, time bonus, etc
        */
       if ((ch->level < LEVEL_IMMORTAL || !ch->desc) && !is_obj && !IS_SET(ch->extra,EXTRA_AFK)
-      && str_cmp(ch->name, "Kast") != 0)
+      && str_cmp(ch->name, "Kast") != 0
+      && !(ch->pcdata != NULL && ch->pcdata->is_bot))
       {
         if ((ch->desc == NULL || ch->desc->connected == CON_PLAYING) && ch->level >= 2 && ch->save_time < save_time )
         {
