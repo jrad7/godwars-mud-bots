@@ -116,6 +116,23 @@ extern BOT_ROSTER_ENTRY bot_roster[MAX_BOT_ROSTER];
 extern int              bot_roster_count;
 
 /* -----------------------------------------------------------------------
+ * BOT_GEAR_PIECE - one row in a per-class gear table (bot_gear.c)
+ *
+ * wear_slot    : WEAR_* constant for the target equipment slot
+ * cmd          : full command string to issue, e.g. "vamparmor ring"
+ * primal_cost  : ch->practice cost checked before issuing the command
+ * Terminator row has wear_slot == WEAR_NONE and cmd == NULL.
+ * ----------------------------------------------------------------------- */
+typedef struct {
+    int         wear_slot;
+    const char *cmd;
+    int         primal_cost;
+} BOT_GEAR_PIECE;
+
+/* Per-class gear tables, indexed by BOT_CLASS_* (defined in bot_gear.c) */
+extern const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT];
+
+/* -----------------------------------------------------------------------
  * Class AI vtable - one entry per BOT_CLASS_*
  *
  * Each class implements the hooks that apply; unused hooks are NULL.
@@ -153,6 +170,7 @@ void    save_bot_roster     ( void );
 void    bot_ai_update       ( struct char_data *ch, BOT_DATA *bot );
 void    bot_change_state    ( struct char_data *ch, BOT_DATA *bot, bot_state_t new_state );
 void    bot_cmd             ( struct char_data *ch, const char *cmd );
+void    bot_gear_check      ( struct char_data *ch );
 bool    bot_watch_assign_random ( struct char_data *watcher, struct char_data *skip );
 
 void    bot_chat_init       ( void );

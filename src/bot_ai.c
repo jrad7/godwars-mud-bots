@@ -569,38 +569,14 @@ static void bot_state_logging_out( CHAR_DATA *ch, BOT_DATA *bot )
 }
 
 /* -----------------------------------------------------------------------
- * bot_ensure_geared - ensures the bot isn't naked, spawning gear if needed
+ * bot_ensure_geared - delegates to bot_gear_check (bot_gear.c)
+ *
+ * bot_gear_check handles all position checks, surplus cleanup, newbiepack
+ * fallback, and class-gear upgrades — one action per call.
  * ----------------------------------------------------------------------- */
 static void bot_ensure_geared( CHAR_DATA *ch )
 {
-    int i;
-    bool naked = TRUE;
-
-    /* Don't try to gear up mid-combat */
-    if ( ch->position == POS_FIGHTING )
-        return;
-
-    /* Check if any gear is worn */
-    for ( i = 0; i < MAX_WEAR; i++ )
-    {
-        if ( get_eq_char( ch, i ) != NULL )
-        {
-            naked = FALSE;
-            break;
-        }
-    }
-
-    if ( naked )
-    {
-        /* Must be standing to receive and wear gear. Call do_stand directly
-         * rather than through bot_cmd to avoid the snoop echo noise. */
-        if ( ch->position < POS_STANDING )
-            do_stand( ch, "" );
-
-        /* Always spawn a fresh newbie pack to guarantee a full set, then wear. */
-        do_newbiepack( ch, "" );
-        do_wear( ch, "all" );
-    }
+    bot_gear_check( ch );
 }
 
 /* -----------------------------------------------------------------------
