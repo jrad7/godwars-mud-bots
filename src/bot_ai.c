@@ -95,6 +95,8 @@ static const struct {
     { 30100, 30200, DIRMASK(DIR_UP) },
     /* Jobo's Heaven entrance (99000): don't go down (exits back to temple via D5) */
     { 99000, 99000, DIRMASK(DIR_DOWN) },
+    /* Smurf Village entrance path (101): south exits to room 3040, outside the zone */
+    { 101, 101, DIRMASK(DIR_SOUTH) },
 
     { 0, 0, 0 }   /* terminator */
 };
