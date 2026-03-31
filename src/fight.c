@@ -2182,7 +2182,7 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
       {
         if (IS_NPC(victim) && !IS_SET(victim->act, ACT_NOEXP))
         {
-          int cp_gain = victim->level * 2;
+          int cp_gain = victim->level * 4;
           if (is_grind_mob(victim))
           {
               cp_gain = (cp_gain * GRIND_CP_MULT_NUM) / GRIND_CP_MULT_DEN;
@@ -3389,7 +3389,7 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   xp  = number_range( xp * 3 / 4, xp * 5 / 4 );
   xp  = UMAX( 0, xp );
   xp  = (xp * (victim->level) * 0.60);
-  xp  = xp / 2; /* Put in cause players compaling to much exp :P */
+  xp  = xp;
   if (!IS_NPC(gch))
   {
     gch->pcdata->score[SCORE_TOTAL_LEVEL] += victim->level;
@@ -3402,16 +3402,16 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   if (!IS_NPC(gch) && xp > 499 && gch->pcdata->disc_points != 999 && gch->pcdata->disc_research != -1)
   {
     if (!IS_SET(gch->act, PLR_BRIEF4)) stc("#RYou gained a discipline point.#n\n\r", gch);
-    gain_disc_points(gch, 1);
+    gain_disc_points(gch, 2);
     if (!IS_SET(gch->act, PLR_BRIEF4)) if (victim->level > 200 && gch->pcdata->disc_points != 999)
     {
     stc("#RYou gained a discipline point.#n\n\r", gch);
-    gain_disc_points(gch, 1);
+    gain_disc_points(gch, 2);
     }
     if (!IS_SET(gch->act, PLR_BRIEF4)) if (victim->level > 400 && gch->pcdata->disc_points != 999)
     {
     stc("#RYou gained a discipline point.#n\n\r", gch);
-    gain_disc_points(gch, 1);
+    gain_disc_points(gch, 2);
     }
     xp -= 500;
   }
