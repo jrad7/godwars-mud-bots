@@ -13,14 +13,14 @@ AREA_FILES = [
 
 # Modifiers for Mob Health (Hit points)
 # NdS+P will become (N * HP_MULTI_N)d(S)+(P * HP_MULTI_P)
-HP_MULTI_N = 5
-HP_MULTI_P = 5
+HP_MULTI_N = 15
+HP_MULTI_P = 15
 
 # Modifiers for Mob Damage
 # NdS+P will become (N // DAM_DIV_N)d(S)+(P // DAM_DIV_P)
 # Minimum dice number is 1, so 1d4 halved becomes 1d4.
-DAM_DIV_N = 2
-DAM_DIV_P = 2
+DAM_DIV_N = 4
+DAM_DIV_P = 4
 
 # --- CONFIGURATION END ---
 
