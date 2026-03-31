@@ -1989,9 +1989,9 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
 
     mob->armor		= interpolate( mob->level, 100, -100 );
 
-    tempvalue		= mob->level * 12 + number_range(
-				mob->level * mob->level / 4,
-				mob->level * mob->level );
+    tempvalue		= mob->level * mob->level * 20 + number_range(
+				mob->level * mob->level * 5,
+				mob->level * mob->level * 10 );
 
     if(tempvalue > 300000 || tempvalue < 0) mob->max_hit = 300000;
     else mob->max_hit	= tempvalue;

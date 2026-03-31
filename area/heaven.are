@@ -18,7 +18,7 @@ A worshipper of the almighty stands and preaches his word.
 him, for he will lead you out of darkness."
 ~
 17 0 1000 S
-10 20 10 75d1+2925 1d2+0
+5 20 10 75d1+2925 1d2+0
 0 0
 0 0 1
 #99001
@@ -30,7 +30,7 @@ I repent, I do, I do, please forgive me oh
 Father, I have sinned, but I repent...
 ~
 17 0 500 S
-8 20 10 75d1+2925 1d2+0
+5 20 10 75d1+2925 1d2+0
 0 0
 0 0 2
 #99002
@@ -41,7 +41,7 @@ An angel flitters around, looking for fun.
 Oh glory, oh Glory!!!
 ~
 1 8204 1000 S
-12 20 10 75d1+2925 1d2+0
+5 20 10 75d1+2925 1d2+0
 0 0
 0 0 1
 #99003
@@ -52,7 +52,7 @@ An archangel watches over the sinners.
 You shall repent!!!!
 ~
 17 8332 1000 S
-14 20 10 75d1+2925 1d2+0
+5 20 10 75d1+2925 1d2+0
 0 0
 0 0 2
 #99004
@@ -65,7 +65,7 @@ I'll have to send him straight to hell, oh
 my, oh my."
 ~
 19 16384 1000 S
-298 0 0 0d0+0 0d0+0
+5 0 0 0d0+0 0d0+0
 0 0
 0 0 0
 #0

@@ -16,7 +16,7 @@ A hellish creature from the abyss is growling at you.
 ~
 ~
 17 0 -1000 S
-17 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30101
@@ -26,7 +26,7 @@ A Pit Lord is eyeing you.
 ~
 ~
 17 128 -1000 S
-25 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30102
@@ -36,7 +36,7 @@ A hell hound is standing here growling at you.
 ~
 ~
 17 0 -1000 S
-20 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30103
@@ -56,7 +56,7 @@ A large demon pokes you HARD.
 ~
 ~
 17 0 -1000 S
-30 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30105
@@ -66,7 +66,7 @@ A short demon tries to bite you in the knee.
 ~
 ~
 17 0 -1000 S
-22 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30106
@@ -76,7 +76,7 @@ A green demon fondles you fondly.
 ~
 ~
 17 0 -1000 S
-18 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30107
@@ -86,7 +86,7 @@ A Lava Horror tries to kill you.
 ~
 ~
 17 0 -1000 S
-12 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30108
@@ -96,7 +96,7 @@ A Wailing Soul tries to get away.
 ~
 ~
 17 0 -1000 S
-35 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30109
@@ -106,7 +106,7 @@ A dark wraith tries to steal your soul.
 ~
 ~
 17 0 -1000 S
-28 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30110
@@ -116,7 +116,7 @@ A Flaming Claw tries to rip your heart out.
 ~
 ~
 17 0 -1000 S
-40 19 8 75d1+7425 1d2+0
+15 19 8 75d1+7425 1d2+0
 0 0
 0 0 0
 #30111
@@ -128,7 +128,7 @@ This is Maje, a former player who made the
 error of insulting Jobo one time to many.
 ~
 3 0 0 S
-349 0 0 0d0+0 0d0+0
+15 0 0 0d0+0 0d0+0
 0 0
 0 0 0
 #0
