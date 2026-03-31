@@ -150,7 +150,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( 120, 180 );   /* 2-3 minutes */
         bot->grind_attempts = 0;
         /* Navigate to grinding area based on power tier */
-        if ( ch->max_hit < 5000 )
+        if ( ch->max_hit < 3500 )
         {
             /* Tier 1 - newbie area: recall -> up -> open door -> south */
             bot->nav_n = 0;
@@ -159,7 +159,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
             bot_nav_queue( bot, "open door" );
             bot_nav_queue( bot, "south" );
         }
-        else if ( number_range( 0, 1 ) == 0 )
+        else if ( ch->max_hit < 6000 )
         {
             /* Tier 2 - Smurf Village: recall -> 2S -> 3W -> N */
             bot->nav_n = 0;
@@ -173,7 +173,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         }
         else
         {
-            /* Tier 2 - Elemental Canyon: recall(3001) -> 2S -> 6E -> 4S -> 2E -> S -> 2E -> D -> S */
+            /* Tier 3 - Elemental Canyon: recall(3001) -> 2S -> 6E -> 4S -> 2E -> S -> 2E -> D -> S */
             bot->nav_n = 0;
             bot_nav_queue( bot, "recall" );
             bot_nav_queue( bot, "south" );
