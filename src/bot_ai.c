@@ -603,15 +603,11 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 
     if ( naked )
     {
-        /* Must be standing to wear equipment */
-        if ( ch->position < POS_STANDING )
-        {
-            bot_cmd( ch, "wake" );
-            bot_cmd( ch, "stand" );
-        }
-
-        /* Try to wear whatever is currently in inventory */
-        bot_cmd( ch, "wear all" );
+        /* Call do_wear directly to bypass the position check in interpret().
+         * Using bot_cmd("wear all") would require waking the bot first, which
+         * then causes bot_state_resting to immediately re-issue "sleep" since
+         * it sees a standing bot with low HP -- creating an infinite loop. */
+        do_wear( ch, "all" );
 
         /* Re-check if they managed to put anything on */
         for ( i = 0; i < MAX_WEAR; i++ )
@@ -627,7 +623,7 @@ static void bot_ensure_geared( CHAR_DATA *ch )
         {
             /* Still naked, must have lost it all! Spawn newbie pack and wear. */
             do_newbiepack( ch, "" );
-            bot_cmd( ch, "wear all" );
+            do_wear( ch, "all" );
         }
     }
 }
