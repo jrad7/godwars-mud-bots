@@ -22,6 +22,7 @@ extern const BOT_CLASS_AI bot_vamp_ai;
 extern const BOT_CLASS_AI bot_monk_ai;
 extern const BOT_CLASS_AI bot_ninja_ai;
 extern const BOT_CLASS_AI bot_demon_ai;
+extern const BOT_CLASS_AI bot_drow_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
@@ -31,7 +32,8 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_vamp_ai,   /* BOT_CLASS_VAMPIRE */
     &bot_monk_ai,   /* BOT_CLASS_MONK    */
     &bot_ninja_ai,  /* BOT_CLASS_NINJA   */
-    &bot_demon_ai   /* BOT_CLASS_DEMON   */
+    &bot_demon_ai,  /* BOT_CLASS_DEMON   */
+    &bot_drow_ai    /* BOT_CLASS_DROW    */
 };
 
 /* -----------------------------------------------------------------------
@@ -221,6 +223,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_MONK:    return "monk";
     case BOT_CLASS_NINJA:   return "ninja";
     case BOT_CLASS_DEMON:   return "demon";
+    case BOT_CLASS_DROW:    return "drow";
     default:                return "demon";
     }
 }

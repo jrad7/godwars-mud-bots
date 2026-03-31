@@ -56,6 +56,8 @@ static const struct {
     { "Wrex",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 25, 95, 20 },
     { "Ashe",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 90, 30, 75 },
     { "Cael",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 55, 55, 55 },
+    { "Zilvra",  BOT_CLASS_DROW,   BOT_LIFE_PERMANENT, 40, 70, 50 },
+    { "Drisnil", BOT_CLASS_DROW,   BOT_LIFE_PERMANENT, 55, 60, 45 },
 
     /* --- Long-lived roster: stay weeks before retiring --- */
     { "Vex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      30, 90, 50 },
@@ -78,6 +80,7 @@ static const struct {
     { "Xan",     BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      50, 60, 85 },
     { "Yrel",    BOT_CLASS_NINJA,   BOT_LIFE_LONG,      85, 45, 55 },
     { "Zeth",    BOT_CLASS_DEMON,   BOT_LIFE_LONG,      40, 75, 50 },
+    { "Vrae",    BOT_CLASS_DROW,   BOT_LIFE_LONG,      60, 65, 55 },
 
     /* --- Short-lived roster: cycle through, retire fast --- */
     { "Thresh",  BOT_CLASS_MONK,    BOT_LIFE_SHORT,     80, 30, 50 },
@@ -98,6 +101,7 @@ static const struct {
     { "Rex",     BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     35, 85, 35 },
     { "Urax",    BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     80, 40, 65 },
     { "Wex",     BOT_CLASS_MONK,    BOT_LIFE_SHORT,     50, 55, 80 },
+    { "Sylvrix", BOT_CLASS_DROW,   BOT_LIFE_SHORT,     70, 55, 60 },
     { NULL }
 };
 
