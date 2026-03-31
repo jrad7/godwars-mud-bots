@@ -20,7 +20,7 @@ struct descriptor_data;
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 
 /* Population settings */
-#define MAX_BOT_ROSTER      70
+#define MAX_BOT_ROSTER      100
 #define BOT_MIN_ONLINE      10
 #define BOT_MAX_ONLINE      50
 
@@ -72,7 +72,8 @@ typedef enum {
 #define BOT_CLASS_NINJA     2
 #define BOT_CLASS_DEMON     3
 #define BOT_CLASS_DROW      4
-#define BOT_CLASS_COUNT     5
+#define BOT_CLASS_WEREWOLF  5
+#define BOT_CLASS_COUNT     6
 
 /*
  * Bot roster entry - one per named bot character.

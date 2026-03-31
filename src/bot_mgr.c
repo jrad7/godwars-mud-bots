@@ -56,8 +56,16 @@ static const struct {
     { "Wrex",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 25, 95, 20 },
     { "Ashe",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 90, 30, 75 },
     { "Cael",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 55, 55, 55 },
-    { "Zilvra",  BOT_CLASS_DROW,   BOT_LIFE_PERMANENT, 40, 70, 50 },
-    { "Drisnil", BOT_CLASS_DROW,   BOT_LIFE_PERMANENT, 55, 60, 45 },
+    { "Zilvra",  BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 40, 70, 50 },
+    { "Drisnil", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 55, 60, 45 },
+    { "Garak",   BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 35, 75, 55 },
+    { "Fenris",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 50, 65, 40 },
+    { "Xolvrae", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 30, 80, 40 },
+    { "Nathrae", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 65, 55, 65 },
+    { "Valdris", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 50, 65, 35 },
+    { "Torval",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 45, 70, 65 },
+    { "Hakon",   BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 25, 85, 30 },
+    { "Bjarga",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 70, 60, 50 },
 
     /* --- Long-lived roster: stay weeks before retiring --- */
     { "Vex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      30, 90, 50 },
@@ -80,7 +88,16 @@ static const struct {
     { "Xan",     BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      50, 60, 85 },
     { "Yrel",    BOT_CLASS_NINJA,   BOT_LIFE_LONG,      85, 45, 55 },
     { "Zeth",    BOT_CLASS_DEMON,   BOT_LIFE_LONG,      40, 75, 50 },
-    { "Vrae",    BOT_CLASS_DROW,   BOT_LIFE_LONG,      60, 65, 55 },
+    { "Vrae",    BOT_CLASS_DROW,      BOT_LIFE_LONG,      60, 65, 55 },
+    { "Ilvaen",  BOT_CLASS_DROW,      BOT_LIFE_LONG,      50, 75, 50 },
+    { "Szoryn",  BOT_CLASS_DROW,      BOT_LIFE_LONG,      35, 80, 45 },
+    { "Quelzar", BOT_CLASS_DROW,      BOT_LIFE_LONG,      75, 60, 60 },
+    { "Delvrae", BOT_CLASS_DROW,      BOT_LIFE_LONG,      45, 70, 70 },
+    { "Lykan",   BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      45, 80, 60 },
+    { "Ulfgar",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      30, 90, 35 },
+    { "Sigrun",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      65, 60, 65 },
+    { "Mordak",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      40, 85, 40 },
+    { "Skaldi",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      55, 70, 55 },
 
     /* --- Short-lived roster: cycle through, retire fast --- */
     { "Thresh",  BOT_CLASS_MONK,    BOT_LIFE_SHORT,     80, 30, 50 },
@@ -101,7 +118,14 @@ static const struct {
     { "Rex",     BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     35, 85, 35 },
     { "Urax",    BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     80, 40, 65 },
     { "Wex",     BOT_CLASS_MONK,    BOT_LIFE_SHORT,     50, 55, 80 },
-    { "Sylvrix", BOT_CLASS_DROW,   BOT_LIFE_SHORT,     70, 55, 60 },
+    { "Sylvrix", BOT_CLASS_DROW,      BOT_LIFE_SHORT,     70, 55, 60 },
+    { "Chal",    BOT_CLASS_DROW,      BOT_LIFE_SHORT,     60, 65, 55 },
+    { "Belryn",  BOT_CLASS_DROW,      BOT_LIFE_SHORT,     80, 50, 70 },
+    { "Nizzre",  BOT_CLASS_DROW,      BOT_LIFE_SHORT,     45, 75, 45 },
+    { "Ragna",   BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     60, 70, 50 },
+    { "Skoll",   BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     35, 85, 45 },
+    { "Hati",    BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     50, 80, 35 },
+    { "Wulfric", BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     70, 65, 60 },
     { NULL }
 };
 
