@@ -91,6 +91,8 @@ static const struct {
     { 3700, 3760, DIRMASK(DIR_UP) },
     /* Elemental Canyon entrance (9201): don't go north back out to the world */
     { 9201, 9201, DIRMASK(DIR_NORTH) },
+    /* Jobo's Hell (30100-30200): don't go down (exits back through haon.are shaft) */
+    { 30100, 30200, DIRMASK(DIR_DOWN) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -161,15 +163,36 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         }
         else if ( ch->max_hit < 6000 )
         {
-            /* Tier 2 - Smurf Village: recall -> 2S -> 3W -> N */
             bot->nav_n = 0;
-            bot_nav_queue( bot, "recall" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "west" );
-            bot_nav_queue( bot, "west" );
-            bot_nav_queue( bot, "west" );
-            bot_nav_queue( bot, "north" );
+            if ( number_range( 0, 1 ) == 0 )
+            {
+                /* Tier 2a - Smurf Village: recall -> 2S -> 3W -> N */
+                bot_nav_queue( bot, "recall" );
+                bot_nav_queue( bot, "south" );
+                bot_nav_queue( bot, "south" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "north" );
+            }
+            else
+            {
+                /* Tier 2b - Jobo's Hell: recall -> 2S -> 7W -> 3U */
+                /* 3001->3005->3014->3013->3012->3040->3052->6000->6001->6002->30200->30199->30100 */
+                bot_nav_queue( bot, "recall" );
+                bot_nav_queue( bot, "south" );
+                bot_nav_queue( bot, "south" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "west" );
+                bot_nav_queue( bot, "up" );
+                bot_nav_queue( bot, "up" );
+                bot_nav_queue( bot, "up" );
+            }
         }
         else
         {
