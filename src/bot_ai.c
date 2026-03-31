@@ -91,8 +91,10 @@ static const struct {
     { 3700, 3760, DIRMASK(DIR_UP) },
     /* Elemental Canyon entrance (9201): don't go north back out to the world */
     { 9201, 9201, DIRMASK(DIR_NORTH) },
-    /* Jobo's Hell (30100-30200): don't go down (exits back through haon.are shaft) */
-    { 30100, 30200, DIRMASK(DIR_DOWN) },
+    /* Jobo's Hell (30100-30200): don't go up (exits back through haon.are shaft via D4) */
+    { 30100, 30200, DIRMASK(DIR_UP) },
+    /* Jobo's Heaven entrance (99000): don't go down (exits back to temple via D5) */
+    { 99000, 99000, DIRMASK(DIR_DOWN) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -151,74 +153,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_GRINDING:
         bot->state_timer = number_range( 120, 180 );   /* 2-3 minutes */
         bot->grind_attempts = 0;
-        /* Navigate to grinding area based on power tier */
-        if ( ch->max_hit < 3500 )
-        {
-            /* Tier 1 - newbie area: recall -> up -> open door -> south */
-            bot->nav_n = 0;
-            bot_nav_queue( bot, "recall" );
-            bot_nav_queue( bot, "up" );
-            bot_nav_queue( bot, "open door" );
-            bot_nav_queue( bot, "south" );
-        }
-        else if ( ch->max_hit < 6000 )
-        {
-            bot->nav_n = 0;
-            if ( number_range( 0, 1 ) == 0 )
-            {
-                /* Tier 2a - Smurf Village: recall -> 2S -> 3W -> N */
-                bot_nav_queue( bot, "recall" );
-                bot_nav_queue( bot, "south" );
-                bot_nav_queue( bot, "south" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "north" );
-            }
-            else
-            {
-                /* Tier 2b - Jobo's Hell: recall -> 2S -> 7W -> 3U */
-                /* 3001->3005->3014->3013->3012->3040->3052->6000->6001->6002->30200->30199->30100 */
-                bot_nav_queue( bot, "recall" );
-                bot_nav_queue( bot, "south" );
-                bot_nav_queue( bot, "south" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "west" );
-                bot_nav_queue( bot, "up" );
-                bot_nav_queue( bot, "up" );
-                bot_nav_queue( bot, "up" );
-            }
-        }
-        else
-        {
-            /* Tier 3 - Elemental Canyon: recall(3001) -> 2S -> 6E -> 4S -> 2E -> S -> 2E -> D -> S */
-            bot->nav_n = 0;
-            bot_nav_queue( bot, "recall" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "south" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "east" );
-            bot_nav_queue( bot, "down" );
-            bot_nav_queue( bot, "south" );
-        }
+        bot_navigate_to_grind_zone( bot, ch );
         break;
     case BOT_TRAINING:
         bot->state_timer = number_range( 5, 15 );     /* short burst, then back to grind */
@@ -233,6 +168,58 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( 40, 120 );
         break;
     }
+}
+
+/* -----------------------------------------------------------------------
+ * Grind zone navigation table
+ *
+ * Each zone_* array is a NULL-terminated list of commands to queue.
+ * Each GRIND_TIER groups zones that are appropriate up to max_hit.
+ * The last tier acts as a catch-all (use a large sentinel).
+ * To add a zone: define its route array, add it to the right tier.
+ * ----------------------------------------------------------------------- */
+
+static const char *zone_mud_school[]  = { "recall", "up", "open door", "south", NULL };
+static const char *zone_jobo_heaven[] = { "recall", "down", NULL };
+static const char *zone_smurf[]       = { "recall", "south", "south", "west", "west", "west", "north", NULL };
+/* 3001->3005->3014->3013->3012->3040->3052->6000->6001->6002->30200->30199->30100 */
+static const char *zone_jobo_hell[]   = { "recall", "south", "south", "west", "west", "west", "west", "west", "west", "west", "down", "down", "down", NULL };
+/* recall(3001)->2S->6E->4S->2E->S->2E->D->S */
+static const char *zone_canyon[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "south", NULL };
+
+typedef struct {
+    int           max_hit;      /* use this tier when ch->max_hit < max_hit */
+    const char  **routes[8];    /* NULL-sentinel-terminated command lists    */
+    int           num_routes;
+} GRIND_TIER;
+
+static const GRIND_TIER grind_tiers[] = {
+    { 3500,  { zone_mud_school, zone_jobo_heaven }, 2 },
+    { 6000,  { zone_smurf,      zone_jobo_hell   }, 2 },
+    { 99999, { zone_canyon                        }, 1 },
+};
+#define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
+
+static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
+{
+    int i;
+    const GRIND_TIER *tier = &grind_tiers[GRIND_TIER_COUNT - 1];
+    const char **route;
+    const char **step;
+
+    for ( i = 0; i < GRIND_TIER_COUNT; i++ )
+    {
+        if ( ch->max_hit < grind_tiers[i].max_hit )
+        {
+            tier = &grind_tiers[i];
+            break;
+        }
+    }
+
+    route = tier->routes[number_range( 0, tier->num_routes - 1 )];
+    bot->nav_n = 0;
+    for ( step = route; *step != NULL; step++ )
+        bot_nav_queue( bot, *step );
 }
 
 /* -----------------------------------------------------------------------

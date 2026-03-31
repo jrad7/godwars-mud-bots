@@ -1665,6 +1665,9 @@ void area_update( void )
 	    pRoomIndex = get_room_index( 30100 );  /* Jobo's Hell entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
 		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 99000 );  /* Jobo's Heaven entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	}
     }
 
