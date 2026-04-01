@@ -276,6 +276,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( 40, 120 );
         break;
     }
+    bot->state_timer_max = bot->state_timer;
 }
 
 /* -----------------------------------------------------------------------
@@ -651,7 +652,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         bot->grind_attempts = 0;
     }
 
-    if ( bot->state_timer <= 0 )
+    if ( bot->state_timer <= 0 || bot->state_timer <= bot->state_timer_max / 2 )
     {
         if ( bot_should_train(ch) )
             bot_change_state( ch, bot, BOT_TRAINING );
