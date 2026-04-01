@@ -38,61 +38,8 @@
 /* Index into ch->stance[] for the autostance setting */
 #define MONK_AUTODROP  12
 
-/* Forward declarations - defined in kav_fight.c */
+/* Forward declaration - defined in kav_fight.c */
 void do_stance( CHAR_DATA *ch, char *argument );
-void do_autostance( CHAR_DATA *ch, char *argument );
-
-/* -----------------------------------------------------------------------
- * bot_pick_training_stance
- *
- * Returns the 1-based slot (1-5) of the next basic stance to train in
- * order: viper -> crane -> crab -> mongoose -> bull.
- * Returns 0 if all five are mastered (>= 200 XP).
- * ----------------------------------------------------------------------- */
-
-static int bot_pick_training_stance( CHAR_DATA *ch )
-{
-    static const int basic[] = { 1, 2, 3, 4, 5 };
-    int i;
-
-    for ( i = 0; i < 5; i++ )
-    {
-        int xp = ch->stance[ basic[i] ];
-        if ( xp < 0 ) xp = 0;   /* -1 means locked, treat as 0 */
-        if ( xp < 200 )
-            return i + 1;        /* 1-based slot */
-    }
-    return 0;   /* all mastered */
-}
-
-/* -----------------------------------------------------------------------
- * bot_set_autostance
- *
- * Sets the bot's autostance to the current training stance.
- * Stays on the current stance until it reaches 200 XP, then advances.
- * ----------------------------------------------------------------------- */
-
-static void bot_set_autostance( CHAR_DATA *ch )
-{
-    static const char *names[] = { "viper", "crane", "crab", "mongoose", "bull" };
-    int current = ch->stance[MONK_AUTODROP];
-    int pick;
-
-    /* Stick with current stance until fully mastered */
-    if ( current >= STANCE_VIPER && current <= STANCE_BULL
-      && ch->stance[current] < 200 )
-        return;
-
-    /* Current mastered (or unset) - advance to next unmastered */
-    pick = bot_pick_training_stance( ch );
-    if ( pick == 0 )
-        return;   /* all mastered - keep last autostance */
-
-    if ( ch->stance[MONK_AUTODROP] == pick )
-        return;   /* already set correctly */
-
-    do_autostance( ch, (char *)names[ pick - 1 ] );
-}
 
 /* -----------------------------------------------------------------------
  * bot_monk_pick_train
@@ -476,11 +423,10 @@ static void bot_monk_combat_action( CHAR_DATA *ch )
 
 static bool bot_monk_between_fights( CHAR_DATA *ch )
 {
-    int prev = ch->stance[MONK_AUTODROP];
-    bot_set_autostance( ch );
-
-    /* Stance advanced - relax once so autodrop enters the new stance */
-    if ( ch->stance[MONK_AUTODROP] != prev && ch->stance[0] != -1 )
+    /* bot_set_autostance() is called for all classes in bot_state_grinding.
+     * Here we only need to relax from the current stance so autodrop()
+     * can re-enter the (possibly updated) autostance on the next fight. */
+    if ( ch->stance[0] > 0 )
     {
         do_stance( ch, "" );
         return TRUE;

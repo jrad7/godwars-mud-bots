@@ -38,6 +38,104 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_werewolf_ai   /* BOT_CLASS_WEREWOLF  */
 };
 
+/* Forward declarations for stance functions defined in kav_fight.c / fight.c */
+void do_stance( CHAR_DATA *ch, char *argument );
+void do_autostance( CHAR_DATA *ch, char *argument );
+
+/* Index into ch->stance[] for the autostance setting */
+#define MONK_AUTODROP  12
+
+/* -----------------------------------------------------------------------
+ * bot_pick_training_stance
+ *
+ * Returns the STANCE_* ID of the next stance to train, in order:
+ *   basics first (viper, crane, crab, mongoose, bull),
+ *   then advanced (mantis, dragon, tiger, monkey, swallow) once unlocked.
+ * Returns 0 if all available stances are mastered (>= 200 XP).
+ * ----------------------------------------------------------------------- */
+static int bot_pick_training_stance( CHAR_DATA *ch )
+{
+    static const int basic[] = {
+        STANCE_VIPER, STANCE_CRANE, STANCE_CRAB, STANCE_MONGOOSE, STANCE_BULL
+    };
+    int i, xp;
+
+    /* Train all five basic stances first */
+    for ( i = 0; i < 5; i++ )
+    {
+        xp = ch->stance[ basic[i] ];
+        if ( xp < 0 ) xp = 0;   /* -1 means locked, treat as unstarted */
+        if ( xp < 200 )
+            return basic[i];
+    }
+
+    /* Advanced stances - only attempt if prerequisites met and not mastered.
+     * Prerequisites mirror do_autostance() in fight.c. */
+    if ( ch->stance[STANCE_CRANE]    >= 200 && ch->stance[STANCE_VIPER]    >= 200
+      && ch->stance[STANCE_MANTIS]   >= 0   && ch->stance[STANCE_MANTIS]   < 200 )
+        return STANCE_MANTIS;
+
+    if ( ch->stance[STANCE_CRAB]     >= 200 && ch->stance[STANCE_BULL]     >= 200
+      && ch->stance[STANCE_DRAGON]   >= 0   && ch->stance[STANCE_DRAGON]   < 200 )
+        return STANCE_DRAGON;
+
+    if ( ch->stance[STANCE_BULL]     >= 200 && ch->stance[STANCE_VIPER]    >= 200
+      && ch->stance[STANCE_TIGER]    >= 0   && ch->stance[STANCE_TIGER]    < 200 )
+        return STANCE_TIGER;
+
+    if ( ch->stance[STANCE_CRANE]    >= 200 && ch->stance[STANCE_MONGOOSE] >= 200
+      && ch->stance[STANCE_MONKEY]   >= 0   && ch->stance[STANCE_MONKEY]   < 200 )
+        return STANCE_MONKEY;
+
+    if ( ch->stance[STANCE_CRAB]     >= 200 && ch->stance[STANCE_MONGOOSE] >= 200
+      && ch->stance[STANCE_SWALLOW]  >= 0   && ch->stance[STANCE_SWALLOW]  < 200 )
+        return STANCE_SWALLOW;
+
+    return 0;   /* all available stances mastered */
+}
+
+/* -----------------------------------------------------------------------
+ * bot_set_autostance
+ *
+ * Sets the bot's autostance to the current training stance.
+ * Stays on the current stance until it reaches 200 XP, then advances.
+ * Called for all classes each grinding tick so every class trains stances.
+ * ----------------------------------------------------------------------- */
+static void bot_set_autostance( CHAR_DATA *ch )
+{
+    /* Indexed by STANCE_* value (0 unused, 1-10 = viper..swallow) */
+    static const char *stance_names[] = {
+        NULL,        /* 0  STANCE_NORMAL   */
+        "viper",     /* 1  STANCE_VIPER    */
+        "crane",     /* 2  STANCE_CRANE    */
+        "crab",      /* 3  STANCE_CRAB     */
+        "mongoose",  /* 4  STANCE_MONGOOSE */
+        "bull",      /* 5  STANCE_BULL     */
+        "mantis",    /* 6  STANCE_MANTIS   */
+        "dragon",    /* 7  STANCE_DRAGON   */
+        "tiger",     /* 8  STANCE_TIGER    */
+        "monkey",    /* 9  STANCE_MONKEY   */
+        "swallow",   /* 10 STANCE_SWALLOW  */
+    };
+    int current = ch->stance[MONK_AUTODROP];
+    int pick;
+
+    /* Stick with current stance until fully mastered */
+    if ( current >= STANCE_VIPER && current <= STANCE_SWALLOW
+      && ch->stance[current] < 200 )
+        return;
+
+    /* Current mastered (or unset) - advance to next unmastered */
+    pick = bot_pick_training_stance( ch );
+    if ( pick == 0 )
+        return;   /* all mastered - keep last autostance */
+
+    if ( ch->stance[MONK_AUTODROP] == pick )
+        return;   /* already set correctly */
+
+    do_autostance( ch, (char *)stance_names[ pick ] );
+}
+
 /* -----------------------------------------------------------------------
  * bot_cmd - inject a command into a bot as if it typed it
  * ----------------------------------------------------------------------- */
@@ -516,10 +614,12 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         {
             if ( ai && ai->combat_action )
                 ai->combat_action( ch );
-            /* Stance entry is handled by autodrop() in the combat engine */
             bot->grind_attempts = 0;
             return;
         }
+
+        /* Set autostance for stance training - applies to all classes */
+        bot_set_autostance( ch );
 
         /* Between fights: buffs first, then any between-fight setup */
         if ( ai && ai->buff_check && ai->buff_check(ch) )
