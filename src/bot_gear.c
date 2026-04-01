@@ -12,9 +12,9 @@
  *   3. Unclassed bot: fill every empty newbiepack-eligible slot.
  *   4. Classed bot: walk the class gear table in slot order.
  *      - Slot has class gear            → skip.
- *      - Slot has newbiepack + primal   → unequip newbiepack, create class piece, wear all.
+ *      - Slot has newbiepack + primal   → unequip newbiepack, create class piece, wear_obj it.
  *      - Slot has newbiepack, no primal → leave it, try next slot.
- *      - Slot empty + primal            → create class piece, wear all.
+ *      - Slot empty + primal            → create class piece, wear_obj it.
  *      - Slot empty, no primal          → fill with newbiepack (temporary).
  *   5. Newbiepack sweep for any slot covered by the newbiepack but absent
  *      from the class gear table (e.g. drow WEAR_NECK_2).
@@ -23,8 +23,11 @@
  *   - Surplus cleanup uses extract_obj() directly rather than drop+sacrifice
  *     to avoid keyword collisions when worn and unequipped items share names.
  *   - obj_to_char() prepends to ch->carrying, so a newly created class piece
- *     is at the head of the list and gets tried first by "wear all".  The
- *     displaced newbiepack stays in inventory and is extracted next tick.
+ *     is always at ch->carrying after the creation command.  wear_obj() is
+ *     called directly on that pointer rather than "wear all" to avoid hitting
+ *     unrelated wieldable items in inventory (e.g. looted weapons, wolfman
+ *     hand-slot blocks) that would spam error messages each tick.
+ *     The displaced newbiepack stays in inventory and is extracted next tick.
  *   - Vampire and demon skip weapon slots: activating claws auto-drops any
  *     wielded item, making weapon creation pointless for those classes.
  */
@@ -257,6 +260,8 @@ static OBJ_DATA *bot_spawn_obj( CHAR_DATA *ch, int vnum )
  * only spawns a fresh one when needed.  Issues "wear all" after placing
  * the item so the engine assigns it to the correct slot.
  * Returns TRUE if an action was taken (caller should return immediately).
+ * Uses wear_obj() directly rather than "wear all" to avoid triggering error
+ * messages from unrelated wieldable items in inventory.
  * ----------------------------------------------------------------------- */
 static bool bot_fill_newbie_slot( CHAR_DATA *ch, int wear_slot, int vnum )
 {
@@ -270,15 +275,16 @@ static bool bot_fill_newbie_slot( CHAR_DATA *ch, int wear_slot, int vnum )
     {
         if ( obj->wear_loc == WEAR_NONE && obj->pIndexData->vnum == vnum )
         {
-            bot_cmd( ch, "wear all" );
+            wear_obj( ch, obj, TRUE );
             return TRUE;
         }
     }
 
     /* Spawn a new piece and wear it */
-    if ( bot_spawn_obj( ch, vnum ) != NULL )
+    obj = bot_spawn_obj( ch, vnum );
+    if ( obj != NULL )
     {
-        bot_cmd( ch, "wear all" );
+        wear_obj( ch, obj, TRUE );
         return TRUE;
     }
 
@@ -375,8 +381,9 @@ void bot_gear_check( CHAR_DATA *ch )
             if ( ch->practice >= entry->primal_cost )
             {
                 unequip_char( ch, current );        /* → inventory */
-                bot_cmd( ch, entry->cmd );          /* class piece → HEAD of inventory */
-                bot_cmd( ch, "wear all" );          /* class piece worn, newbiepack stays */
+                bot_cmd( ch, entry->cmd );          /* class piece → HEAD of ch->carrying */
+                if ( ch->carrying != NULL && ch->carrying->wear_loc == WEAR_NONE )
+                    wear_obj( ch, ch->carrying, TRUE );
                 return;
             }
             continue;   /* can't afford yet; leave newbiepack, try next slot */
@@ -385,8 +392,9 @@ void bot_gear_check( CHAR_DATA *ch )
         /* Slot is empty */
         if ( ch->practice >= entry->primal_cost )
         {
-            bot_cmd( ch, entry->cmd );
-            bot_cmd( ch, "wear all" );
+            bot_cmd( ch, entry->cmd );              /* class piece → HEAD of ch->carrying */
+            if ( ch->carrying != NULL && ch->carrying->wear_loc == WEAR_NONE )
+                wear_obj( ch, ch->carrying, TRUE );
             return;
         }
 
