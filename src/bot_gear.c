@@ -450,6 +450,13 @@ void bot_gear_check( CHAR_DATA *ch )
         }
         if ( in_table ) continue;   /* handled by step 4 */
 
+        /* Skip wield/hold slots for classes that don't have them in their
+         * gear table (monk, vampire, demon, werewolf).  wear_obj would fail
+         * and spam an error message every tick. */
+        if ( newbie_slots[i].wear_slot == WEAR_WIELD
+          || newbie_slots[i].wear_slot == WEAR_HOLD )
+            continue;
+
         if ( bot_fill_newbie_slot( ch, newbie_slots[i].wear_slot,
                                        newbie_slots[i].vnum ) )
             return;
