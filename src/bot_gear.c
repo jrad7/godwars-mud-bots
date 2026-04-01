@@ -209,7 +209,6 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
  * Maps each newbiepack vnum to the specific WEAR_* slot it occupies.
  * Only slots actually covered by a newbiepack piece are listed:
  *   - WEAR_ABOUT absent: no newbiepack cape/cloak exists.
- *   - WEAR_HOLD  absent: the second newbie sword can't be held.
  * Terminated by { -1, 0 }.
  * ----------------------------------------------------------------------- */
 typedef struct { int wear_slot; int vnum; } NEWBIE_SLOT;
@@ -229,6 +228,7 @@ static const NEWBIE_SLOT newbie_slots[] = {
     { WEAR_WRIST_L,  30339 },   /* newbie bracer */
     { WEAR_WRIST_R,  30339 },   /* newbie bracer */
     { WEAR_WIELD,    30340 },   /* newbie sword  */
+    { WEAR_HOLD,     30340 },   /* newbie sword (offhand) */
     { WEAR_FACE,     2622  },   /* newbie mask   */
     { -1, 0 }
 };
