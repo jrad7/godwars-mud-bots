@@ -149,6 +149,7 @@ Handled in `between_fights` hook:
 4.  Raptor → 1   (auto rfangs every round)
 5.  Spider → 1   (passive poison on every hit)
 6.  Luna  → 1    (flameclaws toggle unlock)
+6b. Luna  → 2    (moonarmour unlock — gear system requires DISC_WERE_LUNA ≥ 2)
 7.  Bear  → 7    (skin and rend toggles)
 8.  Bear  → 8    (slam auto-proc)
 9.  Hawk  → 5    (quills toggle)

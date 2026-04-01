@@ -360,7 +360,7 @@ static int bot_primal_target( CHAR_DATA *ch )
     BOT_DATA *bot = ch->pcdata->botdata;
     if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
         return 0;
-    return ( bot->roster->class_pref == BOT_CLASS_WEREWOLF ) ? 150 : 60;
+    return 60;   /* moonarmour costs 60 primal/piece — same as other classes */
 }
 
 /*

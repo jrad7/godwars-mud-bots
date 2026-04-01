@@ -39,6 +39,7 @@
 #include <string.h>
 #include "merc.h"
 #include "bot.h"
+#include "garou.h"
 
 /* -----------------------------------------------------------------------
  * Vnum recognition helpers
@@ -172,24 +173,25 @@ static const BOT_GEAR_PIECE gear_drow[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Werewolf class gear uses moonarmour (CLASS_WEREWOLF command, costs 60 primal/piece).
+ * Requires DISC_WERE_LUNA >= 2 — enforced by the discipline guard in bot_gear_check.
+ * No wield/hold: werewolves fight with claws. */
 static const BOT_GEAR_PIECE gear_werewolf[] = {
-    { WEAR_FINGER_L, "shapearmor ring",      150 },
-    { WEAR_FINGER_R, "shapearmor ring",      150 },
-    { WEAR_NECK_1,   "shapearmor necklace",  150 },
-    { WEAR_NECK_2,   "shapearmor necklace",  150 },
-    { WEAR_BODY,     "shapearmor jacket",    150 },
-    { WEAR_HEAD,     "shapearmor helmet",    150 },
-    { WEAR_LEGS,     "shapearmor pants",     150 },
-    { WEAR_FEET,     "shapearmor boots",     150 },
-    { WEAR_HANDS,    "shapearmor gloves",    150 },
-    { WEAR_ARMS,     "shapearmor shirt",     150 },
-    { WEAR_ABOUT,    "shapearmor cloak",     150 },
-    { WEAR_WAIST,    "shapearmor belt",      150 },
-    { WEAR_WRIST_L,  "shapearmor bands",     150 },
-    { WEAR_WRIST_R,  "shapearmor bands",     150 },
-    { WEAR_FACE,     "shapearmor visor",     150 },
-    { WEAR_WIELD,    "shapearmor knife",     150 },
-    { WEAR_HOLD,     "shapearmor kane",      150 },
+    { WEAR_FINGER_L, "moonarmour ring",     60 },
+    { WEAR_FINGER_R, "moonarmour ring",     60 },
+    { WEAR_NECK_1,   "moonarmour collar",   60 },
+    { WEAR_NECK_2,   "moonarmour collar",   60 },
+    { WEAR_BODY,     "moonarmour plate",    60 },
+    { WEAR_HEAD,     "moonarmour helmet",   60 },
+    { WEAR_LEGS,     "moonarmour leggings", 60 },
+    { WEAR_FEET,     "moonarmour boots",    60 },
+    { WEAR_HANDS,    "moonarmour gloves",   60 },
+    { WEAR_ARMS,     "moonarmour sleeves",  60 },
+    { WEAR_ABOUT,    "moonarmour cape",     60 },
+    { WEAR_WAIST,    "moonarmour belt",     60 },
+    { WEAR_WRIST_L,  "moonarmour bracer",   60 },
+    { WEAR_WRIST_R,  "moonarmour bracer",   60 },
+    { WEAR_FACE,     "moonarmour mask",     60 },
     { WEAR_NONE, NULL, 0 }
 };
 
@@ -344,6 +346,13 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
+    /* Werewolf moonarmour requires DISC_WERE_LUNA >= 2.
+     * Skip class gear entirely until the discipline is learned;
+     * newbiepack fills slots in the meantime via step 5. */
+    if ( class_pref == BOT_CLASS_WEREWOLF
+      && ch->power[DISC_WERE_LUNA] < 2 )
+        goto newbiepack_sweep;
+
     /* Step 4: classed bot — class-gear pass (one slot upgraded per tick).
      *
      * obj_to_char() prepends to ch->carrying, so a class piece just created
@@ -396,7 +405,9 @@ void bot_gear_check( CHAR_DATA *ch )
     /* Step 5: newbiepack sweep for slots covered by the newbiepack but absent
      * from the class gear table (example: drow WEAR_NECK_2 — drow has only
      * one neck piece so WEAR_NECK_2 is not in gear_drow[]).  These slots
-     * stay filled with newbiepack permanently. */
+     * stay filled with newbiepack permanently.
+     * Also the landing point for the werewolf Luna-2 discipline guard above. */
+    newbiepack_sweep:
     for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
     {
         in_table = FALSE;

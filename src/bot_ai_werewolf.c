@@ -46,6 +46,7 @@
  *   4. Raptor 1 — auto rfangs attack every round
  *   5. Spider 1 — passive poison on every hit
  *   6. Luna 1   — flameclaws toggle (Luna 1 is the cheapest unlock)
+ *   6b.Luna 2   — moonarmour unlock (gear system requires DISC_WERE_LUNA >= 2)
  *   7. Bear 7   — skin (−100 armor) and rend toggles
  *   8. Bear 8   — slam auto-proc (1 in 2–5 rounds depending on Bear lvl)
  *   9. Hawk 5   — quills toggle (extra multi_hit per round)
@@ -81,6 +82,8 @@ static int bot_ww_pick_research( CHAR_DATA *ch )
         { DISC_WERE_SPID, 1  },
         /* Luna 1: flameclaws toggle */
         { DISC_WERE_LUNA, 1  },
+        /* Luna 2: moonarmour unlock (DISC_WERE_LUNA >= 2 required by bot gear) */
+        { DISC_WERE_LUNA, 2  },
         /* Bear 7: skin + rend */
         { DISC_WERE_BEAR, 7  },
         /* Bear 8: slam auto-proc */
