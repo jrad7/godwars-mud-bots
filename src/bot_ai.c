@@ -252,6 +252,33 @@ static const char *bot_class_name( int class_pref )
 }
 
 /*
+ * bot_primal_target - how much primal this bot needs to afford one class gear piece.
+ * Werewolf gear costs 150; all others cost 60.
+ * Returns 0 if the bot has no class yet (unclassed bots don't need primal).
+ */
+static int bot_primal_target( CHAR_DATA *ch )
+{
+    BOT_DATA *bot = ch->pcdata->botdata;
+    if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
+        return 0;
+    return ( bot->roster->class_pref == BOT_CLASS_WEREWOLF ) ? 150 : 60;
+}
+
+/*
+ * bot_should_train_primal - TRUE if bot needs more primal and can afford one point.
+ * Cost for the next primal point is (current_practice + 1) * 500 exp.
+ */
+static bool bot_should_train_primal( CHAR_DATA *ch )
+{
+    int target = bot_primal_target( ch );
+    int cost_next;
+    if ( target == 0 || ch->practice >= target )
+        return FALSE;
+    cost_next = ( ch->practice + 1 ) * 500;
+    return ( ch->exp >= cost_next );
+}
+
+/*
  * Returns TRUE if the bot has exp worth spending on stats or class rank.
  */
 static bool bot_should_train( CHAR_DATA *ch )
@@ -260,6 +287,10 @@ static bool bot_should_train( CHAR_DATA *ch )
 
     if ( ch->level == 2 && ch->max_hit >= 2000 )               return TRUE;
     if ( ch->level == 3 && ch->class == 0 )                     return TRUE;
+
+    /* Primal for class gear takes priority over hp/mana/move spending */
+    if ( bot_should_train_primal(ch) )                           return TRUE;
+
     if ( ch->max_hit  < hp_cap         && ch->exp >= ch->max_hit  + 1 ) return TRUE;
     if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
       && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
@@ -314,6 +345,16 @@ static bool bot_do_train( CHAR_DATA *ch )
             if ( ai && ai->do_train && ai->do_train(ch) )
                 return TRUE;
         }
+    }
+
+    /* Primal for class gear.
+     * Train one point at a time so the training state machine ticks normally.
+     * The gear check in bot_ensure_geared will spend the primal as soon as
+     * ch->practice reaches the cost threshold for the next slot. */
+    if ( bot_should_train_primal(ch) )
+    {
+        bot_cmd( ch, "train primal 1" );
+        return TRUE;
     }
 
     /* Primary: dump all available exp into hp */
