@@ -446,12 +446,16 @@ static bool bot_do_train( CHAR_DATA *ch )
     }
 
     /* Primal for class gear.
-     * Train one point at a time so the training state machine ticks normally.
-     * The gear check in bot_ensure_geared will spend the primal as soon as
-     * ch->practice reaches the cost threshold for the next slot. */
+     * Buy as many primal points as we can afford in one shot, up to the
+     * target ceiling.  The "train primal N" command loops internally and
+     * stops when exp runs out, so passing the full remaining amount is safe. */
     if ( bot_should_train_primal(ch) )
     {
-        bot_cmd( ch, "train primal 1" );
+        int target  = bot_primal_target(ch);
+        int needed  = target - ch->practice;   /* always >= 1 here */
+        char cmd[32];
+        sprintf( cmd, "train primal %d", needed );
+        bot_cmd( ch, cmd );
         return TRUE;
     }
 
