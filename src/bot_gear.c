@@ -7,8 +7,9 @@
  *
  * Priority each tick:
  *   1. Ensure the bot is standing (class armor commands require POS_STANDING).
- *   2. Extract one surplus managed item from inventory (newbiepack or class
- *      gear that isn't worn).  Keeps the carry list clean.
+ *   2a. Extract any unworn wield/hold item (looted weapons bots can't use).
+ *   2b. Extract one surplus managed item from inventory (newbiepack or class
+ *       gear that isn't worn).  Keeps the carry list clean.
  *   3. Unclassed bot: fill every empty newbiepack-eligible slot.
  *   4. Classed bot: walk the class gear table in slot order.
  *      - Slot has class gear            → skip.
@@ -322,7 +323,21 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
-    /* Step 2: extract one surplus managed inventory item per tick.
+    /* Step 2a: extract any unworn wield/hold item from inventory.
+     * Bots loot weapons from mobs; werewolves and claw classes never wield,
+     * and wolfman form blocks hand slots — these items just cause noise. */
+    for ( obj = ch->carrying; obj != NULL; obj = obj_next )
+    {
+        obj_next = obj->next_content;
+        if ( obj->wear_loc != WEAR_NONE ) continue;
+        if ( CAN_WEAR( obj, ITEM_WIELD ) || CAN_WEAR( obj, ITEM_HOLD ) )
+        {
+            extract_obj( obj );
+            return;
+        }
+    }
+
+    /* Step 2b: extract one surplus managed inventory item per tick.
      * "Managed" = newbiepack or class-gear vnum, currently not worn.
      * Direct extract avoids keyword collisions when worn and unequipped
      * items share the same name (e.g. two "newbie ring" items). */
@@ -380,10 +395,13 @@ void bot_gear_check( CHAR_DATA *ch )
         {
             if ( ch->practice >= entry->primal_cost )
             {
+                OBJ_DATA *before = ch->carrying;
+                OBJ_DATA *created;
                 unequip_char( ch, current );        /* → inventory */
                 bot_cmd( ch, entry->cmd );          /* class piece → HEAD of ch->carrying */
-                if ( ch->carrying != NULL && ch->carrying->wear_loc == WEAR_NONE )
-                    wear_obj( ch, ch->carrying, TRUE );
+                created = ( ch->carrying != before ) ? ch->carrying : NULL;
+                if ( created != NULL && created->wear_loc == WEAR_NONE )
+                    wear_obj( ch, created, TRUE );
                 return;
             }
             continue;   /* can't afford yet; leave newbiepack, try next slot */
@@ -392,9 +410,12 @@ void bot_gear_check( CHAR_DATA *ch )
         /* Slot is empty */
         if ( ch->practice >= entry->primal_cost )
         {
+            OBJ_DATA *before  = ch->carrying;
+            OBJ_DATA *created;
             bot_cmd( ch, entry->cmd );              /* class piece → HEAD of ch->carrying */
-            if ( ch->carrying != NULL && ch->carrying->wear_loc == WEAR_NONE )
-                wear_obj( ch, ch->carrying, TRUE );
+            created = ( ch->carrying != before ) ? ch->carrying : NULL;
+            if ( created != NULL && created->wear_loc == WEAR_NONE )
+                wear_obj( ch, created, TRUE );
             return;
         }
 
