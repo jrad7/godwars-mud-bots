@@ -94,6 +94,7 @@ extern	int	malloc_verify	args( ( void ) );
 #if !defined(WIN32)
 #include <unistd.h>
 #include <sys/resource.h>	/* for RLIMIT_NOFILE */
+#include <execinfo.h>           /* for backtrace / backtrace_symbols_fd */
 #endif
 #endif
 
@@ -1580,8 +1581,25 @@ void crashrecov (int iSignal)
         return;
   }
   fCrash = fopen(CRASH_TEMP_FILE, "w");
-  fprintf(fCrash, "0");
-  fclose(fCrash);
+  if (fCrash)
+  {
+      void  *bt_buf[64];
+      int    bt_size;
+      int    fd = fileno(fCrash);
+      time_t now = time(NULL);
+
+      fprintf(fCrash, "Signal %d at %s\n", iSignal, ctime(&now));
+      fprintf(fCrash, "Stack trace:\n");
+      fflush(fCrash);
+
+#if !defined(WIN32)
+      bt_size = backtrace(bt_buf, 64);
+      backtrace_symbols_fd(bt_buf, bt_size, fd);
+#endif
+
+      fprintf(fCrash, "\n0");   /* sentinel must remain for loop-guard check */
+      fclose(fCrash);
+  }
 
   dump_last_command();
  
