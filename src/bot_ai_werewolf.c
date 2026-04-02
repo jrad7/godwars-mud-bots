@@ -70,6 +70,10 @@
 static int bot_ww_pick_research( CHAR_DATA *ch )
 {
     static const struct { int disc; int target; } prio[] = {
+        /* Luna 1: flameclaws toggle */
+        { DISC_WERE_LUNA, 1  },
+        /* Luna 2: moonarmour unlock (DISC_WERE_LUNA >= 2 required by bot gear) */
+        { DISC_WERE_LUNA, 2  },
         /* Boar 3: halves all incoming damage */
         { DISC_WERE_BOAR, 3  },
         /* Bear 5: 20% outgoing damage boost */
@@ -80,10 +84,6 @@ static int bot_ww_pick_research( CHAR_DATA *ch )
         { DISC_WERE_RAPT, 1  },
         /* Spider 1: passive poison on hit */
         { DISC_WERE_SPID, 1  },
-        /* Luna 1: flameclaws toggle */
-        { DISC_WERE_LUNA, 1  },
-        /* Luna 2: moonarmour unlock (DISC_WERE_LUNA >= 2 required by bot gear) */
-        { DISC_WERE_LUNA, 2  },
         /* Bear 7: skin + rend */
         { DISC_WERE_BEAR, 7  },
         /* Bear 8: slam auto-proc */
