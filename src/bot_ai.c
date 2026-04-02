@@ -612,6 +612,14 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
     /* Transition check */
     if ( bot->state_timer <= 0 )
     {
+        /* Decapped bots are level-2 mortals with no HP regen -- training takes
+         * priority over resting since resting will never resolve. */
+        if ( ch->level == 2 && ch->max_hit >= 2000 )
+        {
+            bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar\n\r" );
+            bot_change_state( ch, bot, BOT_TRAINING );
+            return;
+        }
         if ( bot_needs_rest(ch) )
         {
             char r[128];
@@ -767,6 +775,15 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bot_watch_msg( ch, "[REASON] attacked while resting\n\r" );
         bot_change_state( ch, bot, BOT_IDLE );
+        return;
+    }
+
+    /* Decapped bots are mortals (level 2) with no HP regen -- skip waiting and
+     * go straight to training so they can 'train avatar' back to their class. */
+    if ( ch->level == 2 && ch->max_hit >= 2000 )
+    {
+        bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar\n\r" );
+        bot_change_state( ch, bot, BOT_TRAINING );
         return;
     }
 
