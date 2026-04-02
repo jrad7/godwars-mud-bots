@@ -478,14 +478,12 @@ static bool bot_do_train( CHAR_DATA *ch )
         return TRUE;
     }
 
-    /* Step 2: select class once avatar (level 3), no class yet.
-     * Also call all gear back from corpse in case this is a decap recovery. */
+    /* Step 2: select class once avatar (level 3), no class yet */
     if ( ch->level == 3 && ch->class == 0 )
     {
         BOT_DATA *bot = ch->pcdata->botdata;
         int pref = ( bot && bot->roster ) ? bot->roster->class_pref : BOT_CLASS_DEMON;
         char cmd[64];
-        bot_cmd( ch, "call all" );  /* retrieve class gear from corpse if decapped */
         sprintf( cmd, "selfclass %s", bot_class_name(pref) );
         bot_cmd( ch, cmd );
         return TRUE;
@@ -866,6 +864,12 @@ void bot_update( CHAR_DATA *ch )
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
+
+    /* While in "head" state (LOST_HEAD set after a decap) the bot has no body
+     * and cannot act.  behead() already called "call all" so class gear is
+     * already in inventory; skip all AI and gear management until the head
+     * respawns with a body and LOST_HEAD is cleared. */
+    if ( IS_HEAD( ch, LOST_HEAD ) ) return;
 
     /* Make sure we are geared (must be done before timers that might return early) */
     bot_ensure_geared( ch );
