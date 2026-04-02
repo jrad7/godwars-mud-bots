@@ -3410,7 +3410,7 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   xp  = number_range( xp * 3 / 4, xp * 5 / 4 );
   xp  = UMAX( 0, xp );
   xp  = (xp * (victim->level) * 0.60);
-  xp  = xp + ( xp * 10 );
+  xp  = xp + ( xp * XP_KILL_BONUS );
   if (!IS_NPC(gch))
   {
     gch->pcdata->score[SCORE_TOTAL_LEVEL] += victim->level;

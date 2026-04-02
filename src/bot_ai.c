@@ -277,27 +277,27 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     switch ( new_state )
     {
     case BOT_IDLE:
-        bot->state_timer = number_range( 1, 2 );    /* 1-2 seconds */
+        bot->state_timer = number_range( BOT_TIMER_IDLE_MIN, BOT_TIMER_IDLE_MAX );
         break;
     case BOT_EXPLORING:
-        bot->state_timer = number_range( 1, 2 );    /* 1-2 seconds */
+        bot->state_timer = number_range( BOT_TIMER_EXPLORING_MIN, BOT_TIMER_EXPLORING_MAX );
         break;
     case BOT_GRINDING:
-        bot->state_timer = number_range( 120, 180 );   /* 2-3 minutes */
+        bot->state_timer = number_range( BOT_TIMER_GRINDING_MIN, BOT_TIMER_GRINDING_MAX );
         bot->grind_attempts = 0;
         bot_navigate_to_grind_zone( bot, ch );
         break;
     case BOT_TRAINING:
-        bot->state_timer = number_range( 5, 15 );     /* short burst, then back to grind */
+        bot->state_timer = number_range( BOT_TIMER_TRAINING_MIN, BOT_TIMER_TRAINING_MAX );
         break;
     case BOT_RESTING:
-        bot->state_timer = number_range( 60, 120 );    /* 2-3 minutes */
+        bot->state_timer = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
         break;
     case BOT_LOGGING_OUT:
-        bot->state_timer = number_range( 3, 8 );      /* 3-8 seconds */
+        bot->state_timer = number_range( BOT_TIMER_LOGOUT_MIN, BOT_TIMER_LOGOUT_MAX );
         break;
     default:
-        bot->state_timer = number_range( 40, 120 );
+        bot->state_timer = number_range( BOT_TIMER_DEFAULT_MIN, BOT_TIMER_DEFAULT_MAX );
         break;
     }
     bot->state_timer_max = bot->state_timer;
