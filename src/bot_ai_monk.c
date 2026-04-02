@@ -112,11 +112,16 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 
     if ( ch->pcdata == NULL ) return NULL;
 
+    /* Class gear costs primal (60/piece) and must be finished before any
+     * training.  Don't spend exp on chi or techniques while primal is still
+     * needed for gear slots. */
+    if ( !bot_monk_gear_complete(ch) ) return NULL;
+
     pmonk       = ch->pcdata->powers[PMONK];
     mantra_cost = (pmonk + 1) * 10;
 
     /* --- 1. Mantras 1-4 (primal) --- */
-    if ( pmonk < 4 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
+    if ( pmonk < 4 && ch->practice >= mantra_cost )
         return "mantra power improve";
 
     /* --- 2. Core techniques (unlock combo chains) --- */
@@ -129,7 +134,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
     if ( ch->chi[MAXIMUM] < 2 )
     {
         chi_cost = (ch->chi[MAXIMUM] + 1) * 1000000;
-        if ( ch->exp >= chi_cost ) return "learn chi";
+        if ( ch->exp >= chi_cost ) return "learn chi chi";
     }
 
     /* --- 4. Key fight styles --- */
@@ -147,7 +152,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 
     /* --- 6. Mantras 5-9 (recompute cost for current pmonk) --- */
     mantra_cost = (pmonk + 1) * 10;
-    if ( pmonk >= 4 && pmonk < 9 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
+    if ( pmonk >= 4 && pmonk < 9 && ch->practice >= mantra_cost )
         return "mantra power improve";
 
     /* --- 7. Body ability 1-3 (adamantium at 1, spiritpower at 3) --- */
@@ -158,7 +163,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
     if ( ch->chi[MAXIMUM] < 3 )
     {
         chi_cost = (ch->chi[MAXIMUM] + 1) * 1000000;
-        if ( ch->exp >= chi_cost ) return "learn chi";
+        if ( ch->exp >= chi_cost ) return "learn chi chi";
     }
 
     /* --- 9. Spirit ability 1-4 (healingtouch at 3, deathtouch at 4) --- */
@@ -174,7 +179,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 
     /* --- 11. Mantras 10-14 --- */
     mantra_cost = (pmonk + 1) * 10;
-    if ( pmonk >= 9 && pmonk < 14 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
+    if ( pmonk >= 9 && pmonk < 14 && ch->practice >= mantra_cost )
         return "mantra power improve";
 
     /* --- 12. Combat and Aware abilities --- */
@@ -191,7 +196,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
     if ( ch->chi[MAXIMUM] < 6 )
     {
         chi_cost = (ch->chi[MAXIMUM] + 1) * 1000000;
-        if ( ch->exp >= chi_cost ) return "learn chi";
+        if ( ch->exp >= chi_cost ) return "learn chi chi";
     }
 
     return NULL;   /* nothing currently affordable */
