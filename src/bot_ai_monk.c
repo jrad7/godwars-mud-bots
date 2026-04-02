@@ -64,6 +64,25 @@ void do_stance( CHAR_DATA *ch, char *argument );
  * 14.  Chi 4-6       (2x / 2.5x / 3x multiplier)
  * ----------------------------------------------------------------------- */
 
+/* Returns TRUE when every slot in the monk gear table has a class-gear piece
+ * equipped (vnum 33000-33199).  Used to gate mantra spending so primal isn't
+ * consumed before gear is complete. */
+static bool bot_monk_gear_complete( CHAR_DATA *ch )
+{
+    const BOT_GEAR_PIECE *entry;
+    OBJ_DATA             *obj;
+
+    for ( entry = bot_class_gear[BOT_CLASS_MONK]; entry->wear_slot != WEAR_NONE; entry++ )
+    {
+        obj = get_eq_char( ch, entry->wear_slot );
+        if ( obj == NULL
+          || obj->pIndexData->vnum < 33000
+          || obj->pIndexData->vnum > 33199 )
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static const char *bot_monk_pick_train( CHAR_DATA *ch )
 {
     /* rest_fs: remaining fight styles, checked at step 10 */
@@ -97,7 +116,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
     mantra_cost = (pmonk + 1) * 10;
 
     /* --- 1. Mantras 1-4 (primal) --- */
-    if ( pmonk < 4 && ch->practice >= mantra_cost )
+    if ( pmonk < 4 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
         return "mantra power improve";
 
     /* --- 2. Core techniques (unlock combo chains) --- */
@@ -128,7 +147,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 
     /* --- 6. Mantras 5-9 (recompute cost for current pmonk) --- */
     mantra_cost = (pmonk + 1) * 10;
-    if ( pmonk >= 4 && pmonk < 9 && ch->practice >= mantra_cost )
+    if ( pmonk >= 4 && pmonk < 9 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
         return "mantra power improve";
 
     /* --- 7. Body ability 1-3 (adamantium at 1, spiritpower at 3) --- */
@@ -155,7 +174,7 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 
     /* --- 11. Mantras 10-14 --- */
     mantra_cost = (pmonk + 1) * 10;
-    if ( pmonk >= 9 && pmonk < 14 && ch->practice >= mantra_cost )
+    if ( pmonk >= 9 && pmonk < 14 && ch->practice >= mantra_cost && bot_monk_gear_complete(ch) )
         return "mantra power improve";
 
     /* --- 12. Combat and Aware abilities --- */
