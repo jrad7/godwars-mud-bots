@@ -298,7 +298,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
         ch->desc                 = d;
         ch->name                 = str_dup( roster->name );
         ch->pcdata->switchname   = str_dup( roster->name );
-        ch->act                  = PLR_BLANK | PLR_COMBINE | PLR_PROMPT | PLR_HOLYLIGHT;
+        ch->act                  = PLR_BLANK | PLR_COMBINE | PLR_PROMPT | PLR_HOLYLIGHT | PLR_BRIEF2 | PLR_BRIEF3;
         ch->pcdata->board        = &boards[DEFAULT_BOARD];
 
         /* Basic stats */
