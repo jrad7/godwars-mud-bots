@@ -915,7 +915,7 @@ LOG_NORMAL, 8, DISC_VAMP_THAN, 3 }, */
 
     { "miktalk", do_miktalk, 	POS_SLEEPING, 2, LOG_NORMAL, 128, 0, 0},
     { "principles", do_principles, POS_MEDITATING, 3, LOG_NORMAL, 128, 0, 0 },
-    { "michi", do_michi, POS_FIGHTING, 3, LOG_NORMAL, 128, 0, 0 },
+    { "michi", do_michi, POS_RESTING,  3, LOG_NORMAL, 128, 0, 0 },
     { "harakiri", do_hara_kiri, POS_MEDITATING,3, LOG_NORMAL, 128, 0, 0 },
     { "circle",	do_circle, POS_FIGHTING, 3, LOG_NORMAL, 128, 0, 0},
     { "kakusu", do_kakusu, POS_STANDING, 3, LOG_NORMAL, 128, 0, 0 },

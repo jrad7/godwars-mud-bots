@@ -203,6 +203,11 @@ static bool bot_ninja_buff_check( CHAR_DATA *ch )
 {
     if ( !IS_CLASS(ch, CLASS_NINJA) ) return FALSE;
 
+    /* Michi: must be up at all times for regen; critical when resting.
+     * Now allowed at POS_RESTING so it can fire between fights. */
+    if ( ch->rage < 100 && ch->move >= 500 )
+    { bot_cmd( ch, "michi" ); return TRUE; }
+
     /* Kanzuite (Sora 5): truesight — see invisible / detect hidden */
     if ( ch->pcdata->powers[NPOWER_SORA] >= 5
       && !IS_SET(ch->act, PLR_HOLYLIGHT)
