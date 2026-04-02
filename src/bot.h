@@ -42,19 +42,19 @@ struct descriptor_data;
 #define PULSE_BOT_AI       ( 1 * PULSE_PER_SECOND)
 
 /* XP multiplier applied to all kill XP: final_xp = base * (1 + XP_KILL_BONUS) */
-#define XP_KILL_BONUS  30
+#define XP_KILL_BONUS  5
 
 /* State timer ranges in seconds (min/max for number_range) */
 #define BOT_TIMER_IDLE_MIN       1
 #define BOT_TIMER_IDLE_MAX       2
 #define BOT_TIMER_EXPLORING_MIN  1
 #define BOT_TIMER_EXPLORING_MAX  2
-#define BOT_TIMER_GRINDING_MIN   120  /* 2 minutes */
-#define BOT_TIMER_GRINDING_MAX   180   /* 3 minutes */
-#define BOT_TIMER_TRAINING_MIN   5
-#define BOT_TIMER_TRAINING_MAX   15
-#define BOT_TIMER_RESTING_MIN    10    /* 1 minute  */
-#define BOT_TIMER_RESTING_MAX    20    /* 2 minutes */
+#define BOT_TIMER_GRINDING_MIN   180
+#define BOT_TIMER_GRINDING_MAX   240
+#define BOT_TIMER_TRAINING_MIN   10
+#define BOT_TIMER_TRAINING_MAX   30
+#define BOT_TIMER_RESTING_MIN    10 
+#define BOT_TIMER_RESTING_MAX    20 
 #define BOT_TIMER_LOGOUT_MIN     3
 #define BOT_TIMER_LOGOUT_MAX     8
 #define BOT_TIMER_DEFAULT_MIN    40
