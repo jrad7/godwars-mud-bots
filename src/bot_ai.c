@@ -720,6 +720,12 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     if ( victim != NULL )
     {
         char cmd[MAX_INPUT_LENGTH];
+        /* Don't start combat while still equipping newbiepack items */
+        if ( bot_is_gearing( ch ) )
+        {
+            bot_watch_msg( ch, "[GEAR] still equipping — holding attack\n\r" );
+            return;
+        }
         sprintf( cmd, "kill %s", victim->name );
         bot_cmd( ch, cmd );
         bot->grind_attempts = 0;

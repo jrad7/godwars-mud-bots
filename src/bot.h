@@ -198,6 +198,7 @@ void    bot_change_state    ( struct char_data *ch, BOT_DATA *bot, bot_state_t n
 void    bot_cmd             ( struct char_data *ch, const char *cmd );
 void    bot_watch_msg       ( struct char_data *ch, const char *msg );
 void    bot_gear_check      ( struct char_data *ch );
+bool    bot_is_gearing      ( struct char_data *ch );
 bool    bot_watch_assign_random ( struct char_data *watcher, struct char_data *skip );
 
 void    bot_chat_init       ( void );

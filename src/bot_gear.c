@@ -517,3 +517,47 @@ void bot_gear_check( CHAR_DATA *ch )
     }
 
 }
+
+/* -----------------------------------------------------------------------
+ * bot_is_gearing - TRUE while the bot still has empty newbiepack slots.
+ *
+ * Used by the grinding state to delay combat until the bot is fully
+ * equipped.  Only checks slots that the newbiepack covers (wield/hold
+ * excluded for classes that fight bare-handed).
+ * ----------------------------------------------------------------------- */
+bool bot_is_gearing( CHAR_DATA *ch )
+{
+    int i;
+    int class_pref;
+    const BOT_GEAR_PIECE *table;
+    const BOT_GEAR_PIECE *entry;
+    bool in_table;
+
+    if ( ch == NULL || ch->pcdata == NULL ) return FALSE;
+    if ( ch->pcdata->botdata == NULL || ch->pcdata->botdata->roster == NULL )
+        return FALSE;
+
+    class_pref = ch->pcdata->botdata->roster->class_pref;
+    table      = bot_class_gear[class_pref];
+
+    for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
+    {
+        int slot = newbie_slots[i].wear_slot;
+
+        /* Skip wield/hold for classes that fight bare-handed */
+        if ( slot == WEAR_WIELD || slot == WEAR_HOLD )
+        {
+            in_table = FALSE;
+            for ( entry = table; entry->wear_slot != WEAR_NONE; entry++ )
+            {
+                if ( entry->wear_slot == slot ) { in_table = TRUE; break; }
+            }
+            if ( !in_table ) continue;
+        }
+
+        if ( get_eq_char( ch, slot ) == NULL )
+            return TRUE;
+    }
+
+    return FALSE;
+}
