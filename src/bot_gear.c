@@ -159,8 +159,7 @@ static const BOT_GEAR_PIECE gear_drow[] = {
     { WEAR_FINGER_L, "drowcreate ring",      60 },
     { WEAR_FINGER_R, "drowcreate ring",      60 },
     { WEAR_NECK_1,   "drowcreate amulet",    60 },
-    /* WEAR_NECK_2 intentionally absent: drow has only one neck piece.
-     * Step 5 (newbiepack sweep) will fill that slot with a newbie collar. */
+    { WEAR_NECK_2,   "drowcreate amulet",    60 },
     { WEAR_BODY,     "drowcreate armor",     60 },
     { WEAR_HEAD,     "drowcreate helmet",    60 },
     { WEAR_LEGS,     "drowcreate leggings",  60 },
@@ -485,8 +484,7 @@ void bot_gear_check( CHAR_DATA *ch )
     }
 
     /* Step 5: newbiepack sweep for slots covered by the newbiepack but absent
-     * from the class gear table (example: drow WEAR_NECK_2 — drow has only
-     * one neck piece so WEAR_NECK_2 is not in gear_drow[]).  These slots
+     * from the class gear table.  These slots
      * stay filled with newbiepack permanently.
      * Also the landing point for the werewolf Luna-2 discipline guard above. */
     newbiepack_sweep:
