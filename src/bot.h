@@ -131,6 +131,7 @@ struct bot_data {
     int                 session_max;        /* Max seconds for session     */
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
+    time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     char                nav_cmds[24][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
 };
