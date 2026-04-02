@@ -736,7 +736,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             bot->grind_attempts );
         bot_watch_msg( ch, echo );
     }
-    if ( bot->grind_attempts > 3 )
+    if ( bot->grind_attempts > 1 )
     {
         bot_try_move( ch );
         bot->grind_attempts = 0;
