@@ -424,12 +424,17 @@ void bot_gear_check( CHAR_DATA *ch )
                 return;
             }
             {
-                char echo[256];
-                snprintf( echo, sizeof(echo),
-                    "[GEAR] %s: skip '%s' -- need %d primal, have %d\n\r",
-                    ch->name, entry->cmd, entry->primal_cost, ch->practice );
-                if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+                time_t now = time(NULL);
+                if ( ch->desc != NULL && ch->desc->snoop_by != NULL
+                  && now - bot->last_gear_warn >= 60 )
+                {
+                    char echo[256];
+                    snprintf( echo, sizeof(echo),
+                        "[GEAR] %s: skip '%s' -- need %d primal, have %d\n\r",
+                        ch->name, entry->cmd, entry->primal_cost, ch->practice );
                     write_to_buffer( ch->desc->snoop_by, echo, 0 );
+                    bot->last_gear_warn = now;
+                }
             }
             continue;   /* can't afford yet; leave newbiepack, try next slot */
         }
@@ -451,12 +456,17 @@ void bot_gear_check( CHAR_DATA *ch )
 
         /* Can't afford class gear — fill with newbiepack as temporary cover */
         {
-            char echo[256];
-            snprintf( echo, sizeof(echo),
-                "[GEAR] %s: slot empty, skip '%s' -- need %d primal, have %d\n\r",
-                ch->name, entry->cmd, entry->primal_cost, ch->practice );
-            if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+            time_t now = time(NULL);
+            if ( ch->desc != NULL && ch->desc->snoop_by != NULL
+              && now - bot->last_gear_warn >= 60 )
+            {
+                char echo[256];
+                snprintf( echo, sizeof(echo),
+                    "[GEAR] %s: slot empty, skip '%s' -- need %d primal, have %d\n\r",
+                    ch->name, entry->cmd, entry->primal_cost, ch->practice );
                 write_to_buffer( ch->desc->snoop_by, echo, 0 );
+                bot->last_gear_warn = now;
+            }
         }
         for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
         {
