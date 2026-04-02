@@ -27,7 +27,7 @@ struct descriptor_data;
 /* Population settings */
 #define MAX_BOT_ROSTER      100
 #define BOT_MIN_ONLINE      10
-#define BOT_MAX_ONLINE      10
+#define BOT_MAX_ONLINE      30
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
@@ -131,6 +131,7 @@ struct bot_data {
     int                 session_max;        /* Max seconds for session     */
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
+    int                 scatter_steps;      /* Random moves left on zone arrival */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     char                nav_cmds[24][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */

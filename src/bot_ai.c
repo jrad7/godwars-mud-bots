@@ -285,6 +285,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_GRINDING:
         bot->state_timer = number_range( BOT_TIMER_GRINDING_MIN, BOT_TIMER_GRINDING_MAX );
         bot->grind_attempts = 0;
+        bot->scatter_steps = 0;
         bot_navigate_to_grind_zone( bot, ch );
         break;
     case BOT_TRAINING:
@@ -327,8 +328,8 @@ typedef struct {
 } GRIND_TIER;
 
 static const GRIND_TIER grind_tiers[] = {
-    { 3500,  { zone_mud_school, zone_jobo_heaven }, 2 },
-    { 6000,  { zone_smurf,      zone_jobo_hell   }, 2 },
+    { 5000,  { zone_mud_school, zone_jobo_heaven }, 2 },
+    { 10000,  { zone_smurf,      zone_jobo_hell   }, 2 },
     { 99999, { zone_canyon                        }, 1 },
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
@@ -674,6 +675,15 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 {
     CHAR_DATA *victim;
 
+    /* Scatter: take random steps into the zone so bots don't all pile up at
+     * the entrance.  Stop early if combat starts. */
+    if ( bot->scatter_steps > 0 && ch->position != POS_FIGHTING )
+    {
+        bot_try_move( ch );
+        bot->scatter_steps--;
+        return;
+    }
+
     if ( bot_needs_rest(ch) )
     {
         char r[128];
@@ -917,6 +927,16 @@ void bot_update( CHAR_DATA *ch )
         for ( j = 0; j < bot->nav_n - 1; j++ )
             strcpy( bot->nav_cmds[j], bot->nav_cmds[j+1] );
         bot->nav_n--;
+
+        /* Arrived at grind zone: reset the grind timer and scatter the bot a
+         * few random steps so all bots don't crowd the same entrance room. */
+        if ( bot->nav_n == 0 && bot->state == BOT_GRINDING )
+        {
+            bot->state_timer     = number_range( BOT_TIMER_GRINDING_MIN, BOT_TIMER_GRINDING_MAX );
+            bot->state_timer_max = bot->state_timer;
+            bot->scatter_steps   = number_range( 4, 12 );
+            bot_watch_msg( ch, "[NAV] arrived at grind zone -- timer reset, scattering\n\r" );
+        }
         return;
     }
 
