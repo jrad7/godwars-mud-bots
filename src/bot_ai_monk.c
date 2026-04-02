@@ -448,9 +448,12 @@ static void bot_monk_combat_action( CHAR_DATA *ch )
 static bool bot_monk_between_fights( CHAR_DATA *ch )
 {
     /* bot_set_autostance() is called for all classes in bot_state_grinding.
-     * Here we only need to relax from the current stance so autodrop()
-     * can re-enter the (possibly updated) autostance on the next fight. */
-    if ( ch->stance[0] > 0 )
+     * Only drop the stance when it differs from the autostance — this lets
+     * autodrop() re-enter the updated stance on the next fight.  If the bot
+     * is already in the correct autostance there is no reason to drop it,
+     * which avoids fighting with no stance when the next mob is found quickly. */
+    if ( ch->stance[0] > 0
+      && ch->stance[0] != ch->stance[MONK_AUTODROP] )
     {
         do_stance( ch, "" );
         return TRUE;
