@@ -617,6 +617,19 @@ void bot_logout( CHAR_DATA *ch )
                                         ? watcher_desc->original
                                         : watcher_desc->character;
 
+        /* Send a summary before detaching */
+        {
+            char echo[256];
+            int session_secs = (int)( current_time - bot->session_start );
+            snprintf( echo, sizeof(echo),
+                "[BOT] %s logging out (session: %dm%ds, pkills: %d, hp: %d/%d)\n\r",
+                ch->name,
+                session_secs / 60, session_secs % 60,
+                ch->pkill,
+                ch->hit, ch->max_hit );
+            write_to_buffer( watcher_desc, echo, 0 );
+        }
+
         ch->desc->snoop_by = NULL;   /* detach before do_quit tears things down */
 
         if ( watcher != NULL && watcher->pcdata != NULL

@@ -240,6 +240,20 @@ static const NEWBIE_SLOT newbie_slots[] = {
 };
 
 /* -----------------------------------------------------------------------
+ * bot_watch_wear - send a [GEAR] wear notice to any watchbot watcher.
+ * ----------------------------------------------------------------------- */
+static void bot_watch_wear( CHAR_DATA *ch, OBJ_DATA *obj, const char *type )
+{
+    char echo[256];
+    if ( ch->desc == NULL || ch->desc->snoop_by == NULL ) return;
+    snprintf( echo, sizeof(echo), "[GEAR] %s: wear '%s' (%s)\n\r",
+        ch->name,
+        obj->short_descr ? obj->short_descr : "?",
+        type );
+    write_to_buffer( ch->desc->snoop_by, echo, 0 );
+}
+
+/* -----------------------------------------------------------------------
  * bot_spawn_obj - create a single object by vnum into ch's inventory.
  * Returns the new object pointer, NULL if the vnum isn't loaded.
  * ----------------------------------------------------------------------- */
@@ -276,6 +290,7 @@ static bool bot_fill_newbie_slot( CHAR_DATA *ch, int wear_slot, int vnum )
     {
         if ( obj->wear_loc == WEAR_NONE && obj->pIndexData->vnum == vnum )
         {
+            bot_watch_wear( ch, obj, "newbiepack" );
             wear_obj( ch, obj, TRUE );
             return TRUE;
         }
@@ -285,6 +300,7 @@ static bool bot_fill_newbie_slot( CHAR_DATA *ch, int wear_slot, int vnum )
     obj = bot_spawn_obj( ch, vnum );
     if ( obj != NULL )
     {
+        bot_watch_wear( ch, obj, "newbiepack" );
         wear_obj( ch, obj, TRUE );
         return TRUE;
     }
@@ -401,8 +417,19 @@ void bot_gear_check( CHAR_DATA *ch )
                 bot_cmd( ch, entry->cmd );          /* class piece → HEAD of ch->carrying */
                 created = ( ch->carrying != before ) ? ch->carrying : NULL;
                 if ( created != NULL && created->wear_loc == WEAR_NONE )
+                {
+                    bot_watch_wear( ch, created, "class gear" );
                     wear_obj( ch, created, TRUE );
+                }
                 return;
+            }
+            {
+                char echo[256];
+                snprintf( echo, sizeof(echo),
+                    "[GEAR] %s: skip '%s' -- need %d primal, have %d\n\r",
+                    ch->name, entry->cmd, entry->primal_cost, ch->practice );
+                if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+                    write_to_buffer( ch->desc->snoop_by, echo, 0 );
             }
             continue;   /* can't afford yet; leave newbiepack, try next slot */
         }
@@ -415,11 +442,22 @@ void bot_gear_check( CHAR_DATA *ch )
             bot_cmd( ch, entry->cmd );              /* class piece → HEAD of ch->carrying */
             created = ( ch->carrying != before ) ? ch->carrying : NULL;
             if ( created != NULL && created->wear_loc == WEAR_NONE )
+            {
+                bot_watch_wear( ch, created, "class gear" );
                 wear_obj( ch, created, TRUE );
+            }
             return;
         }
 
         /* Can't afford class gear — fill with newbiepack as temporary cover */
+        {
+            char echo[256];
+            snprintf( echo, sizeof(echo),
+                "[GEAR] %s: slot empty, skip '%s' -- need %d primal, have %d\n\r",
+                ch->name, entry->cmd, entry->primal_cost, ch->practice );
+            if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+                write_to_buffer( ch->desc->snoop_by, echo, 0 );
+        }
         for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
         {
             if ( newbie_slots[i].wear_slot != entry->wear_slot ) continue;

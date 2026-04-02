@@ -171,6 +171,7 @@ void    save_bot_roster     ( void );
 void    bot_ai_update       ( struct char_data *ch, BOT_DATA *bot );
 void    bot_change_state    ( struct char_data *ch, BOT_DATA *bot, bot_state_t new_state );
 void    bot_cmd             ( struct char_data *ch, const char *cmd );
+void    bot_watch_msg       ( struct char_data *ch, const char *msg );
 void    bot_gear_check      ( struct char_data *ch );
 bool    bot_watch_assign_random ( struct char_data *watcher, struct char_data *skip );
 

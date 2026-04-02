@@ -159,6 +159,16 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
     interpret( ch, buf );
 }
 
+/* -----------------------------------------------------------------------
+ * bot_watch_msg - send a tagged debug line to the watchbot watcher, if any.
+ * msg must already include the trailing \n\r.
+ * ----------------------------------------------------------------------- */
+void bot_watch_msg( CHAR_DATA *ch, const char *msg )
+{
+    if ( ch->desc == NULL || ch->desc->snoop_by == NULL ) return;
+    write_to_buffer( ch->desc->snoop_by, msg, 0 );
+}
+
 /* Queue a navigation command to be executed before normal AI resumes */
 static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 {
@@ -225,21 +235,35 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch );
 
 void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 {
-#if BOT_DEBUG
+    static const char *state_names[] = {
+        "IDLE", "EXPLORING", "GRINDING", "TRAINING",
+        "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT"
+    };
+
     if ( bot->state != new_state )
     {
-        const char *state_names[] = {
-            "IDLE", "EXPLORING", "GRINDING", "TRAINING",
-            "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT"
-        };
-        char buf[MAX_STRING_LENGTH];
-        sprintf( buf, "BOT DEBUG: %s changing state from %s to %s",
-            ch->name,
-            bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
-            new_state <= BOT_LOGGING_OUT ? state_names[new_state] : "UNKNOWN" );
-        log_string( buf );
-    }
+#if BOT_DEBUG
+        {
+            char buf[MAX_STRING_LENGTH];
+            sprintf( buf, "BOT DEBUG: %s changing state from %s to %s",
+                ch->name,
+                bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
+                new_state <= BOT_LOGGING_OUT ? state_names[new_state] : "UNKNOWN" );
+            log_string( buf );
+        }
 #endif
+
+        /* Notify any watcher via watchbot */
+        if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+        {
+            char echo[256];
+            snprintf( echo, sizeof(echo), "[STATE] %s: %s --> %s\n\r",
+                ch->name,
+                bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
+                new_state  <= BOT_LOGGING_OUT ? state_names[new_state]  : "UNKNOWN" );
+            write_to_buffer( ch->desc->snoop_by, echo, 0 );
+        }
+    }
 
     bot->state       = new_state;
     bot->cmd_delay   = number_range( 1, 2 );
@@ -309,6 +333,16 @@ static const GRIND_TIER grind_tiers[] = {
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 
+/* Maps each route pointer to a human-readable zone name for watchbot output */
+static const struct { const char **route; const char *name; } route_names[] = {
+    { zone_mud_school,  "mud_school"  },
+    { zone_jobo_heaven, "jobo_heaven" },
+    { zone_smurf,       "smurf"       },
+    { zone_jobo_hell,   "jobo_hell"   },
+    { zone_canyon,      "canyon"      },
+    { NULL, NULL }
+};
+
 static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
 {
     int i;
@@ -329,6 +363,25 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
     bot->nav_n = 0;
     for ( step = route; *step != NULL; step++ )
         bot_nav_queue( bot, *step );
+
+    /* Notify watcher which zone was selected */
+    if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+    {
+        const char *zone_name = "unknown";
+        char echo[256];
+        for ( i = 0; route_names[i].route != NULL; i++ )
+        {
+            if ( route_names[i].route == route )
+            {
+                zone_name = route_names[i].name;
+                break;
+            }
+        }
+        snprintf( echo, sizeof(echo),
+            "[NAV] %s: queued %d-step route to %s (tier max_hit=%d, bot max_hit=%d)\n\r",
+            ch->name, bot->nav_n, zone_name, tier->max_hit, ch->max_hit );
+        write_to_buffer( ch->desc->snoop_by, echo, 0 );
+    }
 }
 
 /* -----------------------------------------------------------------------
@@ -561,11 +614,17 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
     {
         if ( bot_needs_rest(ch) )
         {
+            char r[128];
+            snprintf( r, sizeof(r), "[REASON] needs rest: hp %d%% mana %d%%\n\r",
+                ch->hit  * 100 / UMAX(1, ch->max_hit),
+                ch->mana * 100 / UMAX(1, ch->max_mana) );
+            bot_watch_msg( ch, r );
             bot_change_state( ch, bot, BOT_RESTING );
             return;
         }
         if ( bot_should_train(ch) )
         {
+            bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
             return;
         }
@@ -584,6 +643,11 @@ static void bot_state_exploring( CHAR_DATA *ch, BOT_DATA *bot )
 {
     if ( bot_needs_rest(ch) )
     {
+        char r[128];
+        snprintf( r, sizeof(r), "[REASON] needs rest: hp %d%% mana %d%%\n\r",
+            ch->hit  * 100 / UMAX(1, ch->max_hit),
+            ch->mana * 100 / UMAX(1, ch->max_mana) );
+        bot_watch_msg( ch, r );
         bot_change_state( ch, bot, BOT_RESTING );
         return;
     }
@@ -604,6 +668,11 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 
     if ( bot_needs_rest(ch) )
     {
+        char r[128];
+        snprintf( r, sizeof(r), "[REASON] needs rest: hp %d%% mana %d%%\n\r",
+            ch->hit  * 100 / UMAX(1, ch->max_hit),
+            ch->mana * 100 / UMAX(1, ch->max_mana) );
+        bot_watch_msg( ch, r );
         bot_change_state( ch, bot, BOT_RESTING );
         return;
     }
@@ -646,6 +715,14 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 
     /* No targets here - move to find some */
     bot->grind_attempts++;
+    {
+        char echo[256];
+        snprintf( echo, sizeof(echo), "[GRIND] %s: no targets in room %d (attempt %d/3)\n\r",
+            ch->name,
+            ch->in_room ? ch->in_room->vnum : -1,
+            bot->grind_attempts );
+        bot_watch_msg( ch, echo );
+    }
     if ( bot->grind_attempts > 3 )
     {
         bot_try_move( ch );
@@ -655,7 +732,10 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     if ( bot->state_timer <= 0 || bot->state_timer <= bot->state_timer_max / 2 )
     {
         if ( bot_should_train(ch) )
+        {
+            bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
+        }
         else
             bot_change_state( ch, bot, BOT_IDLE );
     }
@@ -666,6 +746,7 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     /* Fight back if attacked */
     if ( ch->position == POS_FIGHTING )
     {
+        bot_watch_msg( ch, "[REASON] attacked while resting\n\r" );
         bot_change_state( ch, bot, BOT_IDLE );
         return;
     }
@@ -680,6 +761,7 @@ static void bot_state_training( CHAR_DATA *ch, BOT_DATA *bot )
     /* Abort if attacked */
     if ( ch->position == POS_FIGHTING )
     {
+        bot_watch_msg( ch, "[REASON] attacked while training\n\r" );
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
     }
@@ -774,6 +856,7 @@ void bot_update( CHAR_DATA *ch )
 #if BOT_DEBUG
             log_string( "BOT_NAV: blocked - fighting" );
 #endif
+            bot_watch_msg( ch, "[NAV] blocked -- in combat, holding route\n\r" );
             return;   /* keep queue intact, retry after combat ends */
         }
         if ( ch->position < POS_STANDING )
@@ -781,6 +864,7 @@ void bot_update( CHAR_DATA *ch )
 #if BOT_DEBUG
             log_string( "BOT_NAV: blocked - not standing, issuing stand" );
 #endif
+            bot_watch_msg( ch, "[NAV] blocked -- not standing, standing up\n\r" );
             bot_cmd( ch, "stand" );
             return;
         }

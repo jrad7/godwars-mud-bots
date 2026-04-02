@@ -3085,6 +3085,27 @@ void make_part( CHAR_DATA *ch, char *argument )
 void raw_kill( CHAR_DATA *victim )
 {
   CHAR_DATA *mount;
+
+  /* Capture bot debug info before stop_fighting clears victim->fighting */
+  if ( !IS_NPC(victim)
+    && victim->pcdata != NULL
+    && victim->pcdata->is_bot
+    && victim->desc  != NULL
+    && victim->desc->snoop_by != NULL )
+  {
+      char echo[256];
+      const char *killer_name = victim->fighting
+          ? ( IS_NPC(victim->fighting) ? victim->fighting->short_descr
+                                       : victim->fighting->name )
+          : "unknown";
+      snprintf( echo, sizeof(echo),
+          "[DEATH] %s died in room %d (fighting: %s)\n\r",
+          victim->name,
+          victim->in_room ? victim->in_room->vnum : -1,
+          killer_name );
+      write_to_buffer( victim->desc->snoop_by, echo, 0 );
+  }
+
   stop_fighting( victim, TRUE );
   make_corpse( victim );
   if ( (mount = victim->mount) != NULL)

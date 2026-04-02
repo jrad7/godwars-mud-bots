@@ -240,7 +240,7 @@ void bot_hear_say( CHAR_DATA *bot, CHAR_DATA *speaker, char *msg )
                     sprintf( cmd, "say demon" );
                 else
                     sprintf( cmd, "say nothing special" );
-                interpret( bot, cmd );
+                bot_cmd( bot, cmd );
                 return;
             }
         }
@@ -251,7 +251,7 @@ void bot_hear_say( CHAR_DATA *bot, CHAR_DATA *speaker, char *msg )
     {
         /* Human-like: respond with a short delay (handled by cmd_delay) */
         sprintf( cmd, "say %s", response );
-        interpret( bot, cmd );
+        bot_cmd( bot, cmd );
     }
 }
 
@@ -277,14 +277,14 @@ void bot_hear_tell( CHAR_DATA *bot, CHAR_DATA *speaker, char *msg )
     if ( response != NULL && speaker != NULL )
     {
         sprintf( cmd, "tell %s %s", speaker->name, response );
-        interpret( bot, cmd );
+        bot_cmd( bot, cmd );
     }
     else if ( speaker != NULL && number_percent() < 40 )
     {
         /* Fallback ack */
         const char *acks[] = { "yeah", "ok", "sure", "hm", "ok cool", NULL };
         sprintf( cmd, "tell %s %s", speaker->name, arr_random(acks) );
-        interpret( bot, cmd );
+        bot_cmd( bot, cmd );
     }
 }
 
@@ -309,18 +309,18 @@ void bot_unprompted_chat( CHAR_DATA *ch, BOT_DATA *bot )
     case 1:
         /* say something in the room */
         sprintf( cmd, "say %s", arr_random(unprompted_says) );
-        interpret( ch, cmd );
+        bot_cmd( ch, cmd );
         break;
     case 2:
         /* chat channel */
         sprintf( cmd, "chat %s", arr_random(unprompted_chat) );
-        interpret( ch, cmd );
+        bot_cmd( ch, cmd );
         break;
     case 3:
         /* emote */
         {
             const char *emotes[] = { "yawn", "grin", "sigh", "nod", "scratch", NULL };
-            interpret( ch, (char *)arr_random(emotes) );
+            bot_cmd( ch, arr_random(emotes) );
         }
         break;
     }
