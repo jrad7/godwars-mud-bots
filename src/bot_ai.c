@@ -478,12 +478,14 @@ static bool bot_do_train( CHAR_DATA *ch )
         return TRUE;
     }
 
-    /* Step 2: select class once avatar (level 3), no class yet */
+    /* Step 2: select class once avatar (level 3), no class yet.
+     * Also call all gear back from corpse in case this is a decap recovery. */
     if ( ch->level == 3 && ch->class == 0 )
     {
         BOT_DATA *bot = ch->pcdata->botdata;
         int pref = ( bot && bot->roster ) ? bot->roster->class_pref : BOT_CLASS_DEMON;
         char cmd[64];
+        bot_cmd( ch, "call all" );  /* retrieve class gear from corpse if decapped */
         sprintf( cmd, "selfclass %s", bot_class_name(pref) );
         bot_cmd( ch, cmd );
         return TRUE;

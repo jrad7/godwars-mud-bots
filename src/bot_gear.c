@@ -339,6 +339,23 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
+    /* Step 1.5: recover called-back class gear from inventory.
+     * After a decap the bot issues "call all" to retrieve its class pieces from
+     * the corpse before picking a class.  Those items land in inventory with
+     * wear_loc == WEAR_NONE.  Wear them one per tick here, before the surplus-
+     * cleanup steps below would extract them. */
+    if ( ch->class != 0 )
+    {
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        {
+            if ( obj->wear_loc != WEAR_NONE ) continue;
+            if ( !bot_is_class_gear_vnum( obj->pIndexData->vnum ) ) continue;
+            bot_watch_wear( ch, obj, "called gear" );
+            wear_obj( ch, obj, TRUE );
+            return;
+        }
+    }
+
     /* Step 2a: extract any unworn wield/hold item from inventory.
      * Bots loot weapons from mobs; werewolves and claw classes never wield,
      * and wolfman form blocks hand slots — these items just cause noise. */
