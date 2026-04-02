@@ -317,13 +317,13 @@ static void bot_drow_combat_action( CHAR_DATA *ch )
     }
 
     /* Priority 5 (90%): confuse — force target to flee (75 move cost) */
-    if ( IS_SET(ch->pcdata->powers[1], DPOWER_CONFUSE)
-      && ch->move >= 75
-      && roll <= 90 )
-    {
-        bot_cmd( ch, "confuse" );
-        return;
-    }
+    //if ( IS_SET(ch->pcdata->powers[1], DPOWER_CONFUSE)
+    //  && ch->move >= 75
+    //  && roll <= 90 )
+    //{
+    //    bot_cmd( ch, "confuse" );
+    //    return;
+    //}
 
     /* Fallback: normal multi_hit loop handles the rest */
 }
