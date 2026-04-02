@@ -702,6 +702,19 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             return;   /* issued a setup command this tick */
     }
 
+    /* Timer expired: transition even if mobs are still present */
+    if ( bot->state_timer <= 0 )
+    {
+        if ( bot_should_train(ch) )
+        {
+            bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
+            bot_change_state( ch, bot, BOT_TRAINING );
+        }
+        else
+            bot_change_state( ch, bot, BOT_IDLE );
+        return;
+    }
+
     /* Find something to kill */
     victim = bot_find_mob_target( ch );
     if ( victim != NULL )
@@ -729,7 +742,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         bot->grind_attempts = 0;
     }
 
-    if ( bot->state_timer <= 0 || bot->state_timer <= bot->state_timer_max / 2 )
+    if ( bot->state_timer <= bot->state_timer_max / 2 )
     {
         if ( bot_should_train(ch) )
         {

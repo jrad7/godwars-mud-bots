@@ -293,6 +293,7 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
             pcdata_free = pcdata_free->next;
         }
         *ch->pcdata = pcdata_zero;
+        ch->pcdata->disc_research = -1;   /* 0 from zero-init is not the sentinel; -1 = none */
 
         d->character             = ch;
         ch->desc                 = d;

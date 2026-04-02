@@ -16,6 +16,11 @@ struct descriptor_data;
 /* Set to 1 to enable verbose bot debug logging, 0 to disable */
 #define BOT_DEBUG  0
 
+/* Set to 1 to disable hardcoded NPC social aggro (mob assists mob of same vnum
+ * and 12.5% random NPC-assists-NPC in fight.c).  Useful while bots are active
+ * so a bot pulling one mob doesn't chain-aggro its entire spawn group. */
+#define BOT_DISABLE_SOCIAL_AGGRO  1
+
 /* Sentinel value for bot descriptors - means no real socket */
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 

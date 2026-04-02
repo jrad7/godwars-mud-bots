@@ -256,8 +256,8 @@ void violence_update( void )
         /*
          * NPC's assist NPC's of same type or 12.5% chance regardless.
          */
-        if ( IS_NPC(rch) && !IS_AFFECTED(rch, AFF_CHARM) )
-        {   
+        if ( !BOT_DISABLE_SOCIAL_AGGRO && IS_NPC(rch) && !IS_AFFECTED(rch, AFF_CHARM) )
+        {
           if (rch->pIndexData == ch->pIndexData || number_bits(3) == 0)
           {
             CHAR_DATA *vch;

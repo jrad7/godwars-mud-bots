@@ -323,6 +323,7 @@ void bot_gear_check( CHAR_DATA *ch )
     int                   class_pref;
     int                   i;
     bool                  in_table;
+    bool                  force_newbiepack;   /* TRUE: ignore in_table in sweep */
 
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
@@ -368,8 +369,9 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
-    class_pref = bot->roster->class_pref;
-    table      = bot_class_gear[class_pref];
+    class_pref        = bot->roster->class_pref;
+    table             = bot_class_gear[class_pref];
+    force_newbiepack  = FALSE;
 
     /* Step 3: unclassed bot — fill every empty newbiepack-eligible slot */
     if ( ch->class == 0 )
@@ -388,7 +390,10 @@ void bot_gear_check( CHAR_DATA *ch )
      * newbiepack fills slots in the meantime via step 5. */
     if ( class_pref == BOT_CLASS_WEREWOLF
       && ch->power[DISC_WERE_LUNA] < 2 )
+    {
+        force_newbiepack = TRUE;
         goto newbiepack_sweep;
+    }
 
     /* Step 4: classed bot — class-gear pass (one slot upgraded per tick).
      *
@@ -496,7 +501,8 @@ void bot_gear_check( CHAR_DATA *ch )
                 break;
             }
         }
-        if ( in_table ) continue;   /* handled by step 4 */
+        if ( in_table && !force_newbiepack )
+            continue;   /* handled by step 4 */
 
         /* Skip wield/hold slots for classes that don't have them in their
          * gear table (monk, vampire, demon, werewolf).  wear_obj would fail
