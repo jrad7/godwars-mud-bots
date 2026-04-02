@@ -257,11 +257,6 @@ static bool bot_ww_buff_check( CHAR_DATA *ch )
       && !IS_SET(ch->newbits, NEW_SLAM) )
     { bot_cmd( ch, "slam" ); return TRUE; }
 
-    /* Rend (Bear or Boar 7): damages target equipment */
-    if ( ( ch->power[DISC_WERE_BEAR] >= 7 || ch->power[DISC_WERE_BOAR] >= 7 )
-      && !IS_SET(ch->newbits, NEW_REND) )
-    { bot_cmd( ch, "rend" ); return TRUE; }
-
     /* Perception (Raptor 3): detect hidden / stealthy enemies */
     if ( ch->power[DISC_WERE_RAPT] >= 3
       && !IS_SET(ch->newbits, NEW_PERCEPTION) )
