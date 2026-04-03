@@ -240,6 +240,10 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT"
     };
 
+    /* Save progress whenever leaving the training state */
+    if ( bot->state == BOT_TRAINING && bot->state != new_state )
+        bot_cmd( ch, "save" );
+
     if ( bot->state != new_state )
     {
 #if BOT_DEBUG
