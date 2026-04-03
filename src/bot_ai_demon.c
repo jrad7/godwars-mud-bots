@@ -103,17 +103,24 @@ static int bot_dem_pick_research( CHAR_DATA *ch )
 /* -----------------------------------------------------------------------
  * Vtable: should_train
  *
- * Returns TRUE if there is a discipline research step ready to action:
- *   - research is complete (disc_points == 999), or
- *   - no research is active and a discipline still needs advancement.
+ * Returns TRUE if there is any demon-specific training step to take:
+ *   - Warp slots available AND enough demon class points (>= 15000), or
+ *   - Discipline research complete (disc_points == 999), or
+ *   - No active research and a discipline still needs advancement.
  *
- * Demons have no age rank — disciplines are the only class-specific
- * training resource.
+ * Demons have no age rank — warps and disciplines are the class-specific
+ * training resources.
  * ----------------------------------------------------------------------- */
 
 static bool bot_dem_should_train( CHAR_DATA *ch )
 {
     if ( !IS_CLASS(ch, CLASS_DEMON) ) return FALSE;
+
+    /* Warp slots still available and enough demon points to buy one */
+    if ( ch->warpcount < 18
+      && ch->pcdata->stats[DEMON_CURRENT] >= 15000
+      && ch->pcdata->stats[DEMON_TOTAL]   >= 15000 )
+        return TRUE;
 
     /* Research complete - ready to spend the point */
     if ( ch->pcdata->disc_points == 999 ) return TRUE;
@@ -132,11 +139,43 @@ static bool bot_dem_should_train( CHAR_DATA *ch )
  * Executes one demon-specific training step.
  * Returns TRUE if a command was issued.
  * Called by bot_do_train() before the generic hp/mana/move spending.
+ *
+ * Order of priority:
+ *   1. WARP_REGENERATE — buy this first for sustained HP recovery.
+ *   2. Any remaining warp slot (random order via plain "obtain").
+ *   3. Discipline research — spend disc_points or start next research.
  * ----------------------------------------------------------------------- */
 
 static bool bot_dem_do_train( CHAR_DATA *ch )
 {
     if ( !IS_CLASS(ch, CLASS_DEMON) ) return FALSE;
+
+    /*
+     * Priority 1: obtain WARP_REGENERATE before spending points elsewhere.
+     * Uses the bot-only targeted path in do_obtain() to skip the random roll.
+     */
+    if ( !IS_SET(ch->warp, WARP_REGENERATE)
+      && ch->warpcount < 18
+      && ch->pcdata->stats[DEMON_CURRENT] >= 15000
+      && ch->pcdata->stats[DEMON_TOTAL]   >= 15000 )
+    {
+        bot_cmd( ch, "obtain regenerate" );
+        return TRUE;
+    }
+
+    /*
+     * Priority 2: fill remaining warp slots in random order.
+     * Plain "obtain" (no arg) uses the original random-roll path in do_obtain().
+     */
+    if ( ch->warpcount < 18
+      && ch->pcdata->stats[DEMON_CURRENT] >= 15000
+      && ch->pcdata->stats[DEMON_TOTAL]   >= 15000 )
+    {
+        bot_cmd( ch, "obtain" );
+        return TRUE;
+    }
+
+    /* Priority 3: discipline research */
 
     /* Research complete - spend the point */
     if ( ch->pcdata->disc_points == 999 && ch->pcdata->disc_research > 0 )
@@ -292,5 +331,5 @@ const BOT_CLASS_AI bot_demon_ai = {
     bot_dem_do_train,       /* do_train       */
     bot_dem_buff_check,     /* buff_check     */
     bot_dem_combat_action,  /* combat_action  */
-    NULL                    /* between_fights - buff_check handles all toggles */
+    NULL                    /* between_fights */
 };

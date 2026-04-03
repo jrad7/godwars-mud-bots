@@ -115,6 +115,9 @@ void do_obtain( CHAR_DATA *ch, char *argument )
 {
     int       newwarp = 0;
     int       warpnum = number_range(1,18);
+    char      arg[MAX_INPUT_LENGTH];
+
+    one_argument( argument, arg );
 
     if (IS_NPC(ch)) return;
 
@@ -136,6 +139,51 @@ void do_obtain( CHAR_DATA *ch, char *argument )
 	    send_to_char("You have already obtained as many warps as possible.\n\r",ch);
 	    return;
 	}
+
+    /*
+     * Bot-only targeted warp path.
+     * Human players always get the random roll below.
+     * Bots may pass a warp name to skip the random selection so they can
+     * guarantee priority warps (e.g. regenerate) are obtained first.
+     */
+    if (arg[0] != '\0' && ch->pcdata != NULL && ch->pcdata->is_bot)
+    {
+        if      (!str_cmp(arg, "regenerate")) newwarp = WARP_REGENERATE;
+        else if (!str_cmp(arg, "cbody"     )) newwarp = WARP_CBODY;
+        else if (!str_cmp(arg, "sbody"     )) newwarp = WARP_SBODY;
+        else if (!str_cmp(arg, "strongarms")) newwarp = WARP_STRONGARMS;
+        else if (!str_cmp(arg, "stronglegs")) newwarp = WARP_STRONGLEGS;
+        else if (!str_cmp(arg, "venomtong" )) newwarp = WARP_VENOMTONG;
+        else if (!str_cmp(arg, "spiketail" )) newwarp = WARP_SPIKETAIL;
+        else if (!str_cmp(arg, "badbreath" )) newwarp = WARP_BADBREATH;
+        else if (!str_cmp(arg, "quickness" )) newwarp = WARP_QUICKNESS;
+        else if (!str_cmp(arg, "stamina"   )) newwarp = WARP_STAMINA;
+        else if (!str_cmp(arg, "hunt"      )) newwarp = WARP_HUNT;
+        else if (!str_cmp(arg, "devour"    )) newwarp = WARP_DEVOUR;
+        else if (!str_cmp(arg, "terror"    )) newwarp = WARP_TERROR;
+        else if (!str_cmp(arg, "steed"     )) newwarp = WARP_STEED;
+        else if (!str_cmp(arg, "weapon"    )) newwarp = WARP_WEAPON;
+        else if (!str_cmp(arg, "magma"     )) newwarp = WARP_MAGMA;
+        else if (!str_cmp(arg, "shards"    )) newwarp = WARP_SHARDS;
+        else if (!str_cmp(arg, "wings"     )) newwarp = WARP_WINGS;
+
+        if (newwarp != 0)
+        {
+            if (IS_SET(ch->warp, newwarp))
+            {
+                /* Already have it — fall back to a random warp */
+                do_obtain(ch, "");
+                return;
+            }
+            SET_BIT(ch->warp, newwarp);
+            ch->pcdata->stats[DEMON_CURRENT] -= 15000;
+            ch->warpcount += 1;
+            send_to_char("You have obtained a new warp!\n\r", ch);
+            save_char_obj(ch);
+            return;
+        }
+        /* Unknown warp name — fall through to random */
+    }
 
              if (warpnum == 1) newwarp = WARP_CBODY;
         else if (warpnum == 2) newwarp = WARP_SBODY;
