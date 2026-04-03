@@ -1206,6 +1206,7 @@ extern char *scale[SCALE_COLS];
 #define OBJ_VNUM_SCHOOL_VEST	   3703
 #define OBJ_VNUM_SCHOOL_SHIELD	   3704
 #define OBJ_VNUM_SCHOOL_BANNER     3716
+#define OBJ_VNUM_BAG               3373
 
 /* For KaVir's stuff */
 #define OBJ_VNUM_SOULBLADE	  30000
@@ -3755,6 +3756,7 @@ DECLARE_DO_FUN(	do_gag		);
 DECLARE_DO_FUN( do_garotte	);
 DECLARE_DO_FUN( do_dark_garotte	);
 DECLARE_DO_FUN(	do_get		);
+DECLARE_DO_FUN( do_makebag      );
 DECLARE_DO_FUN( do_generation	);
 DECLARE_DO_FUN(	do_gift		);
 DECLARE_DO_FUN(	do_give		);

@@ -579,3 +579,8 @@
 [*****] BUG: Write_to_buffer: Way too big. Closing.
 [*****] BUG: Write_to_buffer: Way too big. Closing.
 [*****] BUG: Write_to_buffer: Way too big. Closing.
+[*****] BUG: Write_to_buffer: Way too big. Closing.
+[*****] BUG: Write_to_buffer: Way too big. Closing.
+[*****] BUG: Write_to_buffer: Way too big. Closing.
+[*****] BUG: Write_to_buffer: Way too big. Closing.
+[*****] BUG: Buffer overflow. Closing.

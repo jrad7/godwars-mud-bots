@@ -4053,3 +4053,22 @@ void do_thirdeye(CHAR_DATA *ch, char *argument)
         send_to_char(buf,ch);
    }
 }
+
+void do_makebag( CHAR_DATA *ch, char *argument )
+{
+    OBJ_INDEX_DATA *pObjIndex;
+    OBJ_DATA *obj;
+
+    if ( ( pObjIndex = get_obj_index( OBJ_VNUM_BAG ) ) == NULL )
+    {
+        send_to_char( "Error: Bag object does not exist.\n\r", ch );
+        return;
+    }
+
+    obj = create_object( pObjIndex, 50 );
+    obj_to_char( obj, ch );
+
+    act( "You wave your hands and create $p.", ch, obj, NULL, TO_CHAR );
+    act( "$n waves $s hands and creates $p.", ch, obj, NULL, TO_ROOM );
+    return;
+}
