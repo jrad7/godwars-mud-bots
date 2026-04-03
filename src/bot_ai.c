@@ -892,9 +892,11 @@ void bot_update( CHAR_DATA *ch )
         return;
     }
 
-    /* Make sure we are geared (must be done before timers that might return early) */
-    bot_ensure_geared( ch );
-
+    /* Skip all gear management during decap recovery — the bot has class gear
+     * in inventory from behead() and must not touch newbiepack or class gear
+     * until after call all is issued and decap_recovery is cleared. */
+    if ( !bot->decap_recovery )
+        bot_ensure_geared( ch );
 
     /* Decrement timers */
     bot->state_timer--;
