@@ -1,7 +1,7 @@
 Kast~
-900
+1000
 Kast~
-9
+10
 Vael~
 2
 Emyr~

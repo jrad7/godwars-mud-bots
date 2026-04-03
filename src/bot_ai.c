@@ -205,6 +205,8 @@ static const struct {
     { 99000, 99000, DIRMASK(DIR_DOWN) },
     /* Smurf Village entrance path (101): south exits to room 3040, outside the zone */
     { 101, 101, DIRMASK(DIR_SOUTH) },
+    /* Shire entrance path (1100): south exits back to Haon-Dor (6000) */
+    { 1100, 1100, DIRMASK(DIR_SOUTH) },
 
     { 0, 0, 0 }   /* terminator */
 };
