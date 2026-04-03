@@ -381,6 +381,11 @@ void bot_gear_check( CHAR_DATA *ch )
         if ( !bot_is_newbiepack_vnum( obj->pIndexData->vnum )
           && !bot_is_class_gear_vnum(  obj->pIndexData->vnum ) )
             continue;
+        /* Preserve class gear while mortal (class == 0) — it was called back
+         * from the corpse by behead() and must survive until the bot trains
+         * avatar and picks its class, at which point step 1.5 will wear it. */
+        if ( ch->class == 0 && bot_is_class_gear_vnum( obj->pIndexData->vnum ) )
+            continue;
         extract_obj( obj );
         return;
     }
