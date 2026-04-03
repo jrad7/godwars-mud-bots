@@ -2641,6 +2641,7 @@ struct  area_data
     int                 uvnum;          /* OLC - Upper vnum */
     int                 vnum;           /* OLC - Area vnum  */
     int                 area_flags;     /* OLC */
+    int                 mob_level;      /* Default spawned mob level override */
 };
 
 

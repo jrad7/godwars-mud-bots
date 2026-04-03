@@ -235,6 +235,7 @@ const struct olc_cmd_type aedit_table[] =
     {   "create",	aedit_create		},
     {   "filename",	aedit_file		},
     {   "name",		aedit_name		},
+    {   "level",    aedit_level     },
     {   "recall",	aedit_recall		},
     {	"reset",	aedit_reset		},
     {   "security",	aedit_security		},

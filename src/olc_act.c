@@ -719,6 +719,29 @@ bool aedit_recall( CHAR_DATA *ch, char *argument )
     return TRUE;
 }
 
+bool aedit_level( CHAR_DATA *ch, char *argument )
+{
+    AREA_DATA *pArea;
+    char level_str[MAX_STRING_LENGTH];
+    int value;
+
+    EDIT_AREA(ch, pArea);
+
+    one_argument( argument, level_str );
+
+    if ( !is_number( level_str ) || level_str[0] == '\0' )
+    {
+        send_to_char( "Syntax:  level [number]\n\r", ch );
+        return FALSE;
+    }
+
+    value = atoi( level_str );
+    pArea->mob_level = value;
+
+    send_to_char( "Area mob override level set.\n\r", ch );
+    return TRUE;
+}
+
 
 
 bool aedit_security( CHAR_DATA *ch, char *argument )

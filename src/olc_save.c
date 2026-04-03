@@ -761,6 +761,8 @@ void save_area( AREA_DATA *pArea )
     fprintf( fp, "VNUMs       %d %d\n",      pArea->lvnum, pArea->uvnum );
     fprintf( fp, "Security    %d\n",         pArea->security );
     fprintf( fp, "Recall      %d\n",         pArea->recall );
+    if ( pArea->mob_level > 0 )
+        fprintf( fp, "Level       %d\n",         pArea->mob_level );
     fprintf( fp, "End\n\n\n\n" );
 
     save_helps( fp, pArea );				/* OLC 1.1b */

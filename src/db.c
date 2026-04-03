@@ -27,6 +27,7 @@
 #include <time.h>
 #include "merc.h"
 #include "bot.h"
+#include "area_levels.h"
 
 #if !defined(macintosh)
 extern	int	_filbuf		args( (FILE *) );
@@ -456,6 +457,16 @@ void load_area( FILE *fp )
 	log_string( pArea->name );
     pArea->age		= 15;
     pArea->nplayer	= 0;
+    pArea->mob_level = 0;
+
+    for ( int i = 0; area_level_table[i].filename != NULL; i++ )
+    {
+        if ( !str_cmp( area_level_table[i].filename, strArea ) )
+        {
+            pArea->mob_level = area_level_table[i].level;
+            break;
+        }
+    }
 
     pArea->area_flags   = AREA_LOADING;         /* OLC */
     pArea->security     = 3;                    /* OLC */
@@ -530,6 +541,16 @@ void new_load_area( FILE *fp )
     pArea->uvnum        = 0;
     pArea->area_flags   = 0;
     pArea->recall       = ROOM_VNUM_TEMPLE;
+    pArea->mob_level    = 0;
+
+    for ( int i = 0; area_level_table[i].filename != NULL; i++ )
+    {
+        if ( !str_cmp( area_level_table[i].filename, strArea ) )
+        {
+            pArea->mob_level = area_level_table[i].level;
+            break;
+        }
+    }
  
     for ( ; ; )
     {
@@ -538,6 +559,9 @@ void new_load_area( FILE *fp )
  
        switch ( UPPER(word[0]) )
        {
+           case 'L':
+             KEY( "Level", pArea->mob_level, fread_number( fp ) );
+            break;
            case 'N':
             SKEY( "Name", pArea->name );
             break;   
@@ -1985,6 +2009,10 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
     mob->home		= 3001;
     mob->form		= 32767;
     mob->level		= number_fuzzy( pMobIndex->level );
+
+    if ( pMobIndex->area && pMobIndex->area->mob_level > 0 )
+        mob->level = number_fuzzy( pMobIndex->area->mob_level );
+
     mob->act		= pMobIndex->act;
     mob->affected_by	= pMobIndex->affected_by;
     mob->alignment	= pMobIndex->alignment;
