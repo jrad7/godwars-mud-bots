@@ -1,7 +1,7 @@
 Kast~
-700
+900
 Kast~
-7
+9
 Vael~
 2
 Emyr~
@@ -9,6 +9,6 @@ Emyr~
 Vynn~
 35
 Kast~
-72
+74
 Noone~
 0
