@@ -876,7 +876,11 @@ void bot_update( CHAR_DATA *ch )
      * and cannot act.  behead() already called "call all" so class gear is
      * already in inventory; skip all AI and gear management until the head
      * respawns with a body and LOST_HEAD is cleared. */
-    if ( IS_HEAD( ch, LOST_HEAD ) ) return;
+    if ( IS_HEAD( ch, LOST_HEAD ) )
+    {
+        bot_change_state( ch, bot, BOT_TRAINING );
+        return;
+    }
 
     /* Make sure we are geared (must be done before timers that might return early) */
     bot_ensure_geared( ch );
