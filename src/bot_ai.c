@@ -646,6 +646,14 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
 
     for ( victim = ch->in_room->people; victim != NULL; victim = victim->next_in_room )
     {
+        char dbg[256];
+        snprintf( dbg, sizeof(dbg), "[TARGET_DBG] checking '%s': IS_NPC=%d fighting=%s level=%d(max=%d) ACT_IS_NPC=%d\n\r",
+            victim->name,
+            IS_NPC(victim) ? 1 : 0,
+            victim->fighting ? victim->fighting->name : "none",
+            victim->level, ch->level + 15,
+            IS_SET(victim->act, ACT_IS_NPC) ? 1 : 0 );
+        bot_watch_msg( ch, dbg );
         if ( !IS_NPC(victim) )   continue;   /* Don't attack players */
         if ( victim->fighting )  continue;   /* Skip mobs already in combat */
         if ( victim->pIndexData->level > ch->level + 15 ) continue; /* Too strong (use base level to avoid number_fuzzy variance) */
