@@ -135,7 +135,7 @@ struct bot_data {
     int                 scatter_last_dir;   /* Last dir moved during scatter (-1=none) */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     bool                decap_recovery;     /* TRUE from decap until call all issued */
-    char                nav_cmds[24][32];  /* Queued navigation commands  */
+    char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
 };
 typedef struct bot_data BOT_DATA;

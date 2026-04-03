@@ -172,7 +172,7 @@ void bot_watch_msg( CHAR_DATA *ch, const char *msg )
 /* Queue a navigation command to be executed before normal AI resumes */
 static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 {
-    if ( bot->nav_n < 24 )
+    if ( bot->nav_n < 32 )
     {
         strncpy( bot->nav_cmds[bot->nav_n], cmd, sizeof(bot->nav_cmds[0])-1 );
         bot->nav_cmds[bot->nav_n][sizeof(bot->nav_cmds[0])-1] = '\0';
@@ -207,6 +207,8 @@ static const struct {
     { 101, 101, DIRMASK(DIR_SOUTH) },
     /* Shire entrance path (1100): south exits back to Haon-Dor (6000) */
     { 1100, 1100, DIRMASK(DIR_SOUTH) },
+    /* Weed entrance (30232): south exits to room 4773, outside the zone */
+    { 30232, 30232, DIRMASK(DIR_SOUTH) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -328,6 +330,7 @@ static const char *zone_jobo_hell[]   = { "recall", "south", "south", "west", "w
 static const char *zone_shire[]       = { "recall", "south", "south", "west", "west", "west", "west", "west", "north", NULL };
 /* recall(3001)->2S->6E->4S->2E->S->2E->D->S */
 static const char *zone_canyon[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "south", NULL };
+static const char *zone_weed[]        = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "north", "north", "north", "east", "east", "up", "up", "up", "up", "up", "east", "east", "down", "east", "north", "east", "north", NULL };
 
 typedef struct {
     int           max_hit;      /* use this tier when ch->max_hit < max_hit */
@@ -337,8 +340,9 @@ typedef struct {
 
 static const GRIND_TIER grind_tiers[] = {
     { 5000,  { zone_mud_school, zone_jobo_heaven }, 2 },
-    { 10000,  { zone_smurf,      zone_jobo_hell   }, 2 },
-    { 99999, { zone_canyon, zone_shire             }, 2 },
+    { 10000, { zone_smurf,      zone_jobo_hell   }, 2 },
+    { 20000, { zone_canyon,     zone_shire       }, 2 },
+    { 99999, { zone_weed                         }, 1 },
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 
@@ -350,6 +354,7 @@ static const struct { const char **route; const char *name; } route_names[] = {
     { zone_jobo_hell,   "jobo_hell"   },
     { zone_canyon,      "canyon"      },
     { zone_shire,       "shire"       },
+    { zone_weed,        "weed"        },
     { NULL, NULL }
 };
 
@@ -656,7 +661,6 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
         bot_watch_msg( ch, dbg );
         if ( !IS_NPC(victim) )   continue;   /* Don't attack players */
         if ( victim->fighting )  continue;   /* Skip mobs already in combat */
-        if ( victim->pIndexData->level > ch->level + 15 ) continue; /* Too strong (use base level to avoid number_fuzzy variance) */
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;

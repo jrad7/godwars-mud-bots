@@ -18,7 +18,7 @@ This giant plant is covered with bud. It looks like it could
 smoke you.
 ~
 193 524424 -500 S
-255 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 2
 #30233
@@ -31,7 +31,7 @@ It is a blend of beautiful orange, red, and blue hairs. Just a
 fraction of this plant would be enough to keep you happy for a year.
 ~
 67 524424 -500 S
-440 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30234
@@ -43,7 +43,7 @@ This wrapping of reefer is just what you might need after a hard
 day of work.
 ~
 193 557056 -350 S
-154 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30235
@@ -55,7 +55,7 @@ What used to be a cigar is now filled with enough bud to get the
 owner 5 years.
 ~
 65 524288 -350 S
-117 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30236
@@ -67,7 +67,7 @@ While not a large quanitity of weed, it's probably enough to get
 you by for an hour or two.
 ~
 193 524296 -250 S
-49 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30237
@@ -81,7 +81,7 @@ messed with. Of course if you've been smoking any of this weed, you
 wouldn't really care.
 ~
 193 32776 350 S
-184 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30238
@@ -93,7 +93,7 @@ A big Central American looks at you and says,
 "Hola amigo, muchos dinenos."
 ~
 577 98304 -300 S
-259 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
 #30239
@@ -105,7 +105,7 @@ Just the sweet fragrance of the air is enough to give you
 the munchies.
 ~
 97 10 0 S
-18 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 0
 #30240
@@ -117,9 +117,10 @@ He breaks into timeless verse singing,
 "Lemme get to the point, lets roll another joint."
 ~
 269 557192 500 S
-209 0 0 0d0+0 0d0+0
+35 0 0 0d0+0 0d0+0
 0 0
 0 0 1
+
 #0
 
 
@@ -755,6 +756,167 @@ S
 
 
 #RESETS
+M 0 30234 200 30233
+G 0 30233 0
+M 0 30239 200 30233
+G 0 30238 0
+M 0 30234 200 30234
+G 0 30233 0
+M 0 30235 200 30235
+M 0 30235 200 30236
+M 0 30240 200 30241
+E 0 30237 0 0
+M 0 30236 200 30243
+G 0 30234 0
+M 0 30237 200 30245
+E 0 30235 0 17
+M 0 30232 200 30246
+E 0 30236 0 16
+M 0 30233 200 30249
+E 0 30232 0 16
+M 0 30237 200 30252
+E 0 30235 0 17
+M 0 30238 200 30255
+G 0 30234 0
+M 0 30236 200 30256
+M 0 30236 200 30258
+M 0 30239 200 30232 * generated
+M 0 30234 200 30232 * generated
+M 0 30234 200 30232 * generated
+M 0 30239 200 30232 * generated
+M 0 30236 200 30232 * generated
+M 0 30235 200 30233 * generated
+M 0 30235 200 30233 * generated
+M 0 30235 200 30233 * generated
+M 0 30239 200 30234 * generated
+M 0 30234 200 30234 * generated
+M 0 30239 200 30234 * generated
+M 0 30239 200 30234 * generated
+M 0 30238 200 30235 * generated
+M 0 30234 200 30235 * generated
+M 0 30238 200 30235 * generated
+M 0 30237 200 30235 * generated
+M 0 30234 200 30236 * generated
+M 0 30234 200 30236 * generated
+M 0 30234 200 30236 * generated
+M 0 30235 200 30236 * generated
+M 0 30235 200 30237 * generated
+M 0 30238 200 30237 * generated
+M 0 30238 200 30237 * generated
+M 0 30234 200 30237 * generated
+M 0 30238 200 30237 * generated
+M 0 30235 200 30238 * generated
+M 0 30239 200 30238 * generated
+M 0 30239 200 30238 * generated
+M 0 30239 200 30238 * generated
+M 0 30238 200 30238 * generated
+M 0 30237 200 30239 * generated
+M 0 30235 200 30239 * generated
+M 0 30237 200 30239 * generated
+M 0 30238 200 30239 * generated
+M 0 30236 200 30239 * generated
+M 0 30234 200 30240 * generated
+M 0 30235 200 30240 * generated
+M 0 30239 200 30240 * generated
+M 0 30237 200 30240 * generated
+M 0 30236 200 30240 * generated
+M 0 30236 200 30241 * generated
+M 0 30235 200 30241 * generated
+M 0 30235 200 30241 * generated
+M 0 30236 200 30241 * generated
+M 0 30234 200 30242 * generated
+M 0 30234 200 30242 * generated
+M 0 30237 200 30242 * generated
+M 0 30234 200 30242 * generated
+M 0 30236 200 30242 * generated
+M 0 30236 200 30243 * generated
+M 0 30238 200 30243 * generated
+M 0 30236 200 30243 * generated
+M 0 30234 200 30243 * generated
+M 0 30239 200 30244 * generated
+M 0 30237 200 30244 * generated
+M 0 30238 200 30244 * generated
+M 0 30234 200 30244 * generated
+M 0 30237 200 30244 * generated
+M 0 30234 200 30245 * generated
+M 0 30238 200 30245 * generated
+M 0 30236 200 30245 * generated
+M 0 30239 200 30245 * generated
+M 0 30238 200 30246 * generated
+M 0 30236 200 30246 * generated
+M 0 30238 200 30246 * generated
+M 0 30235 200 30246 * generated
+M 0 30239 200 30247 * generated
+M 0 30234 200 30247 * generated
+M 0 30234 200 30247 * generated
+M 0 30239 200 30247 * generated
+M 0 30235 200 30247 * generated
+M 0 30236 200 30248 * generated
+M 0 30234 200 30248 * generated
+M 0 30235 200 30248 * generated
+M 0 30234 200 30248 * generated
+M 0 30237 200 30248 * generated
+M 0 30236 200 30249 * generated
+M 0 30237 200 30249 * generated
+M 0 30239 200 30249 * generated
+M 0 30236 200 30249 * generated
+M 0 30235 200 30250 * generated
+M 0 30236 200 30250 * generated
+M 0 30236 200 30250 * generated
+M 0 30235 200 30250 * generated
+M 0 30239 200 30250 * generated
+M 0 30236 200 30251 * generated
+M 0 30239 200 30251 * generated
+M 0 30239 200 30251 * generated
+M 0 30239 200 30251 * generated
+M 0 30234 200 30251 * generated
+M 0 30238 200 30252 * generated
+M 0 30239 200 30252 * generated
+M 0 30235 200 30252 * generated
+M 0 30238 200 30252 * generated
+M 0 30239 200 30253 * generated
+M 0 30235 200 30253 * generated
+M 0 30235 200 30253 * generated
+M 0 30237 200 30253 * generated
+M 0 30237 200 30253 * generated
+M 0 30236 200 30254 * generated
+M 0 30239 200 30254 * generated
+M 0 30239 200 30254 * generated
+M 0 30238 200 30254 * generated
+M 0 30235 200 30254 * generated
+M 0 30239 200 30255 * generated
+M 0 30236 200 30255 * generated
+M 0 30234 200 30255 * generated
+M 0 30235 200 30255 * generated
+M 0 30234 200 30256 * generated
+M 0 30236 200 30256 * generated
+M 0 30237 200 30256 * generated
+M 0 30236 200 30256 * generated
+M 0 30234 200 30257 * generated
+M 0 30235 200 30257 * generated
+M 0 30238 200 30257 * generated
+M 0 30239 200 30257 * generated
+M 0 30236 200 30257 * generated
+M 0 30235 200 30258 * generated
+M 0 30239 200 30258 * generated
+M 0 30237 200 30258 * generated
+M 0 30237 200 30258 * generated
+M 0 30239 200 30259 * generated
+M 0 30237 200 30259 * generated
+M 0 30235 200 30259 * generated
+M 0 30236 200 30259 * generated
+M 0 30235 200 30259 * generated
+M 0 30235 200 30260 * generated
+M 0 30239 200 30260 * generated
+M 0 30238 200 30260 * generated
+M 0 30238 200 30260 * generated
+M 0 30236 200 30260 * generated
+M 0 30239 200 30261 * generated
+M 0 30238 200 30261 * generated
+M 0 30237 200 30261 * generated
+M 0 30238 200 30261 * generated
+M 0 30237 200 30261 * generated
+S
 M 0 30234 1 30233
 G 0 30233 0
 M 0 30239 1 30233
@@ -779,6 +941,142 @@ M 0 30238 1 30255
 G 0 30234 0
 M 0 30236 1 30256
 M 0 30236 1 30258
+M 0 30239 5 30232  * generated
+M 0 30234 5 30232  * generated
+M 0 30234 5 30232  * generated
+M 0 30239 5 30232  * generated
+M 0 30236 5 30232  * generated
+M 0 30235 5 30233  * generated
+M 0 30235 5 30233  * generated
+M 0 30235 5 30233  * generated
+M 0 30239 5 30234  * generated
+M 0 30234 5 30234  * generated
+M 0 30239 5 30234  * generated
+M 0 30239 5 30234  * generated
+M 0 30238 5 30235  * generated
+M 0 30234 5 30235  * generated
+M 0 30238 5 30235  * generated
+M 0 30237 5 30235  * generated
+M 0 30234 5 30236  * generated
+M 0 30234 5 30236  * generated
+M 0 30234 5 30236  * generated
+M 0 30235 5 30236  * generated
+M 0 30235 5 30237  * generated
+M 0 30238 5 30237  * generated
+M 0 30238 5 30237  * generated
+M 0 30234 5 30237  * generated
+M 0 30238 5 30237  * generated
+M 0 30235 5 30238  * generated
+M 0 30239 5 30238  * generated
+M 0 30239 5 30238  * generated
+M 0 30239 5 30238  * generated
+M 0 30238 5 30238  * generated
+M 0 30237 5 30239  * generated
+M 0 30235 5 30239  * generated
+M 0 30237 5 30239  * generated
+M 0 30238 5 30239  * generated
+M 0 30236 5 30239  * generated
+M 0 30234 5 30240  * generated
+M 0 30235 5 30240  * generated
+M 0 30239 5 30240  * generated
+M 0 30237 5 30240  * generated
+M 0 30236 5 30240  * generated
+M 0 30236 5 30241  * generated
+M 0 30235 5 30241  * generated
+M 0 30235 5 30241  * generated
+M 0 30236 5 30241  * generated
+M 0 30234 5 30242  * generated
+M 0 30234 5 30242  * generated
+M 0 30237 5 30242  * generated
+M 0 30234 5 30242  * generated
+M 0 30236 5 30242  * generated
+M 0 30236 5 30243  * generated
+M 0 30238 5 30243  * generated
+M 0 30236 5 30243  * generated
+M 0 30234 5 30243  * generated
+M 0 30239 5 30244  * generated
+M 0 30237 5 30244  * generated
+M 0 30238 5 30244  * generated
+M 0 30234 5 30244  * generated
+M 0 30237 5 30244  * generated
+M 0 30234 5 30245  * generated
+M 0 30238 5 30245  * generated
+M 0 30236 5 30245  * generated
+M 0 30239 5 30245  * generated
+M 0 30238 5 30246  * generated
+M 0 30236 5 30246  * generated
+M 0 30238 5 30246  * generated
+M 0 30235 5 30246  * generated
+M 0 30239 5 30247  * generated
+M 0 30234 5 30247  * generated
+M 0 30234 5 30247  * generated
+M 0 30239 5 30247  * generated
+M 0 30235 5 30247  * generated
+M 0 30236 5 30248  * generated
+M 0 30234 5 30248  * generated
+M 0 30235 5 30248  * generated
+M 0 30234 5 30248  * generated
+M 0 30237 5 30248  * generated
+M 0 30236 5 30249  * generated
+M 0 30237 5 30249  * generated
+M 0 30239 5 30249  * generated
+M 0 30236 5 30249  * generated
+M 0 30235 5 30250  * generated
+M 0 30236 5 30250  * generated
+M 0 30236 5 30250  * generated
+M 0 30235 5 30250  * generated
+M 0 30239 5 30250  * generated
+M 0 30236 5 30251  * generated
+M 0 30239 5 30251  * generated
+M 0 30239 5 30251  * generated
+M 0 30239 5 30251  * generated
+M 0 30234 5 30251  * generated
+M 0 30238 5 30252  * generated
+M 0 30239 5 30252  * generated
+M 0 30235 5 30252  * generated
+M 0 30238 5 30252  * generated
+M 0 30239 5 30253  * generated
+M 0 30235 5 30253  * generated
+M 0 30235 5 30253  * generated
+M 0 30237 5 30253  * generated
+M 0 30237 5 30253  * generated
+M 0 30236 5 30254  * generated
+M 0 30239 5 30254  * generated
+M 0 30239 5 30254  * generated
+M 0 30238 5 30254  * generated
+M 0 30235 5 30254  * generated
+M 0 30239 5 30255  * generated
+M 0 30236 5 30255  * generated
+M 0 30234 5 30255  * generated
+M 0 30235 5 30255  * generated
+M 0 30234 5 30256  * generated
+M 0 30236 5 30256  * generated
+M 0 30237 5 30256  * generated
+M 0 30236 5 30256  * generated
+M 0 30234 5 30257  * generated
+M 0 30235 5 30257  * generated
+M 0 30238 5 30257  * generated
+M 0 30239 5 30257  * generated
+M 0 30236 5 30257  * generated
+M 0 30235 5 30258  * generated
+M 0 30239 5 30258  * generated
+M 0 30237 5 30258  * generated
+M 0 30237 5 30258  * generated
+M 0 30239 5 30259  * generated
+M 0 30237 5 30259  * generated
+M 0 30235 5 30259  * generated
+M 0 30236 5 30259  * generated
+M 0 30235 5 30259  * generated
+M 0 30235 5 30260  * generated
+M 0 30239 5 30260  * generated
+M 0 30238 5 30260  * generated
+M 0 30238 5 30260  * generated
+M 0 30236 5 30260  * generated
+M 0 30239 5 30261  * generated
+M 0 30238 5 30261  * generated
+M 0 30237 5 30261  * generated
+M 0 30238 5 30261  * generated
+M 0 30237 5 30261  * generated
 S
 
 
