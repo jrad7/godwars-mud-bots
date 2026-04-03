@@ -4059,6 +4059,12 @@ void do_makebag( CHAR_DATA *ch, char *argument )
     OBJ_INDEX_DATA *pObjIndex;
     OBJ_DATA *obj;
 
+    if (IS_NPC(ch))
+    {
+        send_to_char("Only players can create bags.\n\r", ch);
+        return;
+    }
+
     if ( ( pObjIndex = get_obj_index( OBJ_VNUM_BAG ) ) == NULL )
     {
         send_to_char( "Error: Bag object does not exist.\n\r", ch );
@@ -4066,6 +4072,13 @@ void do_makebag( CHAR_DATA *ch, char *argument )
     }
 
     obj = create_object( pObjIndex, 50 );
+
+    if (obj->questmaker != NULL) free_string(obj->questmaker);
+    obj->questmaker = str_dup(ch->name);
+    
+    if (obj->questowner != NULL) free_string(obj->questowner);
+    obj->questowner = str_dup(ch->pcdata->switchname);
+
     obj_to_char( obj, ch );
 
     act( "You wave your hands and create $p.", ch, obj, NULL, TO_CHAR );

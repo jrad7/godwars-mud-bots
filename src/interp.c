@@ -285,6 +285,7 @@ const	struct	cmd_type	cmd_table	[] =
     { "look",		do_look,	POS_MEDITATING,	 0,  LOG_NORMAL, 0,0,0	},
     { "ls",			do_look,	POS_MEDITATING,	 0,  LOG_NORMAL, 0,0,0	},
     { "meditate",		do_meditate,POS_MEDITATING,	 0,  LOG_NORMAL, 0,0,0	},
+    { "makebag",	do_makebag,	POS_STANDING,	 0,  LOG_NORMAL, 0,0,0	},
     { "mount",		do_mount,	POS_STANDING,	 0,  LOG_NORMAL, 0,0,0	},
     { "order",		do_order,	POS_SITTING,	 1,  LOG_ALWAYS, 0,0,0	},
     { "rest",		do_rest,	POS_MEDITATING,	 0,  LOG_NORMAL, 0,0,0	},
