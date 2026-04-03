@@ -489,6 +489,13 @@ static bool bot_do_train( CHAR_DATA *ch )
         return TRUE;
     }
 
+    /* Step 2.5: call all gear back after picking a class */
+    if ( ch->level == 3 && ch->class != 0 )
+    {
+        bot_cmd( ch, "call all" );
+        return TRUE;
+    }
+
     /* Class-specific rank/skill progression (age, belts, disciplines, etc.) */
     {
         BOT_DATA *bot = ch->pcdata->botdata;
