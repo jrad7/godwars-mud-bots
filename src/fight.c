@@ -1255,7 +1255,7 @@ void one_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt, int handtype)
     if ( wield != NULL && wield->item_type == ITEM_WEAPON )
       dt += wield->value[3];
   }
-  if (ch->wpn[dt-1000] > 5) level = (ch->wpn[dt-1000] / 5);
+  if (dt >= TYPE_HIT && ch->wpn[dt-1000] > 5) level = (ch->wpn[dt-1000] / 5);
   else level = 1;
   if (level > 40) level = 40;
 
