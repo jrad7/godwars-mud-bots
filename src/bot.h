@@ -132,6 +132,7 @@ struct bot_data {
     int                 idle_chat_timer;    /* Pulses until unprompted msg */
     int                 grind_attempts;     /* Combat attempts this state  */
     int                 scatter_steps;      /* Random moves left on zone arrival */
+    int                 scatter_last_dir;   /* Last dir moved during scatter (-1=none) */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     bool                decap_recovery;     /* TRUE from decap until call all issued */
     char                nav_cmds[24][32];  /* Queued navigation commands  */

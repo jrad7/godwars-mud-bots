@@ -592,6 +592,51 @@ static void bot_try_move( CHAR_DATA *ch )
     }
 }
 
+/* Scatter move: prefer directions that are not the reverse of the last move.
+ * Falls back to the reverse direction only if no other exit is usable. */
+static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    extern const sh_int rev_dir[];
+    int tries, door;
+    int avoid = ( bot->scatter_last_dir >= 0 ) ? rev_dir[bot->scatter_last_dir] : -1;
+    EXIT_DATA *pexit;
+
+    /* First pass: try random directions, skipping the back-direction */
+    for ( tries = 0; tries < 12; tries++ )
+    {
+        door = number_range( 0, 5 );
+        if ( ch->in_room == NULL ) return;
+        if ( door == avoid ) continue;
+
+        if ( !bot_dir_allowed( ch, door ) )                      continue;
+        pexit = ch->in_room->exit[door];
+        if ( pexit == NULL || pexit->to_room == NULL )           continue;
+        if ( IS_SET(pexit->exit_info, EX_CLOSED) )               continue;
+        if ( IS_SET(pexit->to_room->room_flags, ROOM_PRIVATE) )  continue;
+
+        bot->scatter_last_dir = door;
+        bot_cmd( ch, dir_name[door] );
+        return;
+    }
+
+    /* Second pass: allow the back-direction as a last resort */
+    for ( tries = 0; tries < 6; tries++ )
+    {
+        door = number_range( 0, 5 );
+        if ( ch->in_room == NULL ) return;
+
+        if ( !bot_dir_allowed( ch, door ) )                      continue;
+        pexit = ch->in_room->exit[door];
+        if ( pexit == NULL || pexit->to_room == NULL )           continue;
+        if ( IS_SET(pexit->exit_info, EX_CLOSED) )               continue;
+        if ( IS_SET(pexit->to_room->room_flags, ROOM_PRIVATE) )  continue;
+
+        bot->scatter_last_dir = door;
+        bot_cmd( ch, dir_name[door] );
+        return;
+    }
+}
+
 /* Find a mob in the room that's safe to attack */
 static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
 {
@@ -706,7 +751,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
      * the entrance.  Stop early if combat starts. */
     if ( bot->scatter_steps > 0 && ch->position != POS_FIGHTING )
     {
-        bot_try_move( ch );
+        bot_scatter_move( ch, bot );
         bot->scatter_steps--;
         return;
     }
@@ -975,6 +1020,7 @@ void bot_update( CHAR_DATA *ch )
             bot->state_timer     = number_range( BOT_TIMER_GRINDING_MIN, BOT_TIMER_GRINDING_MAX );
             bot->state_timer_max = bot->state_timer;
             bot->scatter_steps   = number_range( 4, 12 );
+            bot->scatter_last_dir = -1;
             bot_watch_msg( ch, "[NAV] arrived at grind zone -- timer reset, scattering\n\r" );
         }
         return;
