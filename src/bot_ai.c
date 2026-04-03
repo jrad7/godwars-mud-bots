@@ -322,6 +322,8 @@ static const char *zone_jobo_heaven[] = { "recall", "down", NULL };
 static const char *zone_smurf[]       = { "recall", "south", "south", "west", "west", "west", "north", NULL };
 /* 3001->3005->3014->3013->3012->3040->3052->6000->6001->6002->30200->30199->30100 */
 static const char *zone_jobo_hell[]   = { "recall", "south", "south", "west", "west", "west", "west", "west", "west", "west", "down", "down", "down", NULL };
+/* recall(3001)->2S->5W->N */
+static const char *zone_shire[]       = { "recall", "south", "south", "west", "west", "west", "west", "west", "north", NULL };
 /* recall(3001)->2S->6E->4S->2E->S->2E->D->S */
 static const char *zone_canyon[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "south", NULL };
 
@@ -334,7 +336,7 @@ typedef struct {
 static const GRIND_TIER grind_tiers[] = {
     { 5000,  { zone_mud_school, zone_jobo_heaven }, 2 },
     { 10000,  { zone_smurf,      zone_jobo_hell   }, 2 },
-    { 99999, { zone_canyon                        }, 1 },
+    { 99999, { zone_canyon, zone_shire             }, 2 },
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 
@@ -345,6 +347,7 @@ static const struct { const char **route; const char *name; } route_names[] = {
     { zone_smurf,       "smurf"       },
     { zone_jobo_hell,   "jobo_hell"   },
     { zone_canyon,      "canyon"      },
+    { zone_shire,       "shire"       },
     { NULL, NULL }
 };
 
