@@ -133,6 +133,7 @@ struct bot_data {
     int                 grind_attempts;     /* Combat attempts this state  */
     int                 scatter_steps;      /* Random moves left on zone arrival */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
+    bool                decap_recovery;     /* TRUE from decap until call all issued */
     char                nav_cmds[24][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
 };

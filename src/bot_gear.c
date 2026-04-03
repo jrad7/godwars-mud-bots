@@ -340,11 +340,9 @@ void bot_gear_check( CHAR_DATA *ch )
     }
 
     /* Step 1.5: recover called-back class gear from inventory.
-     * After a decap the bot issues "call all" to retrieve its class pieces from
-     * the corpse before picking a class.  Those items land in inventory with
-     * wear_loc == WEAR_NONE.  Wear them one per tick here, before the surplus-
-     * cleanup steps below would extract them. */
-    if ( ch->class != 0 )
+     * After a decap the bot calls gear back and it lands in inventory.
+     * Skip while decap_recovery is still set — call all hasn't been issued yet. */
+    if ( ch->class != 0 && !bot->decap_recovery )
     {
         for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
         {
@@ -381,10 +379,10 @@ void bot_gear_check( CHAR_DATA *ch )
         if ( !bot_is_newbiepack_vnum( obj->pIndexData->vnum )
           && !bot_is_class_gear_vnum(  obj->pIndexData->vnum ) )
             continue;
-        /* Preserve class gear while mortal (class == 0) — it was called back
-         * from the corpse by behead() and must survive until the bot trains
-         * avatar and picks its class, at which point step 1.5 will wear it. */
-        if ( ch->class == 0 && bot_is_class_gear_vnum( obj->pIndexData->vnum ) )
+        /* Preserve class gear during decap recovery — it was called back by
+         * behead() and must survive until call all is issued and step 1.5
+         * wears it. */
+        if ( bot->decap_recovery && bot_is_class_gear_vnum( obj->pIndexData->vnum ) )
             continue;
         extract_obj( obj );
         return;
@@ -394,8 +392,10 @@ void bot_gear_check( CHAR_DATA *ch )
     table             = bot_class_gear[class_pref];
     force_newbiepack  = FALSE;
 
-    /* Step 3: unclassed bot — fill every empty newbiepack-eligible slot */
-    if ( ch->class == 0 )
+    /* Step 3: unclassed bot or decap recovery — fill newbiepack slots only.
+     * During decap_recovery the bot is re-training; class gear must not be
+     * created or worn until call all has been issued and the flag cleared. */
+    if ( ch->class == 0 || bot->decap_recovery )
     {
         for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
         {

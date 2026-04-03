@@ -489,11 +489,16 @@ static bool bot_do_train( CHAR_DATA *ch )
         return TRUE;
     }
 
-    /* Step 2.5: call all gear back after picking a class */
+    /* Step 2.5: call all gear back after picking a class following a decap */
     if ( ch->level == 3 && ch->class != 0 )
     {
-        bot_cmd( ch, "call all" );
-        return TRUE;
+        BOT_DATA *bot = ch->pcdata->botdata;
+        if ( bot && bot->decap_recovery )
+        {
+            bot->decap_recovery = FALSE;
+            bot_cmd( ch, "call all" );
+            return TRUE;
+        }
     }
 
     /* Class-specific rank/skill progression (age, belts, disciplines, etc.) */
@@ -878,6 +883,7 @@ void bot_update( CHAR_DATA *ch )
      * respawns with a body and LOST_HEAD is cleared. */
     if ( IS_HEAD( ch, LOST_HEAD ) )
     {
+        bot->decap_recovery = TRUE;
         bot_change_state( ch, bot, BOT_TRAINING );
         return;
     }
