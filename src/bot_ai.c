@@ -476,6 +476,12 @@ static bool bot_should_train( CHAR_DATA *ch )
  */
 static bool bot_do_train( CHAR_DATA *ch )
 {
+    if ( ch->position < POS_STANDING )
+    {
+        bot_cmd( ch, "stand" );
+        return TRUE;
+    }
+
     int hp_cap = UMIN( 120000, 20000 + 4000 * ch->pkill );
 
     /* Step 1: train avatar once at level 2 with enough hp */
