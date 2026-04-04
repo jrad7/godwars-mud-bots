@@ -91,6 +91,13 @@ static int bot_pick_training_stance( CHAR_DATA *ch )
       && ch->stance[STANCE_SWALLOW]  >= 0   && ch->stance[STANCE_SWALLOW]  < 200 )
         return STANCE_SWALLOW;
 
+    /* Superstances */
+    if ( ch->stance[19] != -1 && ch->stance[13] < 200 ) return 13; /* STANCE_SS1 */
+    if ( ch->stance[20] != -1 && ch->stance[14] < 200 ) return 14; /* STANCE_SS2 */
+    if ( ch->stance[21] != -1 && ch->stance[15] < 200 ) return 15; /* STANCE_SS3 */
+    if ( ch->stance[22] != -1 && ch->stance[16] < 200 ) return 16; /* STANCE_SS4 */
+    if ( ch->stance[23] != -1 && ch->stance[17] < 200 ) return 17; /* STANCE_SS5 */
+
     return 0;   /* all available stances mastered */
 }
 
@@ -116,12 +123,21 @@ static void bot_set_autostance( CHAR_DATA *ch )
         "tiger",     /* 8  STANCE_TIGER    */
         "monkey",    /* 9  STANCE_MONKEY   */
         "swallow",   /* 10 STANCE_SWALLOW  */
+        "wolf",      /* 11 STANCE_WOLF     */
+        NULL,        /* 12 MONK_AUTODROP   */
+        "ss1",       /* 13 STANCE_SS1      */
+        "ss2",       /* 14 STANCE_SS2      */
+        "ss3",       /* 15 STANCE_SS3      */
+        "ss4",       /* 16 STANCE_SS4      */
+        "ss5",       /* 17 STANCE_SS5      */
     };
     int current = ch->stance[MONK_AUTODROP];
     int pick;
 
     /* Stick with current stance until fully mastered */
-    if ( current >= STANCE_VIPER && current <= STANCE_SWALLOW
+    if ( current >= STANCE_VIPER && current <= 17 /* STANCE_SS5 */
+      && current != 11 /* STANCE_WOLF */
+      && current != 12 /* MONK_AUTODROP */
       && ch->stance[current] < 200 )
         return;
 
@@ -559,11 +575,6 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Primal for class gear takes priority over hp/mana/move spending */
     if ( bot_should_train_primal(ch) )                           return TRUE;
 
-    if ( ch->max_hit  < hp_cap         && ch->exp >= ch->max_hit  + 1 ) return TRUE;
-    if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
-      && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
-    if ( ch->max_move < 10000          && ch->exp >= ch->max_move + 1 ) return TRUE;
-
     /* Check if we need to practice generic spells */
     {
         static const char *practice_spells[] = {
@@ -587,6 +598,54 @@ static bool bot_should_train( CHAR_DATA *ch )
                 return TRUE;
         }
     }
+
+    /* Check for Superstances pooling before training stats */
+    {
+        bool basic_maxed = TRUE;
+        int i;
+        int basics[] = { STANCE_VIPER, STANCE_CRANE, STANCE_CRAB, STANCE_MONGOOSE, STANCE_BULL,
+                         STANCE_MANTIS, STANCE_DRAGON, STANCE_TIGER, STANCE_MONKEY, STANCE_SWALLOW };
+        for ( i = 0; i < 10; i++ )
+        {
+            if ( ch->stance[basics[i]] < 200 ) { basic_maxed = FALSE; break; }
+        }
+
+        if ( basic_maxed && ch->stance[23] == -1 )
+        {
+            if ( ch->stance[18] != 0 ) return TRUE;
+            if ( ch->stance[19] == -1 ) 
+            {
+                if ( ch->exp >= 80000000 ) return TRUE; else return FALSE; 
+            }
+            if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
+            {
+                if ( ch->exp >= 120000000 ) return TRUE; else return FALSE;
+            }
+            if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
+            {
+                if ( ch->exp >= 140000000 ) return TRUE; else return FALSE;
+            }
+            if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
+            {
+                if ( ch->exp >= 200000000 ) return TRUE; else return FALSE;
+            }
+            if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
+            {
+                if ( ch->exp >= 380000000 ) return TRUE; else return FALSE;
+            }
+
+            /* Block stats training if maxed basic but waiting for current ss mastery to hit 200 */
+            return FALSE;
+        }
+    }
+
+    /* Primary: dump all available exp into hp */
+    if ( ch->max_hit  < hp_cap         && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+    /* Secondary: keep mana at parity with hp */
+    if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
+      && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
+    /* Tertiary: keep move above a floor */
+    if ( ch->max_move < 10000          && ch->exp >= ch->max_move + 1 ) return TRUE;
 
     return FALSE;
 }
@@ -675,6 +734,108 @@ static bool bot_do_train( CHAR_DATA *ch )
                 bot_cmd( ch, cmd );
                 return TRUE;
             }
+        }
+    }
+
+    /* Prioritize Superstances ahead of HP/Mana/Move */
+    {
+        bool basic_maxed = TRUE;
+        int i;
+        int basics[] = { STANCE_VIPER, STANCE_CRANE, STANCE_CRAB, STANCE_MONGOOSE, STANCE_BULL,
+                         STANCE_MANTIS, STANCE_DRAGON, STANCE_TIGER, STANCE_MONKEY, STANCE_SWALLOW };
+        for ( i = 0; i < 10; i++ )
+        {
+            if ( ch->stance[basics[i]] < 200 ) { basic_maxed = FALSE; break; }
+        }
+
+        if ( basic_maxed && ch->stance[23] == -1 )
+        {
+            if ( ch->stance[18] != 0 )
+            {
+                bot_cmd( ch, "setstance done" );
+                return TRUE;
+            }
+
+            /* SS1 - 80m exp needed */
+            if ( ch->stance[19] == -1 )
+            {
+                if ( ch->exp >= 80000000 )
+                {
+                    bot_cmd( ch, "setstance damcap lesser" );
+                    bot_cmd( ch, "setstance rev_dc lesser" );
+                    bot_cmd( ch, "setstance damage lesser" );
+                    bot_cmd( ch, "setstance speed" );
+                    bot_cmd( ch, "setstance done" );
+                    return TRUE;
+                }
+                return FALSE; /* Pool if not enough */
+            }
+            /* SS2 - 120m exp needed */
+            else if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
+            {
+                if ( ch->exp >= 120000000 )
+                {
+                    bot_cmd( ch, "setstance damcap greater" );
+                    bot_cmd( ch, "setstance rev_dc lesser" );
+                    bot_cmd( ch, "setstance damage lesser" );
+                    bot_cmd( ch, "setstance resist lesser" );
+                    bot_cmd( ch, "setstance speed" );
+                    bot_cmd( ch, "setstance done" );
+                    return TRUE;
+                }
+                return FALSE; /* Pool */
+            }
+            /* SS3 - 140m exp needed */
+            else if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
+            {
+                if ( ch->exp >= 140000000 )
+                {
+                    bot_cmd( ch, "setstance damcap greater" );
+                    bot_cmd( ch, "setstance rev_dc greater" );
+                    bot_cmd( ch, "setstance damage lesser" );
+                    bot_cmd( ch, "setstance resist lesser" );
+                    bot_cmd( ch, "setstance speed" );
+                    bot_cmd( ch, "setstance done" );
+                    return TRUE;
+                }
+                return FALSE; /* Pool */
+            }
+            /* SS4 - 200m exp needed */
+            else if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
+            {
+                if ( ch->exp >= 200000000 )
+                {
+                    bot_cmd( ch, "setstance damcap supreme" );
+                    bot_cmd( ch, "setstance rev_dc greater" );
+                    bot_cmd( ch, "setstance damage greater" );
+                    bot_cmd( ch, "setstance resist greater" );
+                    bot_cmd( ch, "setstance speed" );
+                    bot_cmd( ch, "setstance done" );
+                    return TRUE;
+                }
+                return FALSE; /* Pool */
+            }
+            /* SS5 - 380m exp needed */
+            else if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
+            {
+                if ( ch->exp >= 380000000 )
+                {
+                    bot_cmd( ch, "setstance damcap supreme" );
+                    bot_cmd( ch, "setstance rev_dc supreme" );
+                    bot_cmd( ch, "setstance damage greater" );
+                    bot_cmd( ch, "setstance resist lesser" );
+                    bot_cmd( ch, "setstance speed" );
+                    bot_cmd( ch, "setstance parry" );
+                    bot_cmd( ch, "setstance dodge" );
+                    bot_cmd( ch, "setstance bypass" );
+                    bot_cmd( ch, "setstance done" );
+                    return TRUE;
+                }
+                return FALSE; /* Pool */
+            }
+            
+            /* Otherwise, wait for mastery */
+            return FALSE;
         }
     }
 
