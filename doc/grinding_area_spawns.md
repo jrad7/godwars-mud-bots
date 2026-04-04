@@ -9,7 +9,7 @@ The Dystopia MUD engine has been modified to automatically manage mob spawns in 
 When an area resets, the engine parses its list of components (`#RESETS`). The `reset_room()` function in `db.c` executes the following logic for Grinding Areas:
 
 1. **Detection:** The engine checks if `pRoom->area->mob_level > 0`. This flags the area as a Grinding Area (configured in `src/area_levels.h`).
-2. **Dynamic Generation:** For every room in the grinding area, the engine picks 5 random valid `vnums` within the area's `lvnum` and `uvnum` boundaries, creates the mobile, and places them into the room.
+2. **Dynamic Generation:** For every room in the grinding area, the engine picks 5 random valid `vnums` within the area's `lvnum` and `uvnum` boundaries, creates the mobile, applies the `ACT_STAY_AREA` flag to prevent them from wandering into other zones, and places them into the room.
 3. **Smart Ignoring:** During the parsing of `#RESETS`, generic Mob (`M`), and subsequent Equipment (`E`) / Give (`G`) resets are functionally ignored and skipped. 
 4. **Shopkeeper Preservation:** The logic ensures that shopkeepers (`pMobIndex->pShop != NULL`) bypass this override, allowing essential merchants and their inventory to spawn uninterrupted even inside grinding areas.
 

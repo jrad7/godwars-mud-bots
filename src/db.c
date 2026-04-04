@@ -1757,6 +1757,7 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
                 CHAR_DATA *rand_mob = create_mobile( pMobIndex );
                 if ( room_is_dark( pRoom ) )
                     SET_BIT(rand_mob->affected_by, AFF_INFRARED);
+                SET_BIT(rand_mob->act, ACT_STAY_AREA);
                 char_to_room( rand_mob, pRoom );
             }
         }
