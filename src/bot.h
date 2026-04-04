@@ -53,8 +53,8 @@ struct descriptor_data;
 #define BOT_TIMER_GRINDING_MAX   240
 #define BOT_TIMER_TRAINING_MIN   15
 #define BOT_TIMER_TRAINING_MAX   60
-#define BOT_TIMER_RESTING_MIN    10 
-#define BOT_TIMER_RESTING_MAX    20 
+#define BOT_TIMER_RESTING_MIN    20 
+#define BOT_TIMER_RESTING_MAX    40 
 #define BOT_TIMER_LOGOUT_MIN     3
 #define BOT_TIMER_LOGOUT_MAX     8
 #define BOT_TIMER_DEFAULT_MIN    40
@@ -142,6 +142,7 @@ struct bot_data {
     int                 scatter_last_dir;   /* Last dir moved during scatter (-1=none) */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     bool                decap_recovery;     /* TRUE from decap until call all issued */
+    bool                blind_recovery;     /* TRUE after recall for blindness - cure next tick */
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */

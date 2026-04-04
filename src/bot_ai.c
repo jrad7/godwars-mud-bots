@@ -581,7 +581,8 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Check if we need to practice generic spells */
     {
         static const char *practice_spells[] = {
-            "repair", "rem", "stone", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+            "repair", "rem", "stone", "sanctuary", "shield", "armor", "bless", "frenzy",
+            "cure blindness", NULL
         };
         int i;
         for ( i = 0; practice_spells[i] != NULL; i++ )
@@ -732,7 +733,8 @@ static bool bot_do_train( CHAR_DATA *ch )
     /* Generic spell practice */
     {
         static const char *practice_spells[] = {
-            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy",
+            "cure blindness", NULL
         };
         int i;
         for ( i = 0; practice_spells[i] != NULL; i++ )
@@ -1633,6 +1635,88 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_check_vision - detect and recover from blindness or total darkness
+ *
+ * Called at the top of bot_update() before the nav queue is drained.
+ * Returns TRUE if a recovery action was taken (caller should return).
+ *
+ * Two-phase recovery:
+ *   Phase 1 (blind_recovery == FALSE): bot is impaired -> flush nav queue,
+ *            recall, set blind_recovery = TRUE.
+ *   Phase 2 (blind_recovery == TRUE):  one tick has passed -> remove
+ *            blindfold or cast cure blindness, then clear the flag.
+ * ----------------------------------------------------------------------- */
+static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    bool in_total_dark;
+    bool is_blind;
+    bool is_blindfolded;
+
+    /* Drow and Droid see through total darkness natively - never trigger */
+    in_total_dark = ( ch->in_room != NULL
+                   && IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS)
+                   && !IS_CLASS(ch, CLASS_DROW)
+                   && !IS_CLASS(ch, CLASS_DROID) );
+
+    is_blindfolded = IS_EXTRA(ch, BLINDFOLDED);
+    is_blind       = ( IS_AFFECTED(ch, AFF_BLIND)
+                    && !IS_AFFECTED(ch, AFF_SHADOWSIGHT) );
+
+    /* Phase 2: already recalled last tick - now fix the cause */
+    if ( bot->blind_recovery )
+    {
+        /* Wait if still in combat */
+        if ( ch->position == POS_FIGHTING )
+            return TRUE;
+
+        if ( is_blindfolded )
+        {
+            bot_watch_msg( ch, "[VISION] removing blindfold\n\r" );
+            bot_cmd( ch, "blindfold self" );
+            bot->blind_recovery = FALSE;
+            return TRUE;
+        }
+
+        if ( is_blind )
+        {
+            int sn = skill_lookup("cure blindness");
+            if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
+            {
+                bot_watch_msg( ch, "[VISION] casting cure blindness\n\r" );
+                bot_cmd( ch, "cast cure blin self" );
+            }
+            /* Clear regardless - if we can't cast it, nothing else to try */
+            bot->blind_recovery = FALSE;
+            return TRUE;
+        }
+
+        /* Vision restored (e.g. drow darkness ended before next tick) */
+        bot->blind_recovery = FALSE;
+        return FALSE;
+    }
+
+    /* Nothing wrong - fast path */
+    if ( !in_total_dark && !is_blind && !is_blindfolded )
+        return FALSE;
+
+    /* Can't recall while fighting - let combat code handle it */
+    if ( ch->position == POS_FIGHTING )
+        return FALSE;
+
+    /* Flush nav queue so we don't stumble blind after recall */
+    if ( bot->nav_n > 0 )
+    {
+        bot_watch_msg( ch, "[VISION] blind/dark - aborting nav queue\n\r" );
+        bot->nav_n = 0;
+    }
+
+    bot_watch_msg( ch, "[VISION] blind or total darkness - recalling\n\r" );
+    bot_cmd( ch, "recall" );
+    bot->blind_recovery = TRUE;
+    return TRUE;
+}
+
+/* -----------------------------------------------------------------------
  * bot_update - main per-bot update, called each PULSE_BOT_MANAGER
  * ----------------------------------------------------------------------- */
 
@@ -1660,6 +1744,10 @@ void bot_update( CHAR_DATA *ch )
      * until after call all is issued and decap_recovery is cleared. */
     if ( !bot->decap_recovery )
         bot_ensure_geared( ch );
+
+    /* Recover from blindness or total darkness before anything else */
+    if ( bot_check_vision( ch, bot ) )
+        return;
 
     /* Decrement timers */
     bot->state_timer--;
