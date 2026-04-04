@@ -45,6 +45,8 @@ void do_autostance( CHAR_DATA *ch, char *argument );
 /* Index into ch->stance[] for the autostance setting */
 #define MONK_AUTODROP  12
 
+static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch );
+
 /* -----------------------------------------------------------------------
  * bot_pick_training_stance
  *
@@ -69,8 +71,6 @@ static int bot_pick_training_stance( CHAR_DATA *ch )
             return basic[i];
     }
 
-    /* Advanced stances - only attempt if prerequisites met and not mastered.
-     * Prerequisites mirror do_autostance() in fight.c. */
     if ( ch->stance[STANCE_CRANE]    >= 200 && ch->stance[STANCE_VIPER]    >= 200
       && ch->stance[STANCE_MANTIS]   >= 0   && ch->stance[STANCE_MANTIS]   < 200 )
         return STANCE_MANTIS;
@@ -853,6 +853,21 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
             bot_change_state( ch, bot, BOT_TRAINING );
             return;
         }
+
+        /* Check for PVP */
+        if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        {
+            CHAR_DATA *target = bot_find_pvp_target(ch);
+            if ( target != NULL )
+            {
+                free_string(ch->hunting);
+                ch->hunting = str_dup(target->name);
+                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                bot_change_state( ch, bot, BOT_PVP_HUNT );
+                return;
+            }
+        }
+
         /* Weighted state pick */
         int roll = number_range( 1, 100 );
         if ( roll <= 40 )
@@ -862,6 +877,29 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
         else
             bot_change_state( ch, bot, BOT_IDLE );   /* Stay idle */
     }
+}
+
+static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch )
+{
+    CHAR_DATA *victim;
+    CHAR_DATA *best_victim = NULL;
+    int count = 0;
+
+    for ( victim = char_list; victim != NULL; victim = victim->next )
+    {
+        if ( IS_NPC(victim) ) continue;
+        if ( victim == ch ) continue;
+        if ( victim->in_room == NULL ) continue;
+        if ( IS_SET(victim->in_room->room_flags, ROOM_ARENA) || IS_SET(victim->in_room->room_flags, ROOM_SAFE) ) continue;
+        if ( !fair_fight(ch, victim) ) continue;
+        if ( is_safe(ch, victim) ) continue;
+        
+        /* Select randomly among valid victims */
+        if ( number_range(0, count) == 0 )
+            best_victim = victim;
+        count++;
+    }
+    return best_victim;
 }
 
 static void bot_state_exploring( CHAR_DATA *ch, BOT_DATA *bot )
@@ -946,6 +984,19 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
         }
+        else if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        {
+            CHAR_DATA *target = bot_find_pvp_target(ch);
+            if ( target != NULL )
+            {
+                free_string(ch->hunting);
+                ch->hunting = str_dup(target->name);
+                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                bot_change_state( ch, bot, BOT_PVP_HUNT );
+            }
+            else
+                bot_change_state( ch, bot, BOT_IDLE );
+        }
         else
             bot_change_state( ch, bot, BOT_IDLE );
         return;
@@ -991,8 +1042,225 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
         }
+        else if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        {
+            CHAR_DATA *target = bot_find_pvp_target(ch);
+            if ( target != NULL )
+            {
+                free_string(ch->hunting);
+                ch->hunting = str_dup(target->name);
+                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                bot_change_state( ch, bot, BOT_PVP_HUNT );
+            }
+            else
+                bot_change_state( ch, bot, BOT_IDLE );
+        }
         else
             bot_change_state( ch, bot, BOT_IDLE );
+    }
+}
+
+/* Find first step of shortest path from start to target. Returns direction 0-5, or -1 if no path. */
+static int bot_find_path( ROOM_INDEX_DATA *start, ROOM_INDEX_DATA *target )
+{
+    struct bfs_queue {
+        ROOM_INDEX_DATA *room;
+        int first_dir;
+    } *queue;
+    bool *visited;
+    int head = 0, tail = 0;
+    int i, dir = -1;
+
+    if ( start == NULL || target == NULL || start == target )
+        return -1;
+
+    /* A massive array of visited flags, indexed by vnum. Safe for up to vnum 200k */
+    visited = calloc( 250000, sizeof(bool) );
+    if ( visited == NULL ) return -1;
+
+    /* A queue of rooms to check, max 20000 nodes searched */
+    queue = calloc( 20000, sizeof(struct bfs_queue) );
+    if ( queue == NULL )
+    {
+        free( visited );
+        return -1;
+    }
+
+    visited[start->vnum] = TRUE;
+
+    /* Enqueue initial available directions */
+    for ( i = 0; i < 6; i++ )
+    {
+        EXIT_DATA *pexit = start->exit[i];
+        if ( pexit != NULL && pexit->to_room != NULL 
+          && !IS_SET(pexit->exit_info, EX_LOCKED) 
+          && pexit->to_room->vnum < 250000 )
+        {
+            if ( pexit->to_room == target )
+            {
+                dir = i;
+                goto done;
+            }
+            if ( !visited[pexit->to_room->vnum] )
+            {
+                visited[pexit->to_room->vnum] = TRUE;
+                queue[tail].room = pexit->to_room;
+                queue[tail].first_dir = i;
+                tail++;
+            }
+        }
+    }
+
+    /* Process queue */
+    while ( head < tail && tail < 19990 )
+    {
+        ROOM_INDEX_DATA *r = queue[head].room;
+        int f_dir = queue[head].first_dir;
+        head++;
+
+        for ( i = 0; i < 6; i++ )
+        {
+            EXIT_DATA *pexit = r->exit[i];
+            if ( pexit != NULL && pexit->to_room != NULL 
+              && !IS_SET(pexit->exit_info, EX_LOCKED) 
+              && pexit->to_room->vnum < 250000 )
+            {
+                if ( pexit->to_room == target )
+                {
+                    dir = f_dir;
+                    goto done;
+                }
+                if ( !visited[pexit->to_room->vnum] )
+                {
+                    visited[pexit->to_room->vnum] = TRUE;
+                    queue[tail].room = pexit->to_room;
+                    queue[tail].first_dir = f_dir;
+                    tail++;
+                }
+            }
+        }
+    }
+
+done:
+    free( visited );
+    free( queue );
+    return dir;
+}
+
+static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    CHAR_DATA *victim;
+    int dir;
+
+    if ( ch->hunting == NULL || ch->hunting[0] == '\0' )
+    {
+        bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    victim = get_char_world( ch, ch->hunting );
+    if ( victim == NULL || is_safe(ch, victim) || !fair_fight(ch, victim) )
+    {
+        bot_watch_msg( ch, "[PVP] Target lost or no longer valid.\n\r" );
+        free_string( ch->hunting );
+        ch->hunting = str_dup("");
+        bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    if ( ch->in_room == victim->in_room )
+    {
+        bot_watch_msg( ch, "[PVP] Target found! Attacking.\n\r" );
+        bot_change_state( ch, bot, BOT_PVP_FIGHT );
+        return;
+    }
+
+    /* Move towards target */
+    dir = bot_find_path( ch->in_room, victim->in_room );
+    
+    if ( dir != -1 )
+    {
+        EXIT_DATA *pexit = ch->in_room->exit[dir];
+        char echo[256];
+        if ( pexit != NULL && IS_SET(pexit->exit_info, EX_CLOSED) )
+        {
+            char cmd[64];
+            sprintf(cmd, "open %s", dir_name[dir]);
+            bot_cmd( ch, cmd );
+        }
+        snprintf( echo, sizeof(echo), "[PVP] BFS found path -- stepping %s\n\r", dir_name[dir] );
+        bot_watch_msg( ch, echo );
+        bot_cmd( ch, dir_name[dir] );
+    }
+    else
+    {
+        bot_watch_msg( ch, "[PVP] BFS failed -- target unreachable. Halting hunt.\n\r" );
+        free_string( ch->hunting );
+        ch->hunting = str_dup("");
+        bot_change_state( ch, bot, BOT_GRINDING );
+    }
+}
+
+static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    CHAR_DATA *victim;
+
+    /* Wait out fight timer before leaving PVP_FIGHT state if target is gone */
+    if ( ch->hunting == NULL || ch->hunting[0] == '\0' )
+    {
+        if ( ch->fight_timer > 0 ) return;
+        bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    victim = get_char_world( ch, ch->hunting );
+    if ( victim == NULL || !fair_fight(ch, victim) )
+    {
+        /* Target dead or invalid */
+        free_string(ch->hunting);
+        ch->hunting = str_dup("");
+        if ( ch->fight_timer > 0 ) return;
+        bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    if ( victim->in_room != ch->in_room )
+    {
+        bot_change_state( ch, bot, BOT_PVP_HUNT );
+        return;
+    }
+
+    if ( victim->position <= POS_STUNNED )
+    {
+        /* Time to finish them */
+        char cmd[256];
+        if ( ch->class == victim->class && ch->generation > victim->generation && victim->generation < 7 && victim->generation > 1 )
+        {
+            sprintf( cmd, "gensteal %s", victim->name );
+            bot_cmd( ch, cmd );
+        }
+        else
+        {
+            sprintf( cmd, "decapitate %s", victim->name );
+            bot_cmd( ch, cmd );
+        }
+        return;
+    }
+
+    /* Keep attacking if not fighting */
+    if ( ch->position != POS_FIGHTING )
+    {
+        char cmd[256];
+        sprintf( cmd, "kill %s", victim->name );
+        bot_cmd( ch, cmd );
+    }
+    
+    /* Execute class combat action */
+    {
+        const BOT_CLASS_AI *ai = NULL;
+        if ( bot->roster ) ai = bot_class_ai[bot->roster->class_pref];
+        if ( ch->position == POS_FIGHTING && ai && ai->combat_action )
+            ai->combat_action( ch );
     }
 }
 
@@ -1191,6 +1459,8 @@ void bot_update( CHAR_DATA *ch )
     case BOT_EXPLORING:   bot_state_exploring(  ch, bot ); break;
     case BOT_GRINDING:    bot_state_grinding(   ch, bot ); break;
     case BOT_TRAINING:    bot_state_training(   ch, bot ); break;
+    case BOT_PVP_HUNT:    bot_state_pvp_hunt(   ch, bot ); break;
+    case BOT_PVP_FIGHT:   bot_state_pvp_fight(  ch, bot ); break;
     case BOT_RESTING:     bot_state_resting(    ch, bot ); break;
     case BOT_LOGGING_OUT: bot_state_logging_out(ch, bot ); break;
     default:
