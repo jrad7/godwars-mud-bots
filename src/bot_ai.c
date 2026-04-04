@@ -886,6 +886,12 @@ static void bot_try_move( CHAR_DATA *ch )
     int tries, door;
     EXIT_DATA *pexit;
 
+    if ( IS_SET(ch->affected_by, AFF_WEBBED) )
+    {
+        bot_cmd( ch, "flex" );
+        return;
+    }
+
     for ( tries = 0; tries < 6; tries++ )
     {
         door = number_range( 0, 5 );
@@ -909,6 +915,12 @@ static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
     extern const sh_int rev_dir[];
     int tries, door;
     int avoid = ( bot->scatter_last_dir >= 0 ) ? rev_dir[bot->scatter_last_dir] : -1;
+
+    if ( IS_SET(ch->affected_by, AFF_WEBBED) )
+    {
+        bot_cmd( ch, "flex" );
+        return;
+    }
     EXIT_DATA *pexit;
 
     /* First pass: try random directions, skipping the back-direction */
@@ -1442,8 +1454,15 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     }
 
     /* Move towards target */
+    if ( IS_SET(ch->affected_by, AFF_WEBBED) )
+    {
+        bot_watch_msg( ch, "[PVP] webbed -- flexing before pursuing\n\r" );
+        bot_cmd( ch, "flex" );
+        return;
+    }
+
     dir = bot_find_path( ch->in_room, victim->in_room );
-    
+
     if ( dir != -1 )
     {
         EXIT_DATA *pexit = ch->in_room->exit[dir];
@@ -1799,6 +1818,12 @@ void bot_update( CHAR_DATA *ch )
             bot_watch_msg( ch, "[NAV] blocked -- not standing, standing up\n\r" );
             bot_cmd( ch, "stand" );
             return;
+        }
+        if ( IS_SET(ch->affected_by, AFF_WEBBED) )
+        {
+            bot_watch_msg( ch, "[NAV] blocked -- webbed, flexing\n\r" );
+            bot_cmd( ch, "flex" );
+            return;   /* keep queue intact, retry once web breaks */
         }
 
         bot_cmd( ch, bot->nav_cmds[0] );

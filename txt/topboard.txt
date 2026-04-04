@@ -1,7 +1,5 @@
 Kast~
 1400
-Szoryn~
-333
 Delvrae~
 200
 Lykan~
@@ -12,6 +10,8 @@ Vrae~
 100
 Wrex~
 100
+Szoryn~
+0
 Bael~
 0
 Grix~
