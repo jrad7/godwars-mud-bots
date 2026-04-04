@@ -2,12 +2,12 @@ Kast~
 1400
 Pax~
 600
-Lykan~
-100
 Wrex~
 100
 Eris~
 100
+Lykan~
+0
 Oryn~
 0
 Quelzar~

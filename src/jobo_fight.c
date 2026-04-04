@@ -177,6 +177,22 @@ void do_gensteal(CHAR_DATA *ch, char *argument)
   char_to_room(victim, location);
   victim->fight_timer = 0;
   players_gstolen++;
+  {
+    FILE *pfp;
+    time_t now = time(NULL);
+    char tbuf[64];
+    struct tm *tm_info = localtime(&now);
+    strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
+    fclose( fpReserve );
+    if ( (pfp = fopen( PKILL_LOG_FILE, "a" )) != NULL )
+    {
+      fprintf( pfp, "[%s] GENSTEAL: %s stole gen from %s (room %d)\n",
+        tbuf, ch->pcdata->switchname, victim->pcdata->switchname,
+        ch->in_room ? ch->in_room->vnum : 0 );
+      fclose( pfp );
+    }
+    fpReserve = fopen( NULL_FILE, "r" );
+  }
   return;
 }
 

@@ -5036,6 +5036,22 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
   sprintf( log_buf, "%s decapitated by %s at %d.",
   victim->pcdata->switchname, ch->pcdata->switchname, victim->in_room->vnum );
   log_string( log_buf );
+  {
+    FILE *pfp;
+    time_t now = time(NULL);
+    char tbuf[64];
+    struct tm *tm_info = localtime(&now);
+    strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
+    fclose( fpReserve );
+    if ( (pfp = fopen( PKILL_LOG_FILE, "a" )) != NULL )
+    {
+      fprintf( pfp, "[%s] DECAP: %s decapitated by %s (room %d)\n",
+        tbuf, victim->pcdata->switchname, ch->pcdata->switchname,
+        victim->in_room->vnum );
+      fclose( pfp );
+    }
+    fpReserve = fopen( NULL_FILE, "r" );
+  }
   players_decap++;
   ch->pcdata->bounty += number_range(30,80);
 
