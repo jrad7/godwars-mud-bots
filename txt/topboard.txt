@@ -1,7 +1,7 @@
 Kast~
 1400
 Pax~
-400
+600
 Lykan~
 100
 Wrex~
@@ -36,5 +36,5 @@ Thorn~
 0
 Nexx~
 0
-Vael~
+Seraph~
 0

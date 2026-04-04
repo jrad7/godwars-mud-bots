@@ -11,7 +11,7 @@
  * Demon combat power comes primarily from passives:
  *   - DISC_DAEM_ATTA: +50 max_dam/level and +level/2 extra attacks
  *   - DISC_DAEM_IMMU: (100 - power*4)% of incoming damage
- *   - DISC_DAEM_HELL > 3: automatic fire proc each combat round
+ *   - DISC_DAEM_HELL > 3: automatic fire proc each combat round (requires level 4+)
  * Active abilities (leech, frostbreath, unnerve, blink) supplement these.
  */
 
@@ -54,24 +54,27 @@ static int bot_dem_pick_research( CHAR_DATA *ch )
     static const struct { int disc; int target; } prio[] = {
         /* Core melee: body parts + damage/attack scaling */
         { DISC_DAEM_ATTA, 5  },
-        /* Survivability: 20% damage reduction */
+        /* Push ATTA immediately: +100 max_dam, +1x unarmed mult, unlocks blink */
+        { DISC_DAEM_ATTA, 7  },
+        /* Survivability: 20% damage reduction before the expensive push to 10 */
         { DISC_DAEM_IMMU, 5  },
-        /* Nether 2: deathsense (truesight); 4: leech */
-        { DISC_DAEM_NETH, 4  },
+        /* Max ATTA: full +500 max_dam, 5x unarmed multiplier, +5 extra attacks */
+        { DISC_DAEM_ATTA, 10 },
+        /* Nether 2: deathsense toggle (truesight) */
+        { DISC_DAEM_NETH, 2  },
+        /* Hellfire 4: fire proc every combat round (fight.c requires > 3) */
+        { DISC_DAEM_HELL, 4  },
         /* Discord 1: unnerve */
         { DISC_DAEM_DISC, 1  },
-        /* Hellfire 3: fire proc every combat round */
-        { DISC_DAEM_HELL, 3  },
+        /* Nether 4: leech (complete to unlock HP drain) */
+        { DISC_DAEM_NETH, 4  },
         /* Geluge 2: frostbreath */
         { DISC_DAEM_GELU, 2  },
-        /* Attack 7: blink burst */
-        { DISC_DAEM_ATTA, 7  },
         /* Immunae max: 40% damage reduction */
         { DISC_DAEM_IMMU, 10 },
         /* Geluge 6: entomb */
         { DISC_DAEM_GELU, 6  },
-        /* Attack max: full damage/attack bonus */
-        { DISC_DAEM_ATTA, 10 },
+        /* Attack max already done above */
         /* Hellfire max: room fire walls */
         { DISC_DAEM_HELL, 8  },
         /* Remaining disciplines to max */

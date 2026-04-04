@@ -46,20 +46,28 @@ static int bot_vamp_pick_research( CHAR_DATA *ch )
      * lower-priority entries are satisfied.
      */
     static const struct { int disc; int target; } prio[] = {
-        /* Core combat passives - benefit from being as high as possible */
-        { DISC_VAMP_POTE, 5  },   /* Potence:        multiplies unarmed damage  */
-        { DISC_VAMP_CELE, 5  },   /* Celerity:       dodge + extra hits          */
-        { DISC_VAMP_FORT, 5  },   /* Fortitude:      passive damage reduction    */
+        /* Core combat passives to rank cap */
+        { DISC_VAMP_POTE, 5  },   /* Potence:   multiplies unarmed damage       */
+        { DISC_VAMP_CELE, 5  },   /* Celerity:  dodge + extra hits               */
+        { DISC_VAMP_FORT, 5  },   /* Fortitude: passive damage reduction         */
         /* Protean 2: unlock claws (primary melee weapon) */
         { DISC_VAMP_PROT, 2  },
-        /* Obtenebration 5: shroud aura + lamprey drain attack */
+        /* Cheap 1-cycle buffs: get these before the expensive OBTE grind */
+        { DISC_VAMP_PRES, 1  },   /* awe: permanent combat aura                  */
+        { DISC_VAMP_AUSP, 1  },   /* truesight: see invisible / detect hidden    */
+        /* Rank-aware damage escalation checkpoints.
+         * These are no-ops at Neonate (UMIN(7,5)=5, already satisfied) but
+         * fire immediately when Ancilla rank is earned, so Potence and
+         * Celerity track the rank cap rather than waiting until pass 2.  */
+        { DISC_VAMP_POTE, 7  },
+        { DISC_VAMP_CELE, 7  },
+        /* Obtenebration 5: lamprey drain attack */
         { DISC_VAMP_OBTE, 5  },
-        /* Presence 1: awe combat aura */
-        { DISC_VAMP_PRES, 1  },
-        /* Auspex 1: truesight (see invisible / detect hidden) */
-        { DISC_VAMP_AUSP, 1  },
-        /* Thaumaturgy 4: theft of vitae (steal blood in combat) */
+        /* Thaumaturgy 4: theft of vitae (blood refuel in combat) */
         { DISC_VAMP_THAU, 4  },
+        /* Elder rank checkpoint: push damage cap again before utility discs */
+        { DISC_VAMP_POTE, 9  },
+        { DISC_VAMP_CELE, 9  },
         /* Serpentis 4: tendrils (combat melee attack) */
         { DISC_VAMP_SERP, 4  },
         /* Thanatosis 5: withering stat debuff + drainlife */
@@ -68,13 +76,15 @@ static int bot_vamp_pick_research( CHAR_DATA *ch )
         { DISC_VAMP_OBFU, 1  },
         /* Necromancy 4: spirit guard (defensive buff) */
         { DISC_VAMP_NECR, 4  },
-        /* Pass 2: maximize the combat cores */
+        /* Pass 2: maximize combat cores */
         { DISC_VAMP_POTE, 10 },
         { DISC_VAMP_CELE, 10 },
         { DISC_VAMP_FORT, 10 },
         { DISC_VAMP_PROT, 10 },
         { DISC_VAMP_OBTE, 10 },
         { DISC_VAMP_PRES, 10 },
+        { DISC_VAMP_THAU, 10 },
+        { DISC_VAMP_SERP, 10 },
         { -1, 0 }
     };
 
