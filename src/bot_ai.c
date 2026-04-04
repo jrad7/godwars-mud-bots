@@ -1455,6 +1455,14 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
+    /* Don't pursue at low resources -- heal up first, keeping the target */
+    if ( !bot_is_healthy(ch) )
+    {
+        bot_watch_msg( ch, "[PVP] Not healthy enough to hunt -- resting first.\n\r" );
+        bot_change_state( ch, bot, BOT_RESTING );
+        return;
+    }
+
     victim = get_char_world( ch, bot->pvp_target );
     if ( victim == NULL || !bot_is_valid_pvp(ch, victim, NULL, 0) )
     {
@@ -1635,7 +1643,15 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
 
     /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
-        bot_change_state( ch, bot, BOT_IDLE );
+    {
+        if ( bot->pvp_target[0] != '\0' )
+        {
+            bot_watch_msg( ch, "[PVP] Recovered -- resuming hunt.\n\r" );
+            bot_change_state( ch, bot, BOT_PVP_HUNT );
+        }
+        else
+            bot_change_state( ch, bot, BOT_IDLE );
+    }
 }
 
 static void bot_state_training( CHAR_DATA *ch, BOT_DATA *bot )
