@@ -735,7 +735,7 @@ void bot_manager_update( void )
 void do_botwar( CHAR_DATA *ch, char *argument )
 {
     CHAR_DATA *wch;
-    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
     {
         send_to_char("Huh?\n\r", ch);
         return;
@@ -760,7 +760,7 @@ void do_botwar( CHAR_DATA *ch, char *argument )
 
 void do_botnormal( CHAR_DATA *ch, char *argument )
 {
-    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
     {
         send_to_char("Huh?\n\r", ch);
         return;
@@ -773,7 +773,7 @@ void do_botpeace( CHAR_DATA *ch, char *argument )
 {
     CHAR_DATA *wch;
 
-    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
     {
         send_to_char("Huh?\n\r", ch);
         return;

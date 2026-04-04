@@ -5628,7 +5628,7 @@ void autodrop(CHAR_DATA *ch)
 void dropinvis(CHAR_DATA *ch)
 {
   if (ch->level < 7 && IS_SET(ch->act, AFF_HIDE)) REMOVE_BIT(ch->act, AFF_HIDE);
-  if (ch->level < 7 && IS_SET(ch->act, PLR_WIZINVIS)) REMOVE_BIT(ch->act, PLR_WIZINVIS);
+  if (ch->level < 7 && IS_SET(ch->act, PLR_WIZINVIS) && !IS_BOT_OVERSEER(ch)) REMOVE_BIT(ch->act, PLR_WIZINVIS);
   if ((IS_CLASS(ch, CLASS_DROW) || IS_CLASS(ch, CLASS_DROID)) && IS_SET(ch->newbits, NEW_DARKNESS))
   {
     REMOVE_BIT(ch->newbits, NEW_DARKNESS);

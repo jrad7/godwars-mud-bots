@@ -2643,7 +2643,7 @@ void do_possess( CHAR_DATA *ch, char *argument )
     CHAR_DATA *bot_ch;
     DESCRIPTOR_DATA *d_bot, *d_prev, *d_iter;
 
-    if ( !IS_IMMORTAL(ch) && str_cmp( ch->name, "Kast" ) != 0 )
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
     {
         send_to_char( "Huh?\n\r", ch );
         return;
@@ -2771,7 +2771,7 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     CHAR_DATA *bot_ch;
     DESCRIPTOR_DATA *d;
 
-    if ( !IS_IMMORTAL(ch) && str_cmp( ch->name, "Kast" ) != 0 )
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
     {
         send_to_char( "Huh?\n\r", ch );
         return;
@@ -2890,6 +2890,54 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     ch->pcdata->bot_watch_any = FALSE;
     bot_ch->desc->snoop_by = ch->desc;
     act( "You begin watching $N. Type 'watchbot off' to stop.", ch, NULL, bot_ch, TO_CHAR );
+    return;
+}
+
+
+
+void do_setoverseer( CHAR_DATA *ch, char *argument )
+{
+    char arg[MAX_INPUT_LENGTH];
+    CHAR_DATA *victim;
+
+    if ( !IS_IMMORTAL(ch) )
+    {
+        send_to_char( "Huh?\n\r", ch );
+        return;
+    }
+
+    one_argument( argument, arg );
+
+    if ( arg[0] == '\0' )
+    {
+        send_to_char( "Usage: setoverseer <player>\n\r", ch );
+        return;
+    }
+
+    if ( ( victim = get_char_world( ch, arg ) ) == NULL )
+    {
+        send_to_char( "They aren't here.\n\r", ch );
+        return;
+    }
+
+    if ( IS_NPC(victim) )
+    {
+        send_to_char( "Not on NPCs.\n\r", ch );
+        return;
+    }
+
+    if ( IS_SET(victim->act, PLR_BOT_OVERSEER) )
+    {
+        REMOVE_BIT(victim->act, PLR_BOT_OVERSEER);
+        act( "You revoke $N's bot overseer rank.", ch, NULL, victim, TO_CHAR );
+        act( "$n has revoked your bot overseer rank.", ch, NULL, victim, TO_VICT );
+    }
+    else
+    {
+        SET_BIT(victim->act, PLR_BOT_OVERSEER);
+        act( "You grant $N the bot overseer rank.", ch, NULL, victim, TO_CHAR );
+        act( "$n has granted you the bot overseer rank.", ch, NULL, victim, TO_VICT );
+    }
     return;
 }
 
@@ -5257,6 +5305,12 @@ void do_invis( CHAR_DATA *ch, char *argument )
 {
     if ( IS_NPC(ch) )
 	return;
+
+    if ( !IS_IMMORTAL(ch) && !IS_BOT_OVERSEER(ch) )
+    {
+	send_to_char( "Huh?\n\r", ch );
+	return;
+    }
 
     if ( IS_SET(ch->act, PLR_WIZINVIS) )
     {

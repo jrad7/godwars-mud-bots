@@ -207,7 +207,7 @@ void char_update( void )
        * void, autosave, time bonus, etc
        */
       if ((ch->level < LEVEL_IMMORTAL || !ch->desc) && !is_obj && !IS_SET(ch->extra,EXTRA_AFK)
-      && str_cmp(ch->name, "Kast") != 0
+      && !IS_BOT_OVERSEER(ch)
       && !(ch->pcdata != NULL && ch->pcdata->is_bot))
       {
         if ((ch->desc == NULL || ch->desc->connected == CON_PLAYING) && ch->level >= 2 && ch->save_time < save_time )
@@ -1499,7 +1499,7 @@ void update_safe_powers(CHAR_DATA *ch)
   /* Arene chaters getting it the hard way */
   if (ch->in_room != NULL && IS_SET(ch->in_room->room_flags, ROOM_ARENA) && ch->level < 7)
   {
-    if (IS_SET(ch->act, PLR_WIZINVIS)) cheating = TRUE;
+    if (IS_SET(ch->act, PLR_WIZINVIS) && !IS_BOT_OVERSEER(ch)) cheating = TRUE;
     if (IS_SET(ch->act, AFF_HIDE)) cheating = TRUE;
     if (IS_SET(ch->newbits, NEW_DARKNESS)) cheating = TRUE;
     if (IS_AFFECTED(ch, AFF_PEACE)) cheating = TRUE;
@@ -1523,7 +1523,7 @@ void update_safe_powers(CHAR_DATA *ch)
     if (ch->move >= cost) ch->move -=cost;
     else do_humanform(ch,"");
   }
-  if (IS_SET(ch->act, PLR_WIZINVIS))
+  if (IS_SET(ch->act, PLR_WIZINVIS) && !IS_BOT_OVERSEER(ch))
   {
     if (ch->move >= cost) ch->move -=cost;
     else

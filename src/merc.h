@@ -1893,6 +1893,7 @@ extern char *scale[SCALE_COLS];
 #define PLR_ACID               67108864
 #define PLR_BRIEF4            134217728
 #define PLR_AMBI              268435456   // Can use both hands well.
+#define PLR_BOT_OVERSEER      536870912   // Can use bot management commands and wizinvis.
 
 /*New bits for playrs (Infidel)*/
 #define NEW_SLAM       1
@@ -3053,6 +3054,7 @@ do								\
 #define IS_JUDGE(ch)		(get_trust(ch) >= LEVEL_JUDGE)
 #define IS_IMMORTAL(ch)		(get_trust(ch) >= LEVEL_IMMORTAL)
 #define IS_HERO(ch)		(get_trust(ch) >= LEVEL_HERO)
+#define IS_BOT_OVERSEER(ch)	(!IS_NPC(ch) && IS_SET((ch)->act, PLR_BOT_OVERSEER))
 
 #define IS_DAY()	    	((weather_info.sunlight == SUN_RISE || weather_info.sunlight == SUN_LIGHT))
 #define IS_NIGHT()	    	((!IS_DAY()))
@@ -4042,6 +4044,7 @@ DECLARE_DO_FUN(	do_watchbot	);
 DECLARE_DO_FUN( do_botwar	);
 DECLARE_DO_FUN( do_botpeace	);
 DECLARE_DO_FUN( do_botnormal	);
+DECLARE_DO_FUN( do_setoverseer	);
 DECLARE_DO_FUN( do_embrace      );
 DECLARE_DO_FUN( do_diablerise   );
 DECLARE_DO_FUN( do_entrance     );
