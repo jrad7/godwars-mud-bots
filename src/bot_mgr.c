@@ -734,12 +734,22 @@ void bot_manager_update( void )
 
 void do_botwar( CHAR_DATA *ch, char *argument )
 {
+    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    {
+        send_to_char("Huh?\n\r", ch);
+        return;
+    }
     global_bot_pvp_mode = BOT_PVP_MODE_WAR;
     send_to_char("Bot PVP is now globally FORCED (War Mode). All bots will relentlessly hunt.\n\r", ch);
 }
 
 void do_botnormal( CHAR_DATA *ch, char *argument )
 {
+    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    {
+        send_to_char("Huh?\n\r", ch);
+        return;
+    }
     global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
     send_to_char("Bot PVP is now globally reverted to DEFAULT (Normal Mode). Bots will use individual aggression logic.\n\r", ch);
 }
@@ -747,6 +757,12 @@ void do_botnormal( CHAR_DATA *ch, char *argument )
 void do_botpeace( CHAR_DATA *ch, char *argument )
 {
     CHAR_DATA *wch;
+
+    if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
+    {
+        send_to_char("Huh?\n\r", ch);
+        return;
+    }
 
     global_bot_pvp_mode = BOT_PVP_MODE_PEACE;
     send_to_char("Bot PVP is now globally DISABLED (Peace Mode). All bot combat halted.\n\r", ch);
