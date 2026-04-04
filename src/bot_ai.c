@@ -1683,7 +1683,7 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
             if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
             {
                 bot_watch_msg( ch, "[VISION] casting cure blindness\n\r" );
-                bot_cmd( ch, "cast cure blin self" );
+                bot_cmd( ch, "cast \"cure blindness\" self" );
             }
             /* Clear regardless - if we can't cast it, nothing else to try */
             bot->blind_recovery = FALSE;
