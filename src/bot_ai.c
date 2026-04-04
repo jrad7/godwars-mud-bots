@@ -1640,11 +1640,13 @@ static void bot_ensure_geared( CHAR_DATA *ch )
  * Called at the top of bot_update() before the nav queue is drained.
  * Returns TRUE if a recovery action was taken (caller should return).
  *
- * Two-phase recovery:
- *   Phase 1 (blind_recovery == FALSE): bot is impaired -> flush nav queue,
- *            recall, set blind_recovery = TRUE.
- *   Phase 2 (blind_recovery == TRUE):  one tick has passed -> remove
- *            blindfold or cast cure blindness, then clear the flag.
+ * ROOM_TOTAL_DARKNESS: recall to safety (two-phase via blind_recovery flag).
+ *   After recall the darkness check won't fire again in the safe room, so
+ *   blind_recovery is only used to wait one tick before rechecking.
+ *
+ * AFF_BLIND / BLINDFOLDED: cure in place each tick - no recall needed.
+ *   If the bot doesn't know cure blindness yet it returns FALSE so normal
+ *   AI keeps running; the blind will wear off on its own.
  * ----------------------------------------------------------------------- */
 static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
 {
@@ -1662,58 +1664,61 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
     is_blind       = ( IS_AFFECTED(ch, AFF_BLIND)
                     && !IS_AFFECTED(ch, AFF_SHADOWSIGHT) );
 
-    /* Phase 2: already recalled last tick - now fix the cause */
+    /* Phase 2: recalled from a dark room last tick - just clear the flag.
+     * If the bot is still somehow in darkness, in_total_dark will catch it
+     * below; if not, we're done. */
     if ( bot->blind_recovery )
     {
-        /* Wait if still in combat */
-        if ( ch->position == POS_FIGHTING )
-            return TRUE;
-
-        if ( is_blindfolded )
-        {
-            bot_watch_msg( ch, "[VISION] removing blindfold\n\r" );
-            bot_cmd( ch, "blindfold self" );
-            bot->blind_recovery = FALSE;
-            return TRUE;
-        }
-
-        if ( is_blind )
-        {
-            int sn = skill_lookup("cure blindness");
-            if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
-            {
-                bot_watch_msg( ch, "[VISION] casting cure blindness\n\r" );
-                bot_cmd( ch, "cast \"cure blindness\" self" );
-            }
-            /* Clear regardless - if we can't cast it, nothing else to try */
-            bot->blind_recovery = FALSE;
-            return TRUE;
-        }
-
-        /* Vision restored (e.g. drow darkness ended before next tick) */
         bot->blind_recovery = FALSE;
-        return FALSE;
+        /* Fall through to handle any lingering conditions */
     }
 
-    /* Nothing wrong - fast path */
-    if ( !in_total_dark && !is_blind && !is_blindfolded )
-        return FALSE;
-
-    /* Can't recall while fighting - let combat code handle it */
-    if ( ch->position == POS_FIGHTING )
-        return FALSE;
-
-    /* Flush nav queue so we don't stumble blind after recall */
-    if ( bot->nav_n > 0 )
+    /* Total darkness: must escape the room - recall to safety */
+    if ( in_total_dark )
     {
-        bot_watch_msg( ch, "[VISION] blind/dark - aborting nav queue\n\r" );
-        bot->nav_n = 0;
+        if ( ch->position == POS_FIGHTING )
+            return FALSE;   /* Can't recall while fighting */
+        if ( bot->nav_n > 0 )
+        {
+            bot_watch_msg( ch, "[VISION] total darkness - aborting nav queue\n\r" );
+            bot->nav_n = 0;
+        }
+        bot_watch_msg( ch, "[VISION] total darkness - recalling\n\r" );
+        bot_cmd( ch, "recall" );
+        bot->blind_recovery = TRUE;
+        return TRUE;
     }
 
-    bot_watch_msg( ch, "[VISION] blind or total darkness - recalling\n\r" );
-    bot_cmd( ch, "recall" );
-    bot->blind_recovery = TRUE;
-    return TRUE;
+    /* Blindfolded: remove it in place */
+    if ( is_blindfolded )
+    {
+        if ( ch->position == POS_FIGHTING )
+            return FALSE;
+        bot_watch_msg( ch, "[VISION] removing blindfold\n\r" );
+        bot_cmd( ch, "blindfold self" );
+        return TRUE;
+    }
+
+    /* Blind spell: cure in place each tick until it clears.
+     * If the spell isn't learned yet, return FALSE so the bot keeps
+     * operating normally while the blind wears off on its own. */
+    if ( is_blind )
+    {
+        int sn;
+        if ( ch->position == POS_FIGHTING )
+            return FALSE;
+        sn = skill_lookup("cure blindness");
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
+        {
+            bot_watch_msg( ch, "[VISION] casting cure blindness\n\r" );
+            bot_cmd( ch, "cast \"cure blindness\" self" );
+            return TRUE;
+        }
+        /* Don't know the spell yet - wait it out, don't block AI */
+        return FALSE;
+    }
+
+    return FALSE;
 }
 
 /* -----------------------------------------------------------------------
