@@ -29,8 +29,8 @@
  *     unrelated wieldable items in inventory (e.g. looted weapons, wolfman
  *     hand-slot blocks) that would spam error messages each tick.
  *     The displaced newbiepack stays in inventory and is extracted next tick.
- *   - Vampire and demon skip weapon slots: activating claws auto-drops any
- *     wielded item, making weapon creation pointless for those classes.
+ *   - Vampire and demon wield class weapons (vamparmor longsword/dagger,
+ *     demonarmour longsword/shortsword) — far higher damage dice than claws.
  */
 
 #if defined(macintosh)
@@ -73,8 +73,8 @@ static bool bot_is_class_gear_vnum( int vnum )
  * Each row: { wear_slot, "command to issue", primal_cost }
  * Terminated by { WEAR_NONE, NULL, 0 }.
  *
- * Vampire: weapons omitted — claws (Protean 2) auto-drops wielded items.
- * Demon:   weapons omitted — claws (Attack 1) auto-drops wielded items.
+ * Vampire: longsword (33040, 25d50 avg 637) + dagger (33041) — do NOT use claws.
+ * Demon:   longsword (33120, 50d75 avg 1900) + shortsword (33121) — do NOT use claws.
  * ----------------------------------------------------------------------- */
 
 static const BOT_GEAR_PIECE gear_vampire[] = {
@@ -93,6 +93,8 @@ static const BOT_GEAR_PIECE gear_vampire[] = {
     { WEAR_WRIST_L,  "vamparmor bracer",    60 },
     { WEAR_WRIST_R,  "vamparmor bracer",    60 },
     { WEAR_FACE,     "vamparmor visor",     60 },
+    { WEAR_WIELD,    "vamparmor longsword", 60 },
+    { WEAR_HOLD,     "vamparmor dagger",    60 },
     { WEAR_NONE, NULL, 0 }
 };
 
@@ -152,6 +154,8 @@ static const BOT_GEAR_PIECE gear_demon[] = {
     { WEAR_WRIST_L,  "demonarmour bracer",    60 },
     { WEAR_WRIST_R,  "demonarmour bracer",    60 },
     { WEAR_FACE,     "demonarmour visor",     60 },
+    { WEAR_WIELD,    "demonarmour longsword",   60 },
+    { WEAR_HOLD,     "demonarmour shortsword",  60 },
     { WEAR_NONE, NULL, 0 }
 };
 

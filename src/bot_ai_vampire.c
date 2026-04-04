@@ -206,10 +206,9 @@ static bool bot_vamp_buff_check( CHAR_DATA *ch )
       && !IS_EXTRA(ch, EXTRA_AWE) )
     { bot_cmd( ch, "awe" ); return TRUE; }
 
-    /* Claws (Protean 2) - primary melee weapon for vampires */
-    if ( ch->power[DISC_VAMP_PROT] >= 2
-      && !IS_VAMPAFF(ch, VAM_CLAWS) )
-    { bot_cmd( ch, "claws" ); return TRUE; }
+    /* Claws intentionally not used: vamparmor longsword/dagger have
+     * far higher damage dice (25d50 vs 10d20) and activating claws
+     * would drop the wielded weapons. */
 
     /* Spirit Guard (Necromancy 4) - defensive buff vs. attacks */
     if ( ch->power[DISC_VAMP_NECR] >= 4

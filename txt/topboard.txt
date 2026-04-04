@@ -20,6 +20,8 @@ Xolvrae~
 133
 Sylas~
 60
+Rael~
+0
 Eris~
 0
 Lykan~
@@ -35,6 +37,4 @@ Grix~
 Ilvaen~
 0
 Garak~
-0
-Sigrun~
 0

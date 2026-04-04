@@ -214,11 +214,11 @@ static bool bot_dem_do_train( CHAR_DATA *ch )
  *
  * Buff priority (highest first):
  *   1. deathsense  – unholy truesight (Nether 2)
- *   2. claws       – primary melee weapon, drops wielded items (Atta 1)
- *   3. fangs       – bite attack (Atta 2)
- *   4. horns       – gore attack (Atta 4 or DEM_HORNS inpart)
- *   5. wings       – wing sweep (Atta 5 or DEM_WINGS inpart)
- *   6. tail        – tail whip (DEM_TAIL inpart only)
+ *   2. fangs       – bite attack (Atta 2)
+ *   3. horns       – gore attack (Atta 4 or DEM_HORNS inpart)
+ *   4. wings       – wing sweep (Atta 5 or DEM_WINGS inpart)
+ *   5. tail        – tail whip (DEM_TAIL inpart only)
+ * Note: claws are NOT activated — longsword/shortsword have 18x more base damage.
  * ----------------------------------------------------------------------- */
 
 static bool bot_dem_buff_check( CHAR_DATA *ch )
@@ -230,10 +230,9 @@ static bool bot_dem_buff_check( CHAR_DATA *ch )
       && !IS_SET(ch->act, PLR_HOLYLIGHT) )
     { bot_cmd( ch, "deathsense" ); return TRUE; }
 
-    /* Claws (Attack 1): primary unarmed weapon; drops wielded items on activate */
-    if ( ch->power[DISC_DAEM_ATTA] >= 1
-      && !IS_VAMPAFF(ch, VAM_CLAWS) )
-    { bot_cmd( ch, "claws" ); return TRUE; }
+    /* Claws intentionally not used: demonarmour longsword/shortsword have
+     * far higher damage dice (50d75 vs 10d20) and activating claws
+     * would drop the wielded weapons. */
 
     /* Fangs (Attack 2): bite attack in combat */
     if ( ch->power[DISC_DAEM_ATTA] >= 2
