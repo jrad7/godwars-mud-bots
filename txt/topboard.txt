@@ -8,8 +8,6 @@ Mael~
 400
 Wrex~
 400
-Quelzar~
-388
 Thorn~
 214
 Ivar~
@@ -20,6 +18,8 @@ Xolvrae~
 133
 Sylas~
 60
+Quelzar~
+0
 Rael~
 0
 Eris~
