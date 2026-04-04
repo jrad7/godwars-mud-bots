@@ -1027,9 +1027,11 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
             CHAR_DATA *target = bot_find_pvp_target(ch);
             if ( target != NULL )
             {
+                char msg[256];
                 strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                 bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
-                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
+                bot_watch_msg( ch, msg );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;
             }
@@ -1179,9 +1181,11 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 CHAR_DATA *target = bot_find_pvp_target(ch);
                 if ( target != NULL )
                 {
+                    char msg[256];
                     strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                     bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
-                    bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                    snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
+                    bot_watch_msg( ch, msg );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
                 else
@@ -1248,9 +1252,11 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 CHAR_DATA *target = bot_find_pvp_target(ch);
                 if ( target != NULL )
                 {
+                    char msg[256];
                     strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                     bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
-                    bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                    snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
+                    bot_watch_msg( ch, msg );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
                 else
@@ -1374,7 +1380,9 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     victim = get_char_world( ch, bot->pvp_target );
     if ( victim == NULL || is_safe(ch, victim) || !fair_fight(ch, victim) )
     {
-        bot_watch_msg( ch, "[PVP] Target lost or no longer valid.\n\r" );
+        char msg[256];
+        snprintf(msg, sizeof(msg), "[PVP] Target %s lost or no longer valid.\n\r", bot->pvp_target);
+        bot_watch_msg( ch, msg );
         bot->pvp_target[0] = '\0';
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
@@ -1382,7 +1390,9 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
 
     if ( ch->in_room == victim->in_room )
     {
-        bot_watch_msg( ch, "[PVP] Target found! Attacking.\n\r" );
+        char msg[256];
+        snprintf(msg, sizeof(msg), "[PVP] Target %s found! Attacking.\n\r", bot->pvp_target);
+        bot_watch_msg( ch, msg );
         bot_change_state( ch, bot, BOT_PVP_FIGHT );
         return;
     }
@@ -1400,7 +1410,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
             sprintf(cmd, "open %s", dir_name[dir]);
             bot_cmd( ch, cmd );
         }
-        snprintf( echo, sizeof(echo), "[PVP] BFS found path -- stepping %s\n\r", dir_name[dir] );
+        snprintf( echo, sizeof(echo), "[PVP] BFS found path -- stepping %s to reach %s\n\r", dir_name[dir], bot->pvp_target );
         bot_watch_msg( ch, echo );
         bot_cmd( ch, dir_name[dir] );
     }
@@ -1676,9 +1686,11 @@ void bot_update( CHAR_DATA *ch )
             CHAR_DATA *target = bot_find_pvp_target(ch);
             if ( target != NULL )
             {
+                char msg[256];
                 strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                 bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
-                bot_watch_msg( ch, "[PVP] WAR MODE ongoing override -> hunting\n\r" );
+                snprintf(msg, sizeof(msg), "[PVP] WAR MODE ongoing override -> hunting %s\n\r", bot->pvp_target);
+                bot_watch_msg( ch, msg );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;
             }
