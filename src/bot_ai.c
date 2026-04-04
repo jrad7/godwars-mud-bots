@@ -1465,6 +1465,15 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
+    /* If we got beaten down (stunned/incap) but not finished, cut our losses */
+    if ( ch->position <= POS_STUNNED )
+    {
+        bot_watch_msg( ch, "[PVP] Incapacitated -- clearing PVP target and recovering.\n\r" );
+        bot->pvp_target[0] = '\0';
+        bot_change_state( ch, bot, BOT_RESTING );
+        return;
+    }
+
     victim = get_char_world( ch, bot->pvp_target );
     if ( victim == NULL || !bot_is_valid_pvp(ch, victim, NULL, 0) )
     {
@@ -1477,6 +1486,17 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
 
     if ( victim->in_room != ch->in_room )
     {
+        /* Distinguish a loss (bot fled at low HP) from target running away.
+         * If below half HP we lost -- don't re-hunt and go recover instead. */
+        if ( ch->hit < ch->max_hit / 2 )
+        {
+            char msg[256];
+            snprintf( msg, sizeof(msg), "[PVP] Lost fight vs %s -- clearing target and resting.\n\r", bot->pvp_target );
+            bot_watch_msg( ch, msg );
+            bot->pvp_target[0] = '\0';
+            bot_change_state( ch, bot, BOT_RESTING );
+            return;
+        }
         bot_change_state( ch, bot, BOT_PVP_HUNT );
         return;
     }
