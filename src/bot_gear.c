@@ -339,6 +339,9 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
+    class_pref        = bot->roster->class_pref;
+    table             = bot_class_gear[class_pref];
+
     /* Step 1.5: recover called-back class gear from inventory.
      * After a decap the bot calls gear back and it lands in inventory.
      * Skip while decap_recovery is still set — call all hasn't been issued yet.
@@ -439,8 +442,6 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
-    class_pref        = bot->roster->class_pref;
-    table             = bot_class_gear[class_pref];
     force_newbiepack  = FALSE;
 
     /* Step 3: unclassed bot or decap recovery — fill newbiepack slots only.
