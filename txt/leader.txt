@@ -1,9 +1,9 @@
 Kast~
-1200
+1300
 Quelzar~
-13
-Haze~
-6
+15
+Jael~
+7
 Ilvaen~
 4008
 Vynn~

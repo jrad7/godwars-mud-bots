@@ -1,28 +1,30 @@
 Kast~
-1200
+1300
 Quelzar~
-812
+868
 Cael~
+333
+Szoryn~
 333
 Sylas~
 240
 Delvrae~
 200
-Lykan~
+Garak~
 200
-Nexx~
-150
-Szoryn~
-150
+Xolvrae~
+133
+Lykan~
+120
 Bael~
 66
 Ilvaen~
 66
-Xolvrae~
-60
-Zeth~
-0
 Thorn~
+0
+Nexx~
+0
+Zeth~
 0
 Vael~
 0
@@ -35,6 +37,4 @@ Noone~
 Noone~
 0
 Noone~
-0
-Jade~
 0

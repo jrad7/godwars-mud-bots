@@ -572,6 +572,9 @@ static bool bot_should_train( CHAR_DATA *ch )
     if ( ch->level == 2 && ch->max_hit >= 2000 )               return TRUE;
     if ( ch->level == 3 && ch->class == 0 )                     return TRUE;
 
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher */
+    if ( ch->generation >= 6 && ch->exp >= 10000000 )           return TRUE;
+
     /* Primal for class gear takes priority over hp/mana/move spending */
     if ( bot_should_train_primal(ch) )                           return TRUE;
 
@@ -703,6 +706,13 @@ static bool bot_do_train( CHAR_DATA *ch )
             if ( ai && ai->do_train && ai->do_train(ch) )
                 return TRUE;
         }
+    }
+
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher */
+    if ( ch->generation >= 6 && ch->exp >= 10000000 )
+    {
+        bot_cmd( ch, "train generation" );
+        return TRUE;
     }
 
     /* Primal for class gear.
