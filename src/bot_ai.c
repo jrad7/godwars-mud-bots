@@ -473,7 +473,7 @@ static bool bot_needs_repair( CHAR_DATA *ch )
 static bool bot_generic_buff_check( CHAR_DATA *ch )
 {
     static const char *buffs[] = {
-        "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+        "stone", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
     };
     int i;
     int sn;
@@ -539,7 +539,7 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Check if we need to practice generic spells */
     {
         static const char *practice_spells[] = {
-            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+            "repair", "rem", "stone", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
         };
         int i;
         for ( i = 0; practice_spells[i] != NULL; i++ )
