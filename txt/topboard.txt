@@ -1,12 +1,18 @@
 Kast~
 1100
-Lykan~
-0
-Ashe~
-0
+Nexx~
+300
+Delvrae~
+200
+Kira~
+100
+Bael~
+66
+Zeth~
+66
 Vael~
 0
-Xan~
+Mael~
 0
 Noone~
 0
@@ -31,10 +37,4 @@ Noone~
 Noone~
 0
 Noone~
-0
-Noone~
-0
-Noone~
-0
-Vex~
 0
