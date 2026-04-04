@@ -2809,6 +2809,7 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
     if ( !str_cmp( arg, "any" ) )
     {
         bool already_watching = FALSE;
+        CHAR_DATA *current_bot = NULL;
         for ( d = descriptor_list; d != NULL; d = d->next )
         {
             if ( d->snoop_by == ch->desc
@@ -2817,6 +2818,7 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
               && d->character->pcdata->is_bot )
             {
                 already_watching = TRUE;
+                current_bot = d->character;
                 break;
             }
         }
@@ -2824,7 +2826,18 @@ void do_watchbot( CHAR_DATA *ch, char *argument )
         ch->pcdata->bot_watch_any = TRUE;
         
         if ( already_watching )
-            send_to_char( "Auto-watch enabled. You will be reassigned when your current bot logs out.\n\r", ch );
+        {
+            current_bot->desc->snoop_by = NULL;
+            if ( !bot_watch_assign_random( ch, current_bot ) )
+            {
+                current_bot->desc->snoop_by = ch->desc;
+                send_to_char( "Auto-watch enabled. You are already watching the only available bot.\n\r", ch );
+            }
+            else
+            {
+                send_to_char( "Auto-watch enabled. Switched to a new random bot.\n\r", ch );
+            }
+        }
         else if ( bot_watch_assign_random( ch, NULL ) )
             send_to_char( "Auto-watch enabled. Type 'watchbot off' to stop.\n\r", ch );
         else
