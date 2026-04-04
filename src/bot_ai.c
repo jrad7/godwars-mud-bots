@@ -1027,8 +1027,8 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
             CHAR_DATA *target = bot_find_pvp_target(ch);
             if ( target != NULL )
             {
-                free_string(ch->hunting);
-                ch->hunting = str_dup(target->name);
+                strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
+                bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
                 bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;
@@ -1179,8 +1179,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 CHAR_DATA *target = bot_find_pvp_target(ch);
                 if ( target != NULL )
                 {
-                    free_string(ch->hunting);
-                    ch->hunting = str_dup(target->name);
+                    strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
+                    bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
                     bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
@@ -1248,8 +1248,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 CHAR_DATA *target = bot_find_pvp_target(ch);
                 if ( target != NULL )
                 {
-                    free_string(ch->hunting);
-                    ch->hunting = str_dup(target->name);
+                    strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
+                    bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
                     bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
@@ -1365,18 +1365,17 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    if ( ch->hunting == NULL || ch->hunting[0] == '\0' )
+    if ( bot->pvp_target[0] == '\0' )
     {
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
     }
 
-    victim = get_char_world( ch, ch->hunting );
+    victim = get_char_world( ch, bot->pvp_target );
     if ( victim == NULL || is_safe(ch, victim) || !fair_fight(ch, victim) )
     {
         bot_watch_msg( ch, "[PVP] Target lost or no longer valid.\n\r" );
-        free_string( ch->hunting );
-        ch->hunting = str_dup("");
+        bot->pvp_target[0] = '\0';
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
     }
@@ -1408,8 +1407,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     else
     {
         bot_watch_msg( ch, "[PVP] BFS failed -- target unreachable. Halting hunt.\n\r" );
-        free_string( ch->hunting );
-        ch->hunting = str_dup("");
+        bot->pvp_target[0] = '\0';
         bot_change_state( ch, bot, BOT_GRINDING );
     }
 }
@@ -1419,19 +1417,18 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
     CHAR_DATA *victim;
 
     /* Wait out fight timer before leaving PVP_FIGHT state if target is gone */
-    if ( ch->hunting == NULL || ch->hunting[0] == '\0' )
+    if ( bot->pvp_target[0] == '\0' )
     {
         if ( ch->fight_timer > 0 ) return;
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
     }
 
-    victim = get_char_world( ch, ch->hunting );
+    victim = get_char_world( ch, bot->pvp_target );
     if ( victim == NULL || !fair_fight(ch, victim) )
     {
         /* Target dead or invalid */
-        free_string(ch->hunting);
-        ch->hunting = str_dup("");
+        bot->pvp_target[0] = '\0';
         if ( ch->fight_timer > 0 ) return;
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
@@ -1679,8 +1676,8 @@ void bot_update( CHAR_DATA *ch )
             CHAR_DATA *target = bot_find_pvp_target(ch);
             if ( target != NULL )
             {
-                free_string(ch->hunting);
-                ch->hunting = str_dup(target->name);
+                strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
+                bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
                 bot_watch_msg( ch, "[PVP] WAR MODE ongoing override -> hunting\n\r" );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;

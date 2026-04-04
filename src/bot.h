@@ -144,6 +144,7 @@ struct bot_data {
     bool                decap_recovery;     /* TRUE from decap until call all issued */
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
+    char                pvp_target[32];    /* Current target of PVP hunt  */
 };
 typedef struct bot_data BOT_DATA;
 
