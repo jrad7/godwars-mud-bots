@@ -1048,6 +1048,48 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
     }
 }
 
+static bool bot_is_valid_pvp( CHAR_DATA *ch, CHAR_DATA *victim, char *dbg, size_t dbg_sz )
+{
+    if ( IS_SET(victim->in_room->room_flags, ROOM_ARENA) || IS_SET(victim->in_room->room_flags, ROOM_SAFE) )
+    {
+        if ( dbg ) snprintf(dbg, dbg_sz, "[PVP_DBG] %s rejected: in safe room\n\r", victim->name);
+        return FALSE;
+    }
+    if ( is_safe(ch, victim) )
+    {
+        if ( dbg ) snprintf(dbg, dbg_sz, "[PVP_DBG] %s rejected: is_safe() is true\n\r", victim->name);
+        return FALSE;
+    }
+
+    bool is_gensteal = FALSE;
+    if ( ch->class == victim->class && victim->generation <= 7 && victim->generation > 1 )
+    {
+        if ( ch->generation >= victim->generation )
+            is_gensteal = TRUE;
+    }
+
+    if ( !is_gensteal )
+    {
+        if ( !fair_fight(ch, victim) )
+        {
+            if ( dbg ) snprintf(dbg, dbg_sz, "[PVP_DBG] %s rejected: fair_fight() failed\n\r", victim->name);
+            return FALSE;
+        }
+    }
+    else
+    {
+        int my_m = getMight(ch);
+        int vic_m = getMight(victim);
+        if ( my_m * 100 < vic_m * 75 )
+        {
+            if ( dbg ) snprintf(dbg, dbg_sz, "[PVP_DBG] %s rejected: gensteal suicide blocked (M:%d vs %d)\n\r", victim->name, my_m, vic_m);
+            return FALSE;
+        }
+    }
+    
+    return TRUE;
+}
+
 static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch )
 {
     CHAR_DATA *victim;
@@ -1061,21 +1103,8 @@ static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch )
         if ( victim == ch ) continue;
         if ( victim->in_room == NULL ) continue;
 
-        if ( IS_SET(victim->in_room->room_flags, ROOM_ARENA) || IS_SET(victim->in_room->room_flags, ROOM_SAFE) )
+        if ( !bot_is_valid_pvp(ch, victim, dbg, sizeof(dbg)) )
         {
-            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: in safe room\n\r", victim->name);
-            bot_watch_msg(ch, dbg);
-            continue;
-        }
-        if ( is_safe(ch, victim) )
-        {
-            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: is_safe() is true (Level/PK limits)\n\r", victim->name);
-            bot_watch_msg(ch, dbg);
-            continue;
-        }
-        if ( !fair_fight(ch, victim) )
-        {
-            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: fair_fight() failed (Age/Level/Might parity)\n\r", victim->name);
             bot_watch_msg(ch, dbg);
             continue;
         }
@@ -1378,7 +1407,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     }
 
     victim = get_char_world( ch, bot->pvp_target );
-    if ( victim == NULL || is_safe(ch, victim) || !fair_fight(ch, victim) )
+    if ( victim == NULL || !bot_is_valid_pvp(ch, victim, NULL, 0) )
     {
         char msg[256];
         snprintf(msg, sizeof(msg), "[PVP] Target %s lost or no longer valid.\n\r", bot->pvp_target);
@@ -1435,7 +1464,7 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
     }
 
     victim = get_char_world( ch, bot->pvp_target );
-    if ( victim == NULL || !fair_fight(ch, victim) )
+    if ( victim == NULL || !bot_is_valid_pvp(ch, victim, NULL, 0) )
     {
         /* Target dead or invalid */
         bot->pvp_target[0] = '\0';
@@ -1454,7 +1483,7 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
     {
         /* Time to finish them */
         char cmd[256];
-        if ( ch->class == victim->class && ch->generation > victim->generation && victim->generation < 7 && victim->generation > 1 )
+        if ( ch->class == victim->class && ch->generation >= victim->generation && victim->generation < 7 && victim->generation > 1 )
         {
             sprintf( cmd, "gensteal %s", victim->name );
             bot_cmd( ch, cmd );

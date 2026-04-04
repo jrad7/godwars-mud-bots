@@ -1,12 +1,12 @@
 Kast~
 1100
-Thorn~
+Lykan~
 0
-Xan~
+Ashe~
 0
 Vael~
 0
-Noone~
+Xan~
 0
 Noone~
 0
@@ -36,5 +36,5 @@ Noone~
 0
 Noone~
 0
-Noone~
+Vex~
 0
