@@ -1658,6 +1658,29 @@ void bot_update( CHAR_DATA *ch )
         return;
     }
 
+    /* Continuous WAR MODE check */
+    if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR 
+      && bot->state != BOT_PVP_HUNT 
+      && bot->state != BOT_PVP_FIGHT 
+      && bot->state != BOT_RESTING 
+      && bot->state != BOT_TRAINING 
+      && bot->state != BOT_LOGGING_OUT )
+    {
+        /* Check randomly to spread CPU load from scanning the MUD */
+        if ( number_percent() <= 25 )
+        {
+            CHAR_DATA *target = bot_find_pvp_target(ch);
+            if ( target != NULL )
+            {
+                free_string(ch->hunting);
+                ch->hunting = str_dup(target->name);
+                bot_watch_msg( ch, "[PVP] WAR MODE ongoing override -> hunting\n\r" );
+                bot_change_state( ch, bot, BOT_PVP_HUNT );
+                return;
+            }
+        }
+    }
+
     /* State dispatch */
     switch ( bot->state )
     {
