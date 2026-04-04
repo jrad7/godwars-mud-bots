@@ -734,6 +734,7 @@ void bot_manager_update( void )
 
 void do_botwar( CHAR_DATA *ch, char *argument )
 {
+    CHAR_DATA *wch;
     if ( !IS_IMMORTAL(ch) && str_cmp(ch->name, "Kast") != 0 )
     {
         send_to_char("Huh?\n\r", ch);
@@ -741,6 +742,20 @@ void do_botwar( CHAR_DATA *ch, char *argument )
     }
     global_bot_pvp_mode = BOT_PVP_MODE_WAR;
     send_to_char("Bot PVP is now globally FORCED (War Mode). All bots will relentlessly hunt.\n\r", ch);
+
+    /* Instantly wake up all grinding/idle bots to evaluate PVP right now */
+    for ( wch = char_list; wch != NULL; wch = wch->next )
+    {
+        if ( IS_NPC(wch) ) continue;
+        if ( wch->pcdata && wch->pcdata->botdata )
+        {
+            BOT_DATA *bot = wch->pcdata->botdata;
+            if ( bot->state == BOT_IDLE || bot->state == BOT_GRINDING )
+            {
+                bot->state_timer = 0;
+            }
+        }
+    }
 }
 
 void do_botnormal( CHAR_DATA *ch, char *argument )
