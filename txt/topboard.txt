@@ -6,9 +6,9 @@ Lykan~
 100
 Quelzar~
 100
-Vrae~
-100
 Wrex~
+100
+Eris~
 100
 Szoryn~
 0
@@ -36,5 +36,5 @@ Nexx~
 0
 Vael~
 0
-Noone~
+Vynn~
 0

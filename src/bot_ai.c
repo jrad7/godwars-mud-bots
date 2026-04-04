@@ -1598,6 +1598,19 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         }
     }
 
+    /* Vampires must heal in the crypt (93350-93359) -- only room that triggers
+     * update_vampire()'s regen tick */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
+    {
+        if ( ch->in_room != NULL && !(ch->in_room->vnum >= ROOM_VNUM_VAMP_CRYPT && ch->in_room->vnum <= ROOM_VNUM_VAMP_CRYPT + 9) )
+        {
+            bot_watch_msg( ch, "[REASON] Vampire retreating to crypt to heal\n\r" );
+            char_from_room(ch);
+            char_to_room(ch, get_room_index(ROOM_VNUM_VAMP_CRYPT));
+            bot_cmd(ch, "look");
+        }
+    }
+
     /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
         bot_change_state( ch, bot, BOT_IDLE );
