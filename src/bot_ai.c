@@ -1358,6 +1358,13 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     CHAR_DATA *victim;
     int dir;
 
+    if ( ch->position == POS_FIGHTING )
+    {
+        bot_watch_msg( ch, "[PVP] Stuck in combat during hunt, fleeing\n\r" );
+        do_flee( ch, "" );
+        return;
+    }
+
     if ( ch->hunting == NULL || ch->hunting[0] == '\0' )
     {
         bot_change_state( ch, bot, BOT_GRINDING );
