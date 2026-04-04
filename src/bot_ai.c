@@ -964,8 +964,9 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
             victim->level, ch->level + 15,
             IS_SET(victim->act, ACT_IS_NPC) ? 1 : 0 );
         bot_watch_msg( ch, dbg );
-        if ( !IS_NPC(victim) )   continue;   /* Don't attack players */
-        if ( victim->fighting )  continue;   /* Skip mobs already in combat */
+        if ( !IS_NPC(victim) )                      continue;   /* Don't attack players */
+        if ( victim->fighting )                     continue;   /* Skip mobs already in combat */
+        if ( IS_AFFECTED(victim, AFF_ETHEREAL) )    continue;   /* Can't fight ethereal mobs */
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;

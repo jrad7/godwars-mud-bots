@@ -6,14 +6,14 @@ Cael~
 333
 Szoryn~
 333
-Garak~
-266
 Sylas~
 240
 Xolvrae~
 214
 Delvrae~
 200
+Garak~
+184
 Sigrun~
 100
 Bael~

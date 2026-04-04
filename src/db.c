@@ -1748,7 +1748,8 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
             {
                 int vnum = number_range( pRoom->area->lvnum, pRoom->area->uvnum );
                 pMobIndex = get_mob_index( vnum );
-                if (pMobIndex != NULL && pMobIndex->pShop == NULL)
+                if (pMobIndex != NULL && pMobIndex->pShop == NULL
+                &&  !IS_SET(pMobIndex->affected_by, AFF_ETHEREAL))
                     break;
                 pMobIndex = NULL;
             }
