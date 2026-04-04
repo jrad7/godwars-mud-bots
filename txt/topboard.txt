@@ -1,15 +1,29 @@
 Kast~
-1100
+1200
+Quelzar~
+388
 Nexx~
 300
+Sylas~
+240
 Delvrae~
 200
-Kira~
-100
+Lykan~
+200
+Szoryn~
+150
 Bael~
 66
 Zeth~
-66
+0
+Thorn~
+0
+Ilvaen~
+0
+Cael~
+0
+Xolvrae~
+0
 Vael~
 0
 Mael~
@@ -22,19 +36,5 @@ Noone~
 0
 Noone~
 0
-Noone~
-0
-Noone~
-0
-Noone~
-0
-Noone~
-0
-Noone~
-0
-Noone~
-0
-Noone~
-0
-Noone~
+Arix~
 0

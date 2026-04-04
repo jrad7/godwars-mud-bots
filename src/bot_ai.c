@@ -1161,6 +1161,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             ch->mana * 100 / UMAX(1, ch->max_mana) );
         bot_watch_msg( ch, r );
         bot_change_state( ch, bot, BOT_RESTING );
+        if ( ch->position == POS_FIGHTING )
+            do_flee( ch, "" );
         return;
     }
 
@@ -1515,11 +1517,11 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
 
 static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
 {
-    /* Fight back if attacked */
+    /* Flee if attacked while resting -- need to get out of combat to heal */
     if ( ch->position == POS_FIGHTING )
     {
-        bot_watch_msg( ch, "[REASON] attacked while resting\n\r" );
-        bot_change_state( ch, bot, BOT_IDLE );
+        bot_watch_msg( ch, "[REASON] attacked while resting, fleeing\n\r" );
+        do_flee( ch, "" );
         return;
     }
 
