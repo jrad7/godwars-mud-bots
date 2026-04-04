@@ -1714,12 +1714,40 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
     int iExit;
     int level = 0;
     bool last;
+    bool is_grinding = FALSE;
                 
     if ( !pRoom )
         return;
    
     pMob        = NULL;
     last        = FALSE;
+
+    if ( pRoom->area && pRoom->area->mob_level > 0 && str_cmp(pRoom->area->filename, "weed.are") != 0 )
+        is_grinding = TRUE;
+
+    if ( is_grinding )
+    {
+        int tries, i;
+        for (i = 0; i < 5; i++)
+        {
+            MOB_INDEX_DATA *pMobIndex = NULL;
+            for (tries = 0; tries < 100; tries++)
+            {
+                int vnum = number_range( pRoom->area->lvnum, pRoom->area->uvnum );
+                pMobIndex = get_mob_index( vnum );
+                if (pMobIndex != NULL && pMobIndex->pShop == NULL)
+                    break;
+                pMobIndex = NULL;
+            }
+            if (pMobIndex != NULL)
+            {
+                CHAR_DATA *rand_mob = create_mobile( pMobIndex );
+                if ( room_is_dark( pRoom ) )
+                    SET_BIT(rand_mob->affected_by, AFF_INFRARED);
+                char_to_room( rand_mob, pRoom );
+            }
+        }
+    }
             
     for ( iExit = 0;  iExit < MAX_DIR;  iExit++ )
     {
@@ -1753,6 +1781,12 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
             if ( !( pMobIndex = get_mob_index( pReset->arg1 ) ) )
             {
                 bug( "Reset_room: 'M': bad vnum %d.", pReset->arg1 );
+                continue;
+            }
+             
+            if ( is_grinding && pMobIndex->pShop == NULL )
+            {
+                last = FALSE;
                 continue;
             }
              
