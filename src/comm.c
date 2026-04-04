@@ -1852,10 +1852,22 @@ void write_to_buffer( DESCRIPTOR_DATA *d, const char *txt, int length)
           
   if (length <= 0)
     length = strlen(txt);
-            
+
+  /* Bot with no snooper: output is never read from the buffer, discard now
+   * to prevent the buffer filling up and triggering a spurious close_socket. */
+  if ( d->descriptor < 0 && d->snoop_by == NULL )
+    return;
+
   if (length >= MAX_STRING_LENGTH )
   {
-    bug( "Write_to_buffer: Way too big. Closing.", 0 );
+    char wtb_buf[MAX_STRING_LENGTH];
+    snprintf( wtb_buf, sizeof(wtb_buf),
+        "Write_to_buffer: Way too big (len=%d, who=%s, desc=%d, txt='%.80s').",
+        length,
+        (d->character ? d->character->name : "none"),
+        d->descriptor,
+        txt );
+    bug( wtb_buf, 0 );
     return;
   }
             
@@ -2085,6 +2097,14 @@ void write_to_buffer( DESCRIPTOR_DATA *d, const char *txt, int length)
     /* There is a limit to our patience */
     if (d->outsize >= 32000)
     {
+      if ( d->descriptor < 0 )
+      {
+          /* Bot: clear the buffer instead of disconnecting — there is no
+           * real socket to drain.  The snooper will miss some output but
+           * the bot stays alive. */
+          d->outtop = 0;
+          return;
+      }
       bug("Buffer overflow. Closing.",0);
       close_socket(d);
       return;
