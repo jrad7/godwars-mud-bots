@@ -1,14 +1,16 @@
 Kast~
 1400
+Pax~
+400
 Lykan~
 100
 Wrex~
 100
 Eris~
 100
-Quelzar~
-0
 Oryn~
+0
+Quelzar~
 0
 Delvrae~
 0
@@ -35,6 +37,4 @@ Thorn~
 Nexx~
 0
 Vael~
-0
-Vynn~
 0

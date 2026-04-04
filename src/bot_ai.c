@@ -512,7 +512,7 @@ static bool bot_needs_repair( CHAR_DATA *ch )
 static bool bot_generic_buff_check( CHAR_DATA *ch )
 {
     static const char *buffs[] = {
-        "stone", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+        "stone", "sanctuary", "fly", "shield", "armor", "bless", "frenzy", NULL
     };
     int i;
     int sn;
@@ -552,6 +552,8 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
              * list — check the bitvector directly to avoid an infinite cast loop. */
             if ( !strcmp(buffs[i], "sanctuary") && IS_AFFECTED(ch, AFF_SANCTUARY) )
                 continue;
+            if ( !strcmp(buffs[i], "fly") && IS_AFFECTED(ch, AFF_FLYING) )
+                continue;
             char cmd[64];
             sprintf(cmd, "cast %s", buffs[i]);
             bot_cmd(ch, cmd);
@@ -581,7 +583,7 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Check if we need to practice generic spells */
     {
         static const char *practice_spells[] = {
-            "repair", "rem", "stone", "sanctuary", "shield", "armor", "bless", "frenzy",
+            "repair", "rem", "stone", "sanctuary", "fly", "shield", "armor", "bless", "frenzy",
             "cure blindness", NULL
         };
         int i;
@@ -742,7 +744,7 @@ static bool bot_do_train( CHAR_DATA *ch )
     /* Generic spell practice */
     {
         static const char *practice_spells[] = {
-            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy",
+            "repair", "remove curse", "stone skin", "sanctuary", "fly", "shield", "armor", "bless", "frenzy",
             "cure blindness", NULL
         };
         int i;
