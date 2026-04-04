@@ -1728,7 +1728,20 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
     if ( is_grinding )
     {
         int tries, i;
-        for (i = 0; i < 5; i++)
+        int current_mobs = 0;
+        int to_spawn = 5;
+        CHAR_DATA *rch;
+
+        for ( rch = pRoom->people; rch != NULL; rch = rch->next_in_room )
+        {
+            if ( IS_NPC(rch) && rch->pIndexData->pShop == NULL )
+                current_mobs++;
+        }
+
+        if ( current_mobs + to_spawn > 20 )
+            to_spawn = 20 - current_mobs;
+
+        for (i = 0; i < to_spawn; i++)
         {
             MOB_INDEX_DATA *pMobIndex = NULL;
             for (tries = 0; tries < 100; tries++)
