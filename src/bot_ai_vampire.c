@@ -54,14 +54,12 @@ static int bot_vamp_pick_research( CHAR_DATA *ch )
         { DISC_VAMP_PROT, 2  },
         /* Obtenebration 5: shroud aura + lamprey drain attack */
         { DISC_VAMP_OBTE, 5  },
-        /* Presence 2: awe combat aura + mindblast stun */
-        { DISC_VAMP_PRES, 2  },
+        /* Presence 1: awe combat aura */
+        { DISC_VAMP_PRES, 1  },
         /* Auspex 1: truesight (see invisible / detect hidden) */
         { DISC_VAMP_AUSP, 1  },
         /* Thaumaturgy 4: theft of vitae (steal blood in combat) */
         { DISC_VAMP_THAU, 4  },
-        /* Quietus 4: assassinate (high single-hit damage burst) */
-        { DISC_VAMP_QUIE, 4  },
         /* Serpentis 4: tendrils (combat melee attack) */
         { DISC_VAMP_SERP, 4  },
         /* Thanatosis 5: withering stat debuff + drainlife */
@@ -249,13 +247,7 @@ static void bot_vamp_combat_action( CHAR_DATA *ch )
         return;
     }
 
-    /* Priority 2 (40%): assassinate - heavy single-hit burst */
-    if ( ch->power[DISC_VAMP_QUIE] >= 4 && roll <= 40 )
-    {
-        sprintf( cmd, "assassinate %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
+    /* (Priority 2 removed: assassinate is out-of-combat only) */
 
     /* Priority 3 (55%): lamprey - shadow drain (Obtenebration 5) */
     if ( ch->power[DISC_VAMP_OBTE] >= 5 && roll <= 55 )
@@ -288,13 +280,7 @@ static void bot_vamp_combat_action( CHAR_DATA *ch )
         return;
     }
 
-    /* Priority 7 (90%): mindblast - mental stun */
-    if ( ch->power[DISC_VAMP_PRES] >= 2 && roll <= 90 )
-    {
-        sprintf( cmd, "mindblast %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
+    /* (Priority 7 removed: mindblast is out-of-combat only) */
 
     /* Fallback: basic combat continues via normal multi_hit loop */
 }
