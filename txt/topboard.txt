@@ -2,17 +2,25 @@ Kast~
 1400
 Pax~
 800
+Quelzar~
+525
+Mael~
+400
 Wrex~
-100
+300
+Xolvrae~
+240
+Thorn~
+214
 Zilvra~
-100
+150
+Ivar~
+150
+Valdris~
+120
 Eris~
 0
 Lykan~
-0
-Oryn~
-0
-Quelzar~
 0
 Delvrae~
 0
@@ -22,19 +30,11 @@ Bael~
 0
 Grix~
 0
-Cael~
-0
 Ilvaen~
 0
 Garak~
 0
-Sylas~
-0
 Sigrun~
 0
-Jade~
-0
-Thorn~
-0
-Nexx~
+Arix~
 0

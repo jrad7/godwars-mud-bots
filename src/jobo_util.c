@@ -1040,10 +1040,31 @@ void recycle_dummys()
         continue;
       }
       
-      /* recycle */  
+      /* recycle */
       dummy->next = dummy_free;
       dummy_free = dummy;
     }
-  }     
+  }
 }
+
+const char *player_class_name( CHAR_DATA *ch )
+{
+  if (IS_NPC(ch)) return "NPC";
+  if (IS_CLASS(ch, CLASS_DEMON))        return "Demon";
+  if (IS_CLASS(ch, CLASS_MAGE))         return "Mage";
+  if (IS_CLASS(ch, CLASS_WEREWOLF))     return "Werewolf";
+  if (IS_CLASS(ch, CLASS_VAMPIRE))      return "Vampire";
+  if (IS_CLASS(ch, CLASS_SAMURAI))      return "Samurai";
+  if (IS_CLASS(ch, CLASS_DROW))         return "Drow";
+  if (IS_CLASS(ch, CLASS_MONK))         return "Monk";
+  if (IS_CLASS(ch, CLASS_NINJA))        return "Ninja";
+  if (IS_CLASS(ch, CLASS_LICH))         return "Lich";
+  if (IS_CLASS(ch, CLASS_SHAPESHIFTER)) return "Shapeshifter";
+  if (IS_CLASS(ch, CLASS_TANARRI))      return "Tanarri";
+  if (IS_CLASS(ch, CLASS_ANGEL))        return "Angel";
+  if (IS_CLASS(ch, CLASS_UNDEAD_KNIGHT))return "Undead Knight";
+  if (IS_CLASS(ch, CLASS_DROID))        return "Droid";
+  return "Human";
+}
+
 

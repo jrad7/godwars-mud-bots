@@ -181,14 +181,23 @@ void do_gensteal(CHAR_DATA *ch, char *argument)
     FILE *pfp;
     time_t now = time(NULL);
     char tbuf[64];
+    const char *kclass = player_class_name(ch);
+    const char *vclass = player_class_name(victim);
     struct tm *tm_info = localtime(&now);
     strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
     fclose( fpReserve );
     if ( (pfp = fopen( PKILL_LOG_FILE, "a" )) != NULL )
     {
-      fprintf( pfp, "[%s] GENSTEAL: %s stole gen from %s (room %d)\n",
-        tbuf, ch->pcdata->switchname, victim->pcdata->switchname,
+      fprintf( pfp, "[%s] GENSTEAL: %s (%s) stole gen from %s (%s) (room %d)\n",
+        tbuf, ch->pcdata->switchname, kclass,
+        victim->pcdata->switchname, vclass,
         ch->in_room ? ch->in_room->vnum : 0 );
+      fclose( pfp );
+    }
+    if ( (pfp = fopen( CLASS_STATS_FILE, "a" )) != NULL )
+    {
+      fprintf( pfp, "[%s] GENSTEAL WIN  %s\n", tbuf, kclass );
+      fprintf( pfp, "[%s] GENSTEAL LOSS %s\n", tbuf, vclass );
       fclose( pfp );
     }
     fpReserve = fopen( NULL_FILE, "r" );

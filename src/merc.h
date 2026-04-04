@@ -4426,7 +4426,8 @@ char *	crypt		args( ( const char *key, const char *salt ) );
 #define BUG_FILE	"../txt/bugs.txt"      /* For 'bug' and bug( )		*/
 #define SHUTDOWN_FILE	"shutdown.txt"	/* For 'shutdown'		*/
 #define CRASH_TEMP_FILE "../txt/crashtmp.txt" /* Need it for crash-recover */
-#define PKILL_LOG_FILE	"../txt/pkill.log"	/* Decap and gensteal log	*/
+#define PKILL_LOG_FILE		"../txt/pkill.log"	/* Decap and gensteal log	*/
+#define CLASS_STATS_FILE	"../txt/class_stats.log"/* Class win/loss log		*/
 
 /*
  * Our function prototypes.
@@ -4610,6 +4611,7 @@ void  logout_message            args (( CHAR_DATA *ch ));
 void  login_message             args (( CHAR_DATA *ch ));
 void  avatar_message            args (( CHAR_DATA *ch ));
 void  special_decap_message     args (( CHAR_DATA *ch, CHAR_DATA *victim ));
+const char *player_class_name   args (( CHAR_DATA *ch ));
 void  powerdown                 args (( CHAR_DATA *ch ));
 bool  multicheck                args (( CHAR_DATA *ch ));
 bool  reachedDecapLimit         args (( CHAR_DATA *ch ));

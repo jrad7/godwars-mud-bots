@@ -5040,14 +5040,23 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
     FILE *pfp;
     time_t now = time(NULL);
     char tbuf[64];
+    const char *kclass = player_class_name(ch);
+    const char *vclass = player_class_name(victim);
     struct tm *tm_info = localtime(&now);
     strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
     fclose( fpReserve );
     if ( (pfp = fopen( PKILL_LOG_FILE, "a" )) != NULL )
     {
-      fprintf( pfp, "[%s] DECAP: %s decapitated by %s (room %d)\n",
-        tbuf, victim->pcdata->switchname, ch->pcdata->switchname,
+      fprintf( pfp, "[%s] DECAP: %s (%s) decapitated %s (%s) (room %d)\n",
+        tbuf, ch->pcdata->switchname, kclass,
+        victim->pcdata->switchname, vclass,
         victim->in_room->vnum );
+      fclose( pfp );
+    }
+    if ( (pfp = fopen( CLASS_STATS_FILE, "a" )) != NULL )
+    {
+      fprintf( pfp, "[%s] DECAP WIN  %s\n", tbuf, kclass );
+      fprintf( pfp, "[%s] DECAP LOSS %s\n", tbuf, vclass );
       fclose( pfp );
     }
     fpReserve = fopen( NULL_FILE, "r" );
