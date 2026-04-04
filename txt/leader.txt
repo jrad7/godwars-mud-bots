@@ -1,7 +1,7 @@
 Kast~
-1300
+1400
 Quelzar~
-17
+20
 Jael~
 8
 Ilvaen~
@@ -9,6 +9,6 @@ Ilvaen~
 Vynn~
 35
 Kast~
-98
+100
 Noone~
 0

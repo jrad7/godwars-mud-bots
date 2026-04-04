@@ -341,13 +341,64 @@ void bot_gear_check( CHAR_DATA *ch )
 
     /* Step 1.5: recover called-back class gear from inventory.
      * After a decap the bot calls gear back and it lands in inventory.
-     * Skip while decap_recovery is still set — call all hasn't been issued yet. */
+     * Skip while decap_recovery is still set — call all hasn't been issued yet.
+     *
+     * Surplus duplicate guard: after avatar-retrain + call all a bot may end up
+     * with an extra copy of a class piece (e.g. two pairs of boots).  Wearing a
+     * duplicate would displace the equipped copy into inventory, creating an
+     * infinite swap loop.  Before wearing, verify all gear-table slots that need
+     * this vnum aren't already fully satisfied. */
     if ( ch->class != 0 && !bot->decap_recovery )
     {
         for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
         {
+            const BOT_GEAR_PIECE *ge;
+            const char           *matched_cmd;
+            int                   matched_count;
+            int                   needed_count;
+
             if ( obj->wear_loc != WEAR_NONE ) continue;
             if ( !bot_is_class_gear_vnum( obj->pIndexData->vnum ) ) continue;
+
+            /* Find how many gear-table slots are already filled with this vnum,
+             * and capture the cmd shared by those entries. */
+            matched_cmd   = NULL;
+            matched_count = 0;
+            for ( ge = table; ge->wear_slot != WEAR_NONE; ge++ )
+            {
+                OBJ_DATA *worn = get_eq_char( ch, ge->wear_slot );
+                if ( worn != NULL
+                  && worn->pIndexData->vnum == obj->pIndexData->vnum )
+                {
+                    matched_cmd = ge->cmd;
+                    matched_count++;
+                }
+            }
+
+            /* If no worn item shares this vnum yet, the slot is free — wear it. */
+            if ( matched_cmd == NULL )
+            {
+                bot_watch_wear( ch, obj, "called gear" );
+                wear_obj( ch, obj, TRUE );
+                return;
+            }
+
+            /* Count how many table entries need this same vnum (e.g. 2 for rings,
+             * 1 for boots).  If all are already filled, this piece is surplus;
+             * step 2b will extract it next tick. */
+            needed_count = 0;
+            for ( ge = table; ge->wear_slot != WEAR_NONE; ge++ )
+            {
+                if ( strcmp( ge->cmd, matched_cmd ) == 0 )
+                    needed_count++;
+            }
+
+            if ( matched_count >= needed_count )
+            {
+                bot_watch_wear( ch, obj, "surplus-skip" );
+                continue;   /* surplus duplicate — step 2b will extract it */
+            }
+
             bot_watch_wear( ch, obj, "called gear" );
             wear_obj( ch, obj, TRUE );
             return;
