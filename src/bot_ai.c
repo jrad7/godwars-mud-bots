@@ -881,6 +881,18 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
+    /* Demons without WARP_REGENERATE must heal in Hell (93420) */
+    if ( IS_CLASS(ch, CLASS_DEMON) && !IS_SET(ch->warp, WARP_REGENERATE) )
+    {
+        if ( ch->in_room != NULL && !(ch->in_room->vnum >= ROOM_VNUM_HELL && ch->in_room->vnum <= ROOM_VNUM_HELL + 6) )
+        {
+            bot_watch_msg( ch, "[REASON] Demon retreating to Hell to heal\n\r" );
+            char_from_room(ch);
+            char_to_room(ch, get_room_index(ROOM_VNUM_HELL));
+            bot_cmd(ch, "look");
+        }
+    }
+
     /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
         bot_change_state( ch, bot, BOT_IDLE );
