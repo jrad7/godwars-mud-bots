@@ -617,29 +617,38 @@ static bool bot_should_train( CHAR_DATA *ch )
         if ( basic_maxed && ch->stance[23] == -1 )
         {
             if ( ch->stance[18] != 0 ) return TRUE;
-            if ( ch->stance[19] == -1 ) 
+            /* SS1: pool immediately once basics are maxed */
+            if ( ch->stance[19] == -1 )
             {
-                if ( ch->exp >= 80000000 ) return TRUE; else return FALSE; 
+                if ( ch->exp >= 80000000 ) return TRUE; else return FALSE;
             }
-            if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
+            /* SS2-SS5: train HP to a threshold first, then pool until ready to buy.
+             * If below the HP threshold, fall through to HP training below. */
+            else if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
             {
-                if ( ch->exp >= 120000000 ) return TRUE; else return FALSE;
+                if ( ch->max_hit >= 30000 ) return TRUE;  /* pool (bot_do_train gates at 120M) */
+                /* else fall through to HP training */
             }
-            if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
+            else if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
             {
-                if ( ch->exp >= 140000000 ) return TRUE; else return FALSE;
+                if ( ch->max_hit >= 40000 ) return TRUE;  /* pool until 140M */
+                /* else fall through */
             }
-            if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
+            else if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
             {
-                if ( ch->exp >= 200000000 ) return TRUE; else return FALSE;
+                if ( ch->max_hit >= 50000 ) return TRUE;  /* pool until 200M */
+                /* else fall through */
             }
-            if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
+            else if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
             {
-                if ( ch->exp >= 380000000 ) return TRUE; else return FALSE;
+                if ( ch->max_hit >= 60000 ) return TRUE;  /* pool until 380M */
+                /* else fall through */
             }
-
-            /* Block stats training if maxed basic but waiting for current ss mastery to hit 200 */
-            return FALSE;
+            else
+            {
+                /* Basic maxed but waiting for current SS mastery to hit 200 — pool */
+                return FALSE;
+            }
         }
     }
 
@@ -782,7 +791,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                 }
                 return FALSE; /* Pool if not enough */
             }
-            /* SS2 - 120m exp needed */
+            /* SS2 - pool once max_hit >= 30k, buy at 120M */
             else if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
             {
                 if ( ch->exp >= 120000000 )
@@ -795,9 +804,10 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                return FALSE; /* Pool */
+                if ( ch->max_hit >= 30000 ) return FALSE; /* pool */
+                /* else fall through to HP training */
             }
-            /* SS3 - 140m exp needed */
+            /* SS3 - pool once max_hit >= 40k, buy at 140M */
             else if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
             {
                 if ( ch->exp >= 140000000 )
@@ -810,9 +820,10 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                return FALSE; /* Pool */
+                if ( ch->max_hit >= 40000 ) return FALSE; /* pool */
+                /* else fall through to HP training */
             }
-            /* SS4 - 200m exp needed */
+            /* SS4 - pool once max_hit >= 50k, buy at 200M */
             else if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
             {
                 if ( ch->exp >= 200000000 )
@@ -825,9 +836,10 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                return FALSE; /* Pool */
+                if ( ch->max_hit >= 50000 ) return FALSE; /* pool */
+                /* else fall through to HP training */
             }
-            /* SS5 - 380m exp needed */
+            /* SS5 - pool once max_hit >= 70k, buy at 380M */
             else if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
             {
                 if ( ch->exp >= 380000000 )
@@ -843,11 +855,14 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                return FALSE; /* Pool */
+                if ( ch->max_hit >= 70000 ) return FALSE; /* pool */
+                /* else fall through to HP training */
             }
-            
-            /* Otherwise, wait for mastery */
-            return FALSE;
+            else
+            {
+                /* Waiting for mastery */
+                return FALSE;
+            }
         }
     }
 
