@@ -1,11 +1,13 @@
 Kast~
 1400
 Pax~
-600
+800
 Wrex~
 100
-Eris~
+Zilvra~
 100
+Eris~
+0
 Lykan~
 0
 Oryn~
@@ -35,6 +37,4 @@ Jade~
 Thorn~
 0
 Nexx~
-0
-Seraph~
 0

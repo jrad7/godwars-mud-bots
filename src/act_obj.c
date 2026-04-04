@@ -3681,61 +3681,99 @@ void do_recharge( CHAR_DATA *ch, char *argument )
 
 void quest_object( CHAR_DATA *ch, OBJ_DATA *obj )
 {
-    static const int quest_selection[] = 
-    {
-         /* New items */
-         93004, 93005, 32001, 14028, 14030, 14014, 14023, 14031, 
-         14029, 31065, 31067, 31057, 31059, 31052, 50000, 50008, 50007,
-         50201, 50204, 77011,
-	 /* Old items */
-         1330, 9105,
-	 5005, 5011, 5012, 5013, 2902, 1352, 2348, 2361, 9231, 5011,
-	 5012, 5013, 2902, 1352, 2348, 2361, 2371,  300,  303,  307,
-	 7216, 1100,  100,30315, 5110, 6001, 3050,  301, 5230,30302,
-	  663, 7303, 2915, 2275, 8600, 8601, 8602, 8603, 5030, 9321,
-	 6010, 1304, 1307, 1332, 1333, 1342, 1356, 1361, 2304, 2322,
-	 2331, 2382, 8003, 8005, 5300, 5302, 5309, 5310, 5311, 4000,
-	 2624,  311, 7203, 7206, 5214,
-	 5223, 5228, 2804, 1612, 5207, 9302, 5301, 5224, 7801, 9313,
-	 6304, 2003, 3425, 3423, 608,  1109,30319, 8903, 9317, 9307,
-	 4050,  5028, 4100, 3428,  310, 2102, 3402, 5319, 6512,
-	 11005, 30316, 2106, 8007, 6601, 2333, 3610, 2015, 5022,
-	 1394, 2202, 1401, 6005, 1614, 1388, 9311, 3604, 4701,
-	30325, 6106, 2003, 7190, 9322, 1384, 3412, 2342, 1374, 2210,
-	 2332, 2901, 7200, 7824, 3410, 2013, 1510, 8306, 3414, 2005
+    /* Parallel to grind_tiers[] in bot_ai.c.
+     * Same max_hit thresholds, mapped to each zone's VNUM range so that
+     * quest targets always come from content appropriate to the player. */
+    static const struct {
+        int max_hit;
+        int vnum_lo;
+        int vnum_hi;
+    } quest_tiers[] = {
+        {  5000,  3700,  3760 },   /* mud school  */
+        { 10000,   100,   129 },   /* smurf       */
+        { 20000,  9201,  9260 },   /* canyon      */
+        { 40000, 30232, 30261 },   /* weed        */
+        { 60000,  1100,  1157 },   /* shire       */
+        { 80000, 30100, 30200 },   /* hell        */
+        { 999999, 99000, 99100 },  /* heaven      */
     };
-    int object;
-    if (obj == NULL || obj->item_type != ITEM_QUESTCARD) return;
+    static const int TIER_COUNT =
+        (int)( sizeof(quest_tiers) / sizeof(quest_tiers[0]) );
 
+    OBJ_INDEX_DATA *candidates[256];
+    int             ncandidates = 0;
+    int             picks[4];
+    int             npicks = 0;
+    int             vnum_lo, vnum_hi;
+    int             tier_idx;
+    int             i, j, attempts, vnum, dup;
 
-    if( obj->level <=50 )
-        object = number_range(obj->level, obj->level + 100);
-    else
-	object = number_range(75, 150);
-    if (object < 1 || object > 150) object = 0;
-    obj->value[0] = quest_selection[object];
+    if ( obj == NULL || obj->item_type != ITEM_QUESTCARD ) return;
 
-    if( obj->level <=50 )
-        object = number_range(obj->level, obj->level + 100);
-    else
-	object = number_range(75, 150);
-    if (object < 1 || object > 150) object = 0;
-    obj->value[1] = quest_selection[object];
+    /* Select tier by max_hit; default to the highest if above all thresholds */
+    tier_idx = TIER_COUNT - 1;
+    if ( ch != NULL && !IS_NPC(ch) )
+    {
+        for ( i = 0; i < TIER_COUNT; i++ )
+        {
+            if ( ch->max_hit < quest_tiers[i].max_hit )
+            {
+                tier_idx = i;
+                break;
+            }
+        }
+    }
 
-    if( obj->level <=50 )
-        object = number_range(obj->level, obj->level + 100);
-    else
-	object = number_range(75, 150);
-    if (object < 1 || object > 150) object = 0;
-    obj->value[2] = quest_selection[object];
+    vnum_lo = quest_tiers[tier_idx].vnum_lo;
+    vnum_hi = quest_tiers[tier_idx].vnum_hi;
 
-    if( obj->level <=50 )
-        object = number_range(obj->level, obj->level + 100);
-    else
-	object = number_range(75, 150);
-    if (object < 1 || object > 150) object = 0;
-    obj->value[3] = quest_selection[object];
-    return;
+    /* Scan obj_index_hash for valid takeable items within the zone's VNUMs */
+    for ( i = 0; i < MAX_KEY_HASH && ncandidates < 256; i++ )
+    {
+        OBJ_INDEX_DATA *pObj;
+        for ( pObj = obj_index_hash[i]; pObj != NULL; pObj = pObj->next )
+        {
+            if ( pObj->vnum < vnum_lo || pObj->vnum > vnum_hi ) continue;
+            if ( !IS_SET(pObj->wear_flags, ITEM_TAKE) )          continue;
+            if ( pObj->item_type == ITEM_QUEST        ||
+                 pObj->item_type == ITEM_QUESTCARD     ||
+                 pObj->item_type == ITEM_QUESTMACHINE  ||
+                 pObj->item_type == ITEM_MONEY         ||
+                 pObj->item_type == ITEM_TREASURE      ||
+                 pObj->item_type == ITEM_KEY           ) continue;
+            candidates[ncandidates++] = pObj;
+            if ( ncandidates >= 256 ) break;
+        }
+    }
+
+    if ( ncandidates == 0 )
+    {
+        /* Zone has no valid items -- leave slots at their current values */
+        return;
+    }
+
+    /* Pick 4 distinct VNUMs; fall back to allowing duplicates if zone is tiny */
+    obj->value[0] = obj->value[1] = obj->value[2] = obj->value[3] = -1;
+    attempts = 0;
+    while ( npicks < 4 && attempts < 200 )
+    {
+        vnum = candidates[number_range(0, ncandidates - 1)]->vnum;
+        dup  = FALSE;
+        attempts++;
+        for ( j = 0; j < npicks; j++ )
+        {
+            if ( picks[j] == vnum ) { dup = TRUE; break; }
+        }
+        if ( !dup ) picks[npicks++] = vnum;
+    }
+    /* Zone had fewer than 4 unique items -- fill remaining slots with any pick */
+    while ( npicks < 4 )
+        picks[npicks++] = candidates[number_range(0, ncandidates - 1)]->vnum;
+
+    obj->value[0] = picks[0];
+    obj->value[1] = picks[1];
+    obj->value[2] = picks[2];
+    obj->value[3] = picks[3];
 }
 
 void do_complete( CHAR_DATA *ch, char *argument )
