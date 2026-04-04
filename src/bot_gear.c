@@ -383,6 +383,7 @@ void bot_gear_check( CHAR_DATA *ch )
             {
                 bot_watch_wear( ch, obj, "called gear" );
                 wear_obj( ch, obj, TRUE );
+                bot->limb_gear_call = FALSE;  /* gear confirmed back; episode over */
                 return;
             }
 
@@ -404,6 +405,7 @@ void bot_gear_check( CHAR_DATA *ch )
 
             bot_watch_wear( ch, obj, "called gear" );
             wear_obj( ch, obj, TRUE );
+            bot->limb_gear_call = FALSE;  /* gear confirmed back; episode over */
             return;
         }
     }
@@ -522,6 +524,20 @@ void bot_gear_check( CHAR_DATA *ch )
         {
             OBJ_DATA *before  = ch->carrying;
             OBJ_DATA *created;
+
+            /* Before crafting, try "call all" once — the piece may have been
+             * severed off during PvP and is still claimed by the bot.  If call
+             * all retrieves it, step 1.5 will wear it next tick and clear
+             * limb_gear_call.  If nothing comes back (gear was never made or
+             * call all already fired), limb_gear_call is TRUE on the next pass
+             * and we fall through to craft normally. */
+            if ( !bot->limb_gear_call )
+            {
+                bot->limb_gear_call = TRUE;
+                bot_cmd( ch, "call all" );
+                return;
+            }
+
             bot_cmd( ch, entry->cmd );              /* class piece → HEAD of ch->carrying */
             created = ( ch->carrying != before ) ? ch->carrying : NULL;
             if ( created != NULL && created->wear_loc == WEAR_NONE )
@@ -529,6 +545,7 @@ void bot_gear_check( CHAR_DATA *ch )
                 bot_watch_wear( ch, created, "class gear" );
                 wear_obj( ch, created, TRUE );
             }
+            bot->limb_gear_call = FALSE;  /* crafted fresh; reset for next episode */
             return;
         }
 

@@ -142,6 +142,7 @@ struct bot_data {
     int                 scatter_last_dir;   /* Last dir moved during scatter (-1=none) */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     bool                decap_recovery;     /* TRUE from decap until call all issued */
+    bool                limb_gear_call;     /* TRUE = call all issued for limb-loss gear, not yet confirmed back */
     bool                blind_recovery;     /* TRUE after recall for blindness - cure next tick */
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */

@@ -10,6 +10,8 @@ Quelzar~
 100
 Vrae~
 100
+Wrex~
+100
 Bael~
 0
 Grix~
@@ -33,8 +35,6 @@ Thorn~
 Nexx~
 0
 Vael~
-0
-Noone~
 0
 Noone~
 0
