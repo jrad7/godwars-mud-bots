@@ -5675,8 +5675,8 @@ bool fair_fight(CHAR_DATA *ch, CHAR_DATA *victim)
   /*
    * All the people that shouldn't be fighting anyway
    */
-  if ((get_age(victim) - 17) < 2) return FALSE;
-  if ((get_age(ch) - 17) < 2) return FALSE;
+  if ((get_age(victim) - 17) < 2 && !(victim->pcdata && victim->pcdata->is_bot)) return FALSE;
+  if ((get_age(ch) - 17) < 2 && !(ch->pcdata && ch->pcdata->is_bot)) return FALSE;
   if (ch == victim) return FALSE;
   if (ch->level != 3 || victim->level != 3) return FALSE;
   if (reachedDecapLimit(ch)) return FALSE;

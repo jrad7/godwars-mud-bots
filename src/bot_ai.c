@@ -1051,15 +1051,32 @@ static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch )
     CHAR_DATA *victim;
     CHAR_DATA *best_victim = NULL;
     int count = 0;
+    char dbg[256];
 
     for ( victim = char_list; victim != NULL; victim = victim->next )
     {
         if ( IS_NPC(victim) ) continue;
         if ( victim == ch ) continue;
         if ( victim->in_room == NULL ) continue;
-        if ( IS_SET(victim->in_room->room_flags, ROOM_ARENA) || IS_SET(victim->in_room->room_flags, ROOM_SAFE) ) continue;
-        if ( !fair_fight(ch, victim) ) continue;
-        if ( is_safe(ch, victim) ) continue;
+
+        if ( IS_SET(victim->in_room->room_flags, ROOM_ARENA) || IS_SET(victim->in_room->room_flags, ROOM_SAFE) )
+        {
+            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: in safe room\n\r", victim->name);
+            bot_watch_msg(ch, dbg);
+            continue;
+        }
+        if ( is_safe(ch, victim) )
+        {
+            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: is_safe() is true (Level/PK limits)\n\r", victim->name);
+            bot_watch_msg(ch, dbg);
+            continue;
+        }
+        if ( !fair_fight(ch, victim) )
+        {
+            snprintf(dbg, sizeof(dbg), "[PVP_DBG] %s rejected: fair_fight() failed (Age/Level/Might parity)\n\r", victim->name);
+            bot_watch_msg(ch, dbg);
+            continue;
+        }
         
         /* Select randomly among valid victims */
         if ( number_range(0, count) == 0 )
