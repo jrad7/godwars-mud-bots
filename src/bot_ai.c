@@ -347,15 +347,15 @@ static const GRIND_TIER grind_tiers[] = {
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 
 /* Maps each route pointer to a human-readable zone name for watchbot output */
-static const struct { const char **route; const char *name; } route_names[] = {
-    { zone_mud_school,  "mud_school"  },
-    { zone_jobo_heaven, "jobo_heaven" },
-    { zone_smurf,       "smurf"       },
-    { zone_jobo_hell,   "jobo_hell"   },
-    { zone_canyon,      "canyon"      },
-    { zone_shire,       "shire"       },
-    { zone_weed,        "weed"        },
-    { NULL, NULL }
+static const struct { const char **route; const char *name; const char *filename; } route_names[] = {
+    { zone_mud_school,  "mud_school",  "school.are" },
+    { zone_jobo_heaven, "jobo_heaven", "heaven.are" },
+    { zone_smurf,       "smurf",       "smurf.are"  },
+    { zone_jobo_hell,   "jobo_hell",   "hell.are"   },
+    { zone_canyon,      "canyon",      "canyon.are" },
+    { zone_shire,       "shire",       "shire.are"  },
+    { zone_weed,        "weed",        "weed.are"   },
+    { NULL, NULL, NULL }
 };
 
 static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
@@ -364,6 +364,8 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
     const GRIND_TIER *tier = &grind_tiers[GRIND_TIER_COUNT - 1];
     const char **route;
     const char **step;
+    const char *zone_name = "unknown";
+    const char *zone_filename = NULL;
 
     for ( i = 0; i < GRIND_TIER_COUNT; i++ )
     {
@@ -375,6 +377,36 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
     }
 
     route = tier->routes[number_range( 0, tier->num_routes - 1 )];
+
+    for ( i = 0; route_names[i].route != NULL; i++ )
+    {
+        if ( route_names[i].route == route )
+        {
+            zone_name = route_names[i].name;
+            zone_filename = route_names[i].filename;
+            break;
+        }
+    }
+
+    /* Check if already in the target zone */
+    if ( ch->in_room != NULL && ch->in_room->area != NULL && ch->in_room->area->filename != NULL && zone_filename != NULL )
+    {
+        if ( !str_cmp( ch->in_room->area->filename, zone_filename ) )
+        {
+            /* Notify watcher that we are skipping navigation */
+            if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+            {
+                char echo[256];
+                snprintf( echo, sizeof(echo),
+                    "[NAV] %s: already in %s, skipping navigation\n\r",
+                    ch->name, zone_name );
+                write_to_buffer( ch->desc->snoop_by, echo, 0 );
+            }
+            bot->nav_n = 0;
+            return;
+        }
+    }
+
     bot->nav_n = 0;
     for ( step = route; *step != NULL; step++ )
         bot_nav_queue( bot, *step );
@@ -382,16 +414,7 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
     /* Notify watcher which zone was selected */
     if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
     {
-        const char *zone_name = "unknown";
         char echo[256];
-        for ( i = 0; route_names[i].route != NULL; i++ )
-        {
-            if ( route_names[i].route == route )
-            {
-                zone_name = route_names[i].name;
-                break;
-            }
-        }
         snprintf( echo, sizeof(echo),
             "[NAV] %s: queued %d-step route to %s (tier max_hit=%d, bot max_hit=%d)\n\r",
             ch->name, bot->nav_n, zone_name, tier->max_hit, ch->max_hit );
@@ -508,6 +531,11 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
         sn = skill_lookup(buffs[i]);
         if ( sn > 0 && ch->pcdata->learned[sn] > 0 && !is_affected(ch, sn) )
         {
+            /* spell_sanctuary guards via IS_AFFECTED (bitvector), not is_affected
+             * (AFFECT_DATA list), so gear-provided sanctuary won't appear in the
+             * list — check the bitvector directly to avoid an infinite cast loop. */
+            if ( !strcmp(buffs[i], "sanctuary") && IS_AFFECTED(ch, AFF_SANCTUARY) )
+                continue;
             char cmd[64];
             sprintf(cmd, "cast %s", buffs[i]);
             bot_cmd(ch, cmd);
