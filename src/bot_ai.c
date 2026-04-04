@@ -1586,8 +1586,8 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Demons without WARP_REGENERATE must heal in Hell (93420) */
-    if ( IS_CLASS(ch, CLASS_DEMON) && !IS_SET(ch->warp, WARP_REGENERATE) )
+    /* Demons must heal in Hell (93420) */
+    if ( IS_CLASS(ch, CLASS_DEMON) )
     {
         if ( ch->in_room != NULL && !(ch->in_room->vnum >= ROOM_VNUM_HELL && ch->in_room->vnum <= ROOM_VNUM_HELL + 6) )
         {
