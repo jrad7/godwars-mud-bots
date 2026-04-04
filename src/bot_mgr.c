@@ -23,6 +23,8 @@ BOT_ROSTER_ENTRY bot_roster[MAX_BOT_ROSTER];
 int              bot_roster_count  = 0;
 static bool      bot_roster_dirty  = FALSE;
 
+int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
+
 /*
  * Default bot roster - used if bots.txt doesn't exist yet.
  * Mix of classes, lifespans, and personalities.
@@ -726,6 +728,48 @@ void bot_manager_update( void )
 
             if ( bot_login(r) )
                 break;   /* one at a time to stagger logins */
+        }
+    }
+}
+
+void do_botwar( CHAR_DATA *ch, char *argument )
+{
+    global_bot_pvp_mode = BOT_PVP_MODE_WAR;
+    send_to_char("Bot PVP is now globally FORCED (War Mode). All bots will relentlessly hunt.\n\r", ch);
+}
+
+void do_botnormal( CHAR_DATA *ch, char *argument )
+{
+    global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
+    send_to_char("Bot PVP is now globally reverted to DEFAULT (Normal Mode). Bots will use individual aggression logic.\n\r", ch);
+}
+
+void do_botpeace( CHAR_DATA *ch, char *argument )
+{
+    CHAR_DATA *wch;
+
+    global_bot_pvp_mode = BOT_PVP_MODE_PEACE;
+    send_to_char("Bot PVP is now globally DISABLED (Peace Mode). All bot combat halted.\n\r", ch);
+
+    for ( wch = char_list; wch != NULL; wch = wch->next )
+    {
+        if ( IS_NPC(wch) ) continue;
+        if ( wch->pcdata && wch->pcdata->botdata )
+        {
+            BOT_DATA *bot = wch->pcdata->botdata;
+            if ( bot->state == BOT_PVP_HUNT || bot->state == BOT_PVP_FIGHT )
+            {
+                if ( wch->hunting && wch->hunting[0] != '\0' )
+                {
+                    free_string(wch->hunting);
+                    wch->hunting = str_dup("");
+                }
+                if ( wch->position == POS_FIGHTING )
+                {
+                    stop_fighting( wch, TRUE );
+                }
+                bot_change_state( wch, bot, BOT_GRINDING );
+            }
         }
     }
 }

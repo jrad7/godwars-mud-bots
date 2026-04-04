@@ -79,6 +79,13 @@ typedef enum {
     BOT_LOGGING_OUT = 8    /* Saying goodbye, about to quit            */
 } bot_state_t;
 
+/* Global Bot PVP Modes */
+#define BOT_PVP_MODE_PEACE   0
+#define BOT_PVP_MODE_NORMAL  1
+#define BOT_PVP_MODE_WAR     2
+
+extern int global_bot_pvp_mode;
+
 /*
  * Bot lifespan types
  */

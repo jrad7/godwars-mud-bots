@@ -855,7 +855,13 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
         }
 
         /* Check for PVP */
-        if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        bool do_pvp = FALSE;
+        if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR )
+            do_pvp = TRUE;
+        else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+            do_pvp = TRUE;
+
+        if ( do_pvp )
         {
             CHAR_DATA *target = bot_find_pvp_target(ch);
             if ( target != NULL )
@@ -984,21 +990,32 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
         }
-        else if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        else
         {
-            CHAR_DATA *target = bot_find_pvp_target(ch);
-            if ( target != NULL )
+            bool do_pvp = FALSE;
+            if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
+            else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression ) do_pvp = TRUE;
+
+            if ( do_pvp )
             {
-                free_string(ch->hunting);
-                ch->hunting = str_dup(target->name);
-                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
-                bot_change_state( ch, bot, BOT_PVP_HUNT );
+                CHAR_DATA *target = bot_find_pvp_target(ch);
+                if ( target != NULL )
+                {
+                    free_string(ch->hunting);
+                    ch->hunting = str_dup(target->name);
+                    bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                    bot_change_state( ch, bot, BOT_PVP_HUNT );
+                }
+                else
+                {
+                    bot_change_state( ch, bot, BOT_IDLE );
+                }
             }
             else
+            {
                 bot_change_state( ch, bot, BOT_IDLE );
+            }
         }
-        else
-            bot_change_state( ch, bot, BOT_IDLE );
         return;
     }
 
@@ -1042,21 +1059,32 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
             bot_watch_msg( ch, "[REASON] has exp/primal to spend\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
         }
-        else if ( bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
+        else
         {
-            CHAR_DATA *target = bot_find_pvp_target(ch);
-            if ( target != NULL )
+            bool do_pvp = FALSE;
+            if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
+            else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression ) do_pvp = TRUE;
+
+            if ( do_pvp )
             {
-                free_string(ch->hunting);
-                ch->hunting = str_dup(target->name);
-                bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
-                bot_change_state( ch, bot, BOT_PVP_HUNT );
+                CHAR_DATA *target = bot_find_pvp_target(ch);
+                if ( target != NULL )
+                {
+                    free_string(ch->hunting);
+                    ch->hunting = str_dup(target->name);
+                    bot_watch_msg( ch, "[PVP] Selected target for hunting\n\r" );
+                    bot_change_state( ch, bot, BOT_PVP_HUNT );
+                }
+                else
+                {
+                    bot_change_state( ch, bot, BOT_IDLE );
+                }
             }
             else
+            {
                 bot_change_state( ch, bot, BOT_IDLE );
+            }
         }
-        else
-            bot_change_state( ch, bot, BOT_IDLE );
     }
 }
 
