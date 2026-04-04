@@ -298,7 +298,7 @@ static void bot_ww_combat_action( CHAR_DATA *ch )
     if ( target == NULL ) return;
 
     roll  = number_range( 1, 100 );
-    tname = IS_NPC(target) ? target->short_descr : target->name;
+    tname = target->name;
 
     /* Priority 1 (20%): moonbeam — large burst, alignment-scaled
      * 500 mana at Luna 8; deals 500 (good), 750 (neutral), or 1000 (evil) */

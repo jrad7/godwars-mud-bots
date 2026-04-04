@@ -282,7 +282,7 @@ static void bot_dem_combat_action( CHAR_DATA *ch )
     if ( target == NULL ) return;
 
     roll  = number_range( 1, 100 );
-    tname = IS_NPC(target) ? target->short_descr : target->name;
+    tname = target->name;
 
     /* Priority 1 (35%): leech - damages target and heals self by up to 300 HP */
     if ( ch->power[DISC_DAEM_NETH] >= 4 && roll <= 35 )

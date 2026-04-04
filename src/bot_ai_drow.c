@@ -275,7 +275,7 @@ static void bot_drow_combat_action( CHAR_DATA *ch )
     if ( target == NULL ) return;
 
     roll  = number_range( 1, 100 );
-    tname = IS_NPC(target) ? target->short_descr : target->name;
+    tname = target->name;
 
     /* Priority 1 (30%): garotte — instakill NPCs on lucky percent rolls;
      * requires a whip in WEAR_WIELD or WEAR_HOLD. */

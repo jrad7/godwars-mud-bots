@@ -230,7 +230,7 @@ static void bot_vamp_combat_action( CHAR_DATA *ch )
 
     blood = ch->pcdata->condition[COND_THIRST];
     roll  = number_range( 1, 100 );
-    tname = IS_NPC(target) ? target->short_descr : target->name;
+    tname = target->name;
 
     /* Priority 0: steal blood when running dry (Thaumaturgy 4)
      * Blood fuels most discipline abilities - keep it topped up. */
