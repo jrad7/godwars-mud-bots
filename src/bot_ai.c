@@ -445,6 +445,79 @@ static bool bot_should_train_primal( CHAR_DATA *ch )
     return ( ch->exp >= cost_next );
 }
 
+static bool bot_should_practice( CHAR_DATA *ch, const char *spell_name )
+{
+    int sn = skill_lookup( spell_name );
+    if ( sn < 0 ) return FALSE;
+    if ( ch->level < skill_table[sn].skill_level ) return FALSE;
+    if ( ch->pcdata->learned[sn] >= 100 ) return FALSE;
+    
+    /* We just check if they have at least 5000 exp.
+     * The actual practice command handles the exact deduction. */
+    if ( ch->exp >= 5000 ) return TRUE;
+    
+    return FALSE;
+}
+
+static bool bot_needs_repair( CHAR_DATA *ch )
+{
+    OBJ_DATA *obj;
+    for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+    {
+        if ( obj->condition < 100 && can_see_obj( ch, obj ) )
+            return TRUE;
+    }
+    return FALSE;
+}
+
+static bool bot_generic_buff_check( CHAR_DATA *ch )
+{
+    static const char *buffs[] = {
+        "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+    };
+    int i;
+    int sn;
+
+    /* Out of combat generic spellcasting/buffing */
+    if ( ch->position == POS_FIGHTING )
+        return FALSE;
+
+    if ( IS_AFFECTED(ch, AFF_CURSE) )
+    {
+        sn = skill_lookup("remove curse");
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
+        {
+            bot_cmd( ch, "cast rem self" );
+            return TRUE;
+        }
+    }
+
+    if ( bot_needs_repair(ch) )
+    {
+        sn = skill_lookup("repair");
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
+        {
+            bot_cmd( ch, "cast repair" );
+            return TRUE;
+        }
+    }
+
+    /* Target generic buffs */
+    for ( i = 0; buffs[i] != NULL; i++ )
+    {
+        sn = skill_lookup(buffs[i]);
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 && !is_affected(ch, sn) )
+        {
+            char cmd[64];
+            sprintf(cmd, "cast %s", buffs[i]);
+            bot_cmd(ch, cmd);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 /*
  * Returns TRUE if the bot has exp worth spending on stats or class rank.
  */
@@ -462,6 +535,19 @@ static bool bot_should_train( CHAR_DATA *ch )
     if ( ch->max_mana < ch->max_hit    && ch->max_mana < hp_cap
       && ch->exp >= ch->max_mana + 1 )                                   return TRUE;
     if ( ch->max_move < 10000          && ch->exp >= ch->max_move + 1 ) return TRUE;
+
+    /* Check if we need to practice generic spells */
+    {
+        static const char *practice_spells[] = {
+            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+        };
+        int i;
+        for ( i = 0; practice_spells[i] != NULL; i++ )
+        {
+            if ( bot_should_practice(ch, practice_spells[i]) )
+                return TRUE;
+        }
+    }
 
     /* Delegate class-specific rank/skill checks to the class AI */
     {
@@ -544,6 +630,24 @@ static bool bot_do_train( CHAR_DATA *ch )
         sprintf( cmd, "train primal %d", needed );
         bot_cmd( ch, cmd );
         return TRUE;
+    }
+
+    /* Generic spell practice */
+    {
+        static const char *practice_spells[] = {
+            "repair", "remove curse", "stone skin", "sanctuary", "shield", "armor", "bless", "frenzy", NULL
+        };
+        int i;
+        for ( i = 0; practice_spells[i] != NULL; i++ )
+        {
+            if ( bot_should_practice(ch, practice_spells[i]) )
+            {
+                char cmd[64];
+                sprintf(cmd, "practice %s", practice_spells[i]);
+                bot_cmd( ch, cmd );
+                return TRUE;
+            }
+        }
     }
 
     /* Primary: dump all available exp into hp */
@@ -798,6 +902,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         bot_set_autostance( ch );
 
         /* Between fights: buffs first, then any between-fight setup */
+        if ( bot_generic_buff_check(ch) )
+            return;
         if ( ai && ai->buff_check && ai->buff_check(ch) )
             return;   /* issued a buff command this tick */
         if ( ai && ai->between_fights && ai->between_fights(ch) )
