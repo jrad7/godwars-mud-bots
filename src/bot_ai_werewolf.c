@@ -331,12 +331,12 @@ static void bot_ww_combat_action( CHAR_DATA *ch )
     }
 
     /* Priority 4 (78%): roar — force flee (1-in-6 chance, 18-beat lag) */
-    if ( ch->power[DISC_WERE_BEAR] >= 6
-      && roll <= 78 )
-    {
-        bot_cmd( ch, "roar" );
-        return;
-    }
+    //if ( ch->power[DISC_WERE_BEAR] >= 6
+    //  && roll <= 78 )
+    //{
+    //    bot_cmd( ch, "roar" );
+    //    return;
+    //}
 
     /* Priority 5 (88%): staredown — Owl 5 force flee
      * Owl 5 NPC: ~2/3 success; Owl 6+ NPC: near-certain; 16-beat lag */
