@@ -561,7 +561,7 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
                 continue;
             char cmd[64];
             if ( !strcmp(buffs[i], "pass door") )
-                sprintf(cmd, "cast \"pass door\" self");
+                sprintf(cmd, "cast \"pass door\"");
             else
                 sprintf(cmd, "cast %s", buffs[i]);
             bot_cmd(ch, cmd);
