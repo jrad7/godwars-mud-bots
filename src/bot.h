@@ -147,6 +147,7 @@ struct bot_data {
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */
+    bool                pvp_chasing;       /* TRUE = chasing fleeing target, skip health gate */
     /* Stuck detection: ring buffer of last 10 commands issued */
     char                cmd_history[10][64];
     int                 cmd_history_head;  /* Next write slot (0-9)       */

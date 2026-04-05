@@ -1566,8 +1566,10 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Don't pursue at low resources -- heal up first, keeping the target */
-    if ( !bot_is_healthy(ch) )
+    /* Don't pursue at low resources -- heal up first, keeping the target.
+     * Exception: if we're chasing a fleeing opponent we were already fighting,
+     * skip the health gate and go immediately (they may escape if we wait). */
+    if ( !bot->pvp_chasing && !bot_is_healthy(ch) )
     {
         bot_watch_msg( ch, "[PVP] Not healthy enough to hunt -- resting first.\n\r" );
         bot_change_state( ch, bot, BOT_RESTING );
@@ -1581,6 +1583,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         snprintf(msg, sizeof(msg), "[PVP] Target %s lost or no longer valid.\n\r", bot->pvp_target);
         bot_watch_msg( ch, msg );
         bot->pvp_target[0] = '\0';
+        bot->pvp_chasing = FALSE;
         bot_change_state( ch, bot, BOT_GRINDING );
         return;
     }
@@ -1590,6 +1593,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         char msg[256];
         snprintf(msg, sizeof(msg), "[PVP] Target %s found! Attacking.\n\r", bot->pvp_target);
         bot_watch_msg( ch, msg );
+        bot->pvp_chasing = FALSE;
         bot_change_state( ch, bot, BOT_PVP_FIGHT );
         return;
     }
@@ -1622,6 +1626,7 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bot_watch_msg( ch, "[PVP] BFS failed -- target unreachable. Halting hunt.\n\r" );
         bot->pvp_target[0] = '\0';
+        bot->pvp_chasing = FALSE;
         bot_change_state( ch, bot, BOT_GRINDING );
     }
 }
@@ -1670,6 +1675,7 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
             bot_change_state( ch, bot, BOT_RESTING );
             return;
         }
+        bot->pvp_chasing = TRUE;
         bot_change_state( ch, bot, BOT_PVP_HUNT );
         return;
     }
