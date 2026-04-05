@@ -2048,6 +2048,32 @@ send_to_char( "#rYou force down yer beast#n.\n\r",ch);
 
 
 
+#define SAC_QP_CHANCE  20   /* percent chance per qualifying item */
+#define SAC_QP_REWARD  25   /* quest points awarded on a successful roll */
+
+static bool sac_qp_roll( CHAR_DATA *ch, OBJ_DATA *obj )
+{
+    int itype;
+
+    if ( IS_NPC(ch) ) return FALSE;
+    if ( obj->points > 0 ) return FALSE;  /* quest-crafted gear gets refund instead */
+
+    itype = obj->item_type;
+    if ( itype != ITEM_WEAPON    && itype != ITEM_ARMOR  &&
+         itype != ITEM_SCROLL    && itype != ITEM_WAND   &&
+         itype != ITEM_STAFF     && itype != ITEM_POTION &&
+         itype != ITEM_PILL      && itype != ITEM_LIGHT  &&
+         itype != ITEM_MISSILE   && itype != ITEM_AMMO   &&
+         itype != ITEM_SYMBOL    && itype != ITEM_INSTRUMENT )
+        return FALSE;
+
+    if ( number_percent() > SAC_QP_CHANCE ) return FALSE;
+
+    ch->pcdata->quest += SAC_QP_REWARD;
+    send_to_char( "#Y*#n The spirits reward your sacrifice with #G25#n quest points! #Y*#n\n\r", ch );
+    return TRUE;
+}
+
 void do_sacrifice( CHAR_DATA *ch, char *argument )
 {
     char arg[MAX_INPUT_LENGTH];
@@ -2103,6 +2129,19 @@ void do_sacrifice( CHAR_DATA *ch, char *argument )
         }
         act( "$p disintegrates into a fine powder.", ch, obj, NULL, TO_CHAR );
         act( "$p disintegrates into a fine powder.", ch, obj, NULL, TO_ROOM );
+        if ( obj->item_type == ITEM_CORPSE_NPC || obj->item_type == ITEM_CORPSE_PC )
+        {
+          OBJ_DATA *inside, *inside_next;
+          for ( inside = obj->contains; inside != NULL; inside = inside_next )
+          {
+            inside_next = inside->next_content;
+            sac_qp_roll( ch, inside );
+          }
+        }
+        else
+        {
+          sac_qp_roll( ch, obj );
+        }
         extract_obj( obj );
       }
       if (i == 0) send_to_char("Nothing found.\n\r",ch);
@@ -2143,6 +2182,19 @@ void do_sacrifice( CHAR_DATA *ch, char *argument )
       ch->pcdata->rune_count--;
       send_to_char("you get 5K qp from the rune eq.\n\r",ch);
       ch->pcdata->quest += 5000;
+    }
+    if ( obj->item_type == ITEM_CORPSE_NPC || obj->item_type == ITEM_CORPSE_PC )
+    {
+      OBJ_DATA *inside, *inside_next;
+      for ( inside = obj->contains; inside != NULL; inside = inside_next )
+      {
+        inside_next = inside->next_content;
+        sac_qp_roll( ch, inside );
+      }
+    }
+    else
+    {
+      sac_qp_roll( ch, obj );
     }
     extract_obj( obj );
     return;
