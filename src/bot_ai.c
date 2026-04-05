@@ -372,42 +372,6 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     bot->state_timer_max = bot->state_timer;
 }
 
-/* -----------------------------------------------------------------------
- * Grind zone navigation table
- *
- * Each zone_* array is a NULL-terminated list of commands to queue.
- * Each GRIND_TIER groups zones that are appropriate up to max_hit.
- * The last tier acts as a catch-all (use a large sentinel).
- * To add a zone: define its route array, add it to the right tier.
- * ----------------------------------------------------------------------- */
-
-static const char *zone_mud_school[]  = { "recall", "up", "open door", "south", NULL };
-static const char *zone_jobo_heaven[] = { "recall", "down", NULL };
-static const char *zone_smurf[]       = { "recall", "south", "south", "west", "west", "west", "north", NULL };
-/* 3001->3005->3014->3013->3012->3040->3052->6000->6001->6002->30200->30199->30100 */
-static const char *zone_jobo_hell[]   = { "recall", "south", "south", "west", "west", "west", "west", "west", "west", "west", "down", "down", "down", NULL };
-/* recall(3001)->2S->5W->N */
-static const char *zone_shire[]       = { "recall", "south", "south", "west", "west", "west", "west", "west", "north", NULL };
-/* recall(3001)->2S->6E->4S->2E->S->2E->D->S */
-static const char *zone_canyon[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "south", NULL };
-static const char *zone_weed[]        = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "north", "north", "north", "east", "east", "up", "up", "up", "up", "up", "east", "east", "down", "east", "north", "east", "north", NULL };
-
-typedef struct {
-    int           max_hit;      /* use this tier when ch->max_hit < max_hit */
-    const char  **routes[8];    /* NULL-sentinel-terminated command lists    */
-    int           num_routes;
-} GRIND_TIER;
-
-static const GRIND_TIER grind_tiers[] = {
-    { 5000,  { zone_mud_school                   }, 1 },
-    { 10000, { zone_smurf,                       }, 1 },
-    { 20000, { zone_canyon,                      }, 1 },
-    { 40000, { zone_weed                         }, 1 },
-    { 60000, { zone_shire                        }, 1 },
-    { 80000, { zone_jobo_hell                    }, 1 },
-    { 999999,{ zone_jobo_heaven                  }, 1 },
-};
-#define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 
 /* Maps each route pointer to a human-readable zone name for watchbot output */
 static const struct { const char **route; const char *name; const char *filename; } route_names[] = {
