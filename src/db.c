@@ -24,8 +24,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <time.h>
+extern double sqrt(double);
 #include "merc.h"
 #include "bot.h"
 #include "area_levels.h"
