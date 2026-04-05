@@ -2130,9 +2130,16 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
 
     mob->armor		= interpolate( mob->level, 100, -100 );
 
-    /* HP scales as level^1.5: harder at high levels but not quadratically so.
-     * Coefficient 140 (±35-70 random) gives ~195 average, calibrated so
-     * L50 HP matches the old level^2 value (~68,750). */
+    /* Below L50: quadratic (level^2) keeps low-level mobs light.
+     * L50+: level^1.5 growth, calibrated to match quadratic at L50 (~68,750).
+     * XP stays quadratic so higher zones are more XP-efficient. */
+    if (mob->level <= 50)
+    {
+        tempvalue = mob->level * mob->level * 20 + number_range(
+                    mob->level * mob->level * 5,
+                    mob->level * mob->level * 10 );
+    }
+    else
     {
         int lvl15 = (int)(mob->level * sqrt((double)mob->level));
         tempvalue = lvl15 * 140 + number_range(lvl15 * 35, lvl15 * 70);
