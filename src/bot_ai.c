@@ -267,6 +267,14 @@ static const struct {
     { 1100, 1100, DIRMASK(DIR_SOUTH) },
     /* Weed entrance (30232): south exits to room 4773, outside the zone */
     { 30232, 30232, DIRMASK(DIR_SOUTH) },
+    /* Sewer entrance (7030): up exits back to The Dump in Midgaard (3030) */
+    { 7030, 7030, DIRMASK(DIR_UP) },
+    /* Moria entrance (3900): south exits back to west gate of Midgaard (3052) */
+    { 3900, 3900, DIRMASK(DIR_SOUTH) },
+    /* Plains entrance (300): south exits back into Moria (3904) */
+    { 300, 300, DIRMASK(DIR_SOUTH) },
+    /* Thalos entrance (5200): east exits back toward Midennir (5256) */
+    { 5200, 5200, DIRMASK(DIR_EAST) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -382,6 +390,10 @@ static const struct { const char **route; const char *name; const char *filename
     { zone_canyon,      "canyon",      "canyon.are" },
     { zone_shire,       "shire",       "shire.are"  },
     { zone_weed,        "weed",        "weed.are"   },
+    { zone_sewer,       "sewer",       "sewer.are"  },
+    { zone_moria,       "moria",       "moria.are"  },
+    { zone_plains,      "plains",      "plains.are" },
+    { zone_thalos,      "thalos",      "thalos.are" },
     { NULL, NULL, NULL }
 };
 

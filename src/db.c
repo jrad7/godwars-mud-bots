@@ -1696,6 +1696,18 @@ void area_update( void )
 	    pRoomIndex = get_room_index( 1100 );  /* The Shire entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
 		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 7030 );  /* Sewer entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 3900 );  /* Moria entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 300 );  /* Plains entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 5200 );  /* Thalos entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	}
     }
 
@@ -1709,10 +1721,14 @@ static void give_grind_loot( CHAR_DATA *mob, int mob_level )
 {
     static const struct { int level; int lo; int hi; } loot_tiers[] = {
         {   5,  3700,  3760 },   /* school  */
-        {  15,   100,   129 },   /* smurf   */
-        {  25,  9201,  9260 },   /* canyon  */
-        {  50, 30232, 30261 },   /* weed    */
-        { 100,  1100,  1157 },   /* shire   */
+        {  20,  7000,  7445 },   /* sewer   */
+        {  30,   100,   129 },   /* smurf   */
+        {  40,  3900,  4172 },   /* moria   */
+        {  50,  9201,  9260 },   /* canyon  */
+        {  60,   300,   350 },   /* plains  */
+        {  75, 30232, 30261 },   /* weed    */
+        { 100,  5200,  5280 },   /* thalos  */
+        { 125,  1100,  1157 },   /* shire   */
         { 150, 99000, 99100 },   /* heaven  */
         { 200, 30100, 30200 },   /* hell    */
     };

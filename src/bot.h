@@ -176,6 +176,14 @@ static const char *zone_shire[]       = { "recall", "south", "south", "west", "w
 /* recall(3001)->2S->6E->4S->2E->S->2E->D->S */
 static const char *zone_canyon[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "south", NULL };
 static const char *zone_weed[]        = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "north", "north", "north", "east", "east", "up", "up", "up", "up", "up", "east", "east", "down", "east", "north", "east", "north", NULL };
+/* recall(3001)->4S->D: 3030 The Dump -> down to sewer (7030) */
+static const char *zone_sewer[]       = { "recall", "south", "south", "south", "south", "down", NULL };
+/* recall(3001)->2S->4W->N: west gate trail to Moria (3900) */
+static const char *zone_moria[]       = { "recall", "south", "south", "west", "west", "west", "west", "north", NULL };
+/* recall(3001)->2S->4E->3N->2W->N: via Moria north trail to Plains (300) */
+static const char *zone_plains[]      = { "recall", "south", "south", "east", "east", "east", "east", "north", "north", "north", "west", "west", "north", NULL };
+/* recall(3001)->2S->6E->4S->3W: via Midennir to Thalos (5200) */
+static const char *zone_thalos[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "west", "west", "west", NULL };
 
 typedef struct {
     int           max_hit;      /* use this tier when ch->max_hit < max_hit */
@@ -185,9 +193,13 @@ typedef struct {
 
 static const GRIND_TIER grind_tiers[] = {
     { 5000,  { zone_mud_school                   }, 1 },
-    { 10000, { zone_smurf,                       }, 1 },
-    { 20000, { zone_canyon,                      }, 1 },
+    { 8000,  { zone_sewer                        }, 1 },
+    { 10000, { zone_smurf                        }, 1 },
+    { 15000, { zone_moria                        }, 1 },
+    { 20000, { zone_canyon                       }, 1 },
+    { 30000, { zone_plains                       }, 1 },
     { 40000, { zone_weed                         }, 1 },
+    { 50000, { zone_thalos                       }, 1 },
     { 60000, { zone_shire                        }, 1 },
     { 80000, { zone_jobo_hell                    }, 1 },
     { 999999,{ zone_jobo_heaven                  }, 1 },
