@@ -211,9 +211,7 @@ static const struct {
     int   vnum_hi;
     int   forbidden_dirs;  /* bitmask of 1<<DIR_* */
 } bot_area_rules[] = {
-    /* Mud School / newbie arena (3700-3760): don't go up (exits back to temple) */
-    { 3700, 3760, DIRMASK(DIR_UP) },
-    /* Mud School entrance (3700): down also leads back to Temple of Midgaard */
+    /* Mud School entrance (3700): down leads back to Temple of Midgaard (D5->3001) */
     { 3700, 3700, DIRMASK(DIR_DOWN) },
     /* Elemental Canyon entrance (9201): don't go north back out to the world */
     { 9201, 9201, DIRMASK(DIR_NORTH) },
