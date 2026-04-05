@@ -26,32 +26,29 @@
 #include <time.h>
 #include "merc.h"
 #include "bot.h"
+#include "area_levels.h"
 
 #define MAX_SLAY_TYPES 3
 #define MONK_AUTODROP 12
 
 
-/*
- * Grinding Mobs Configuration
- * Change these multipliers and add new vnum ranges to adjust grinding areas.
- */
-#define GRIND_XP_MULT_NUM      3
-#define GRIND_XP_MULT_DEN      2
-#define GRIND_CP_MULT_NUM      3
-#define GRIND_CP_MULT_DEN      2
+static int get_grind_mult(CHAR_DATA *victim)
+{
+    int vnum, i;
+    if (!victim || !IS_NPC(victim) || !victim->pIndexData) return 0;
+
+    vnum = victim->pIndexData->vnum;
+    for (i = 0; grind_zone_table[i].name != NULL; i++)
+    {
+        if (vnum >= grind_zone_table[i].vnum_lo && vnum <= grind_zone_table[i].vnum_hi)
+            return grind_zone_table[i].mult;
+    }
+    return 0;
+}
 
 bool is_grind_mob(CHAR_DATA *victim)
 {
-    int vnum;
-    if (!victim || !IS_NPC(victim) || !victim->pIndexData) return FALSE;
-        
-    vnum = victim->pIndexData->vnum;
-    
-    if (vnum >= 3700 && vnum <= 3760) return TRUE; /* School */
-    if (vnum >= 100 && vnum <= 129)   return TRUE; /* Smurf */
-    if (vnum >= 9201 && vnum <= 9260) return TRUE; /* Canyon */
-    
-    return FALSE;
+    return get_grind_mult(victim) > 0;
 }
 
 /*
@@ -2177,9 +2174,9 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
         if (IS_NPC(victim) && !IS_SET(victim->act, ACT_NOEXP))
         {
           int cp_gain = victim->level * 4;
-          if (is_grind_mob(victim))
           {
-              cp_gain = (cp_gain * GRIND_CP_MULT_NUM) / GRIND_CP_MULT_DEN;
+              int gmult = get_grind_mult(victim);
+              if (gmult > 0) cp_gain = (cp_gain * gmult) / 100;
           }
           if (IS_CLASS(ch, CLASS_DEMON)) 
           {
@@ -3436,9 +3433,9 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   if (xp > 0 && xp < 4000) xp = number_range(3000,5000);
   if (IS_NPC(victim) && (IS_SET(victim->act, ACT_NOEXP))) return 0;
   
-  if (is_grind_mob(victim))
   {
-      xp = (xp * GRIND_XP_MULT_NUM) / GRIND_XP_MULT_DEN;
+      int gmult = get_grind_mult(victim);
+      if (gmult > 0) xp = (xp * gmult) / 100;
   }
   
   return (int) xp;
