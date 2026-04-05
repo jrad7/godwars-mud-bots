@@ -193,13 +193,13 @@ typedef struct {
 } GRIND_TIER;
 
 static const GRIND_TIER grind_tiers[] = {
-    { 4000,  { zone_mud_school                   }, 1 },
-    { 20000, { zone_smurf, zone_sewer            }, 2 },
-    { 30000, { zone_canyon, zone_moria           }, 2 },
-    { 40000, { zone_weed, zone_plains            }, 2 },
-    { 50000, { zone_shire, zone_thalos           }, 2 },
-    { 888888, { zone_jobo_hell                   }, 1 },
-    { 999999,{ zone_jobo_heaven                  }, 1 },
+    { 3500,  { zone_mud_school                      }, 1 },
+    { 20000, { zone_smurf, zone_sewer, zone_shire   }, 3 },
+    { 30000, { zone_canyon, zone_moria, zone_thalos }, 3 },
+    { 40000, { zone_weed, zone_plains               }, 2 },
+    { 50000, { zone_jobo_hell, zone_jobo_heaven     }, 2 },
+    //{ 888888, { zone_jobo_hell                   }, 1 },
+    //{ 999999,{ zone_jobo_heaven                  }, 1 },
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 

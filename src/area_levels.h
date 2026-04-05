@@ -9,16 +9,16 @@ struct area_level_type
 
 static const struct area_level_type area_level_table[] =
 {
-    { "hell.are",   300 },
-    { "heaven.are", 200 },
-    { "shire.are",  125 },
-    { "thalos.are", 125 },
+    { "hell.are",   125 },
+    { "heaven.are", 125 },
     { "weed.are",    75 },
     { "plains.are",  75 },
     { "canyon.are",  45 },
     { "moria.are",   45 },
+    { "thalos.are",  45 },
     { "sewer.are",   25 },
     { "smurf.are",   25 },
+    { "shire.are",   25 },
     { "school.are",  10 },
     { NULL, 0 }
 };
