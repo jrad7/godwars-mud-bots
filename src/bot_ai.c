@@ -560,7 +560,10 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
             if ( !strcmp(buffs[i], "pass door") && IS_AFFECTED(ch, AFF_PASS_DOOR) )
                 continue;
             char cmd[64];
-            sprintf(cmd, "cast %s", buffs[i]);
+            if ( !strcmp(buffs[i], "pass door") )
+                sprintf(cmd, "cast \"pass door\" self");
+            else
+                sprintf(cmd, "cast %s", buffs[i]);
             bot_cmd(ch, cmd);
             return TRUE;
         }
