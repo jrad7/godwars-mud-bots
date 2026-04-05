@@ -162,11 +162,53 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
     strncpy( buf, cmd, sizeof(buf)-1 );
     buf[sizeof(buf)-1] = '\0';
 
+    /* Stuck detection: track last 10 commands in a ring buffer */
+    if ( ch->pcdata != NULL && ch->pcdata->botdata != NULL )
+    {
+        BOT_DATA *bot = ch->pcdata->botdata;
+        int slot = bot->cmd_history_head;
+
+        strncpy( bot->cmd_history[slot], buf, sizeof(bot->cmd_history[0])-1 );
+        bot->cmd_history[slot][sizeof(bot->cmd_history[0])-1] = '\0';
+        bot->cmd_history_head = (slot + 1) % 10;
+        if ( bot->cmd_history_count < 10 )
+            bot->cmd_history_count++;
+
+        if ( bot->cmd_history_count >= 10 )
+        {
+            bool stuck = TRUE;
+            int i;
+            for ( i = 0; i < 10; i++ )
+            {
+                if ( strcmp( bot->cmd_history[i], bot->cmd_history[0] ) != 0 )
+                {
+                    stuck = FALSE;
+                    break;
+                }
+            }
+            if ( stuck )
+            {
+                char echo[256];
+                snprintf( echo, sizeof(echo),
+                    "[STUCK] %s issued '%s' 10 times -- recalling and resetting\n\r",
+                    ch->name, buf );
+                bot_watch_msg( ch, echo );
+                log_string( echo );
+                /* Clear history so we don't spam recalls */
+                bot->cmd_history_count = 0;
+                bot->cmd_history_head  = 0;
+                interpret( ch, "recall" );
+                bot_change_state( ch, bot, BOT_IDLE );
+                return;
+            }
+        }
+    }
+
     /* If a player is watching this bot, echo the command before executing */
     if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
     {
         char echo[MAX_INPUT_LENGTH + 128];
-        snprintf( echo, sizeof(echo), "<%dhp %dm %dmv %dxp> %s> %s\n\r", 
+        snprintf( echo, sizeof(echo), "<%dhp %dm %dmv %dxp> %s> %s\n\r",
                   ch->hit, ch->mana, ch->move, ch->exp,
                   ch->name, buf );
         write_to_buffer( ch->desc->snoop_by, echo, 0 );
@@ -289,8 +331,10 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         }
     }
 
-    bot->state       = new_state;
-    bot->cmd_delay   = number_range( 1, 2 );
+    bot->state            = new_state;
+    bot->cmd_delay        = number_range( 1, 2 );
+    bot->cmd_history_head  = 0;
+    bot->cmd_history_count = 0;
 
     /* Clear any pending nav commands on state change -- stale nav from a
      * previous GRINDING state would otherwise block the state machine from

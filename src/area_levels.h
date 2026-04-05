@@ -12,9 +12,9 @@ static const struct area_level_type area_level_table[] =
     { "hell.are", 300 },
     { "heaven.are", 200 },
     { "shire.are", 125 },
-    { "weed.are", 80 },
-    { "canyon.are", 60 },
-    { "smurf.are", 40 },
+    { "weed.are", 75 },
+    { "canyon.are", 50 },
+    { "smurf.are", 30 },
     { "school.are", 10 },
     { NULL, 0 }
 };

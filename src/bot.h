@@ -147,6 +147,10 @@ struct bot_data {
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */
+    /* Stuck detection: ring buffer of last 10 commands issued */
+    char                cmd_history[10][64];
+    int                 cmd_history_head;  /* Next write slot (0-9)       */
+    int                 cmd_history_count; /* How many slots are filled   */
 };
 typedef struct bot_data BOT_DATA;
 
