@@ -1596,12 +1596,6 @@ void one_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt, int handtype)
   if( IS_NPC(ch) && ch->pIndexData->hitplus > 3) dam *=3;
   else if( IS_NPC(ch) && ch->pIndexData->hitplus > 0 ) dam *= ch->pIndexData->hitplus;
 
-  if( IS_NPC(victim) && !IS_NPC(ch))
-  {
-    if( victim->pIndexData->hitnodice > 100 ) victim->pIndexData->hitnodice = 0;
-    dam = dam * (100 - victim->pIndexData->hitnodice) / 100;
-  }
-
   attack_modify = dice(1, 100);
   randomize_damage(ch,dam,attack_modify);
   if (dt == gsn_deathaura && dam >= victim->hit && IS_NPC(victim)) dam = victim->hit-1; /* trust me, Jobo */
