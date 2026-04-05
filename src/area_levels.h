@@ -7,7 +7,7 @@ struct area_level_type
     int level;
 };
 
-const struct area_level_type area_level_table[] =
+static const struct area_level_type area_level_table[] =
 {
     { "hell.are", 300 },
     { "heaven.are", 200 },
@@ -32,16 +32,16 @@ struct grind_zone_type
     const char *name;
 };
 
-const struct grind_zone_type grind_zone_table[] =
+static const struct grind_zone_type grind_zone_table[] =
 {
-    { 3700,  3760,  100, "School"  },  /* 1.5x */
-    {  100,   129,  125, "Smurf"   },  /* 2x   */
-    { 9201,  9260,  150, "Canyon"  },  /* 3x   */
-    {30232, 30261,  200, "Weed"    },  /* 4x   */
-    { 1100,  1157,  300, "Shire"   },  /* 5x   */
-    {30100, 30200,  400, "Hell"    },  /* 6x   */
-    {99000, 99100,  500, "Heaven"  },  /* 8x   */
-    {    0,     0,    0, NULL      }   /* end  */
+    { 3700,  3760,  100, "School"  },
+    {  100,   129,  125, "Smurf"   },
+    { 9201,  9260,  150, "Canyon"  },
+    {30232, 30261,  200, "Weed"    },
+    { 1100,  1157,  300, "Shire"   },
+    {30100, 30200,  400, "Hell"    },
+    {99000, 99100,  500, "Heaven"  },
+    {    0,     0,    0, NULL      }   /* end */
 };
 
 #endif
