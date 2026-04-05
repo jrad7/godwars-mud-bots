@@ -1702,6 +1702,65 @@ void area_update( void )
     return;
 }
 
+/* ── Tier-based loot for dynamically-spawned grinding mobs ────────────── */
+#define GRIND_DROP_CHANCE  15   /* percent chance a mob carries a loot item */
+
+static void give_grind_loot( CHAR_DATA *mob, int mob_level )
+{
+    static const struct { int level; int lo; int hi; } loot_tiers[] = {
+        {   5,  3700,  3760 },   /* school  */
+        {  15,   100,   129 },   /* smurf   */
+        {  25,  9201,  9260 },   /* canyon  */
+        {  50, 30232, 30261 },   /* weed    */
+        { 100,  1100,  1157 },   /* shire   */
+        { 150, 99000, 99100 },   /* heaven  */
+        { 200, 30100, 30200 },   /* hell    */
+    };
+    static const int TIER_COUNT =
+        (int)( sizeof(loot_tiers) / sizeof(loot_tiers[0]) );
+
+    int lo = loot_tiers[TIER_COUNT-1].lo;
+    int hi = loot_tiers[TIER_COUNT-1].hi;
+    OBJ_INDEX_DATA *pObjIndex = NULL;
+    OBJ_DATA *obj;
+    int tries, vnum, i;
+
+    if ( number_percent() > GRIND_DROP_CHANCE )
+        return;
+
+    for ( i = 0; i < TIER_COUNT; i++ )
+    {
+        if ( mob_level <= loot_tiers[i].level )
+        {
+            lo = loot_tiers[i].lo;
+            hi = loot_tiers[i].hi;
+            break;
+        }
+    }
+
+    for ( tries = 0; tries < 20; tries++ )
+    {
+        vnum = number_range( lo, hi );
+        pObjIndex = get_obj_index( vnum );
+        if ( pObjIndex != NULL
+        &&   IS_SET( pObjIndex->wear_flags, ITEM_TAKE )
+        &&   pObjIndex->item_type != ITEM_MONEY
+        &&   pObjIndex->item_type != ITEM_TREASURE
+        &&   pObjIndex->item_type != ITEM_KEY
+        &&   pObjIndex->item_type != ITEM_QUEST
+        &&   pObjIndex->item_type != ITEM_QUESTCARD
+        &&   pObjIndex->item_type != ITEM_QUESTMACHINE )
+            break;
+        pObjIndex = NULL;
+    }
+
+    if ( pObjIndex == NULL )
+        return;
+
+    obj = create_object( pObjIndex, number_fuzzy( mob->level ) );
+    obj_to_char( obj, mob );
+}
+
 /* OLC
  * Reset one room.  Called by reset_area and olc.
  */
@@ -1723,7 +1782,7 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
     pMob        = NULL;
     last        = FALSE;
 
-    if ( pRoom->area && pRoom->area->mob_level > 0 && str_cmp(pRoom->area->filename, "weed.are") != 0 )
+    if ( pRoom->area && pRoom->area->mob_level > 0 )
         is_grinding = TRUE;
 
     if ( is_grinding )
@@ -1761,6 +1820,7 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
                     SET_BIT(rand_mob->affected_by, AFF_INFRARED);
                 SET_BIT(rand_mob->act, ACT_STAY_AREA);
                 char_to_room( rand_mob, pRoom );
+                give_grind_loot( rand_mob, pRoom->area->mob_level );
             }
         }
     }
