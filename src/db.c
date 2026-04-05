@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 #include "merc.h"
 #include "bot.h"
@@ -2069,11 +2070,15 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
 
     mob->armor		= interpolate( mob->level, 100, -100 );
 
-    tempvalue		= mob->level * mob->level * 20 + number_range(
-				mob->level * mob->level * 5,
-				mob->level * mob->level * 10 );
+    /* HP scales as level^1.5: harder at high levels but not quadratically so.
+     * Coefficient 140 (±35-70 random) gives ~195 average, calibrated so
+     * L50 HP matches the old level^2 value (~68,750). */
+    {
+        int lvl15 = (int)(mob->level * sqrt((double)mob->level));
+        tempvalue = lvl15 * 140 + number_range(lvl15 * 35, lvl15 * 70);
+    }
 
-    if(tempvalue > 300000 || tempvalue < 0) mob->max_hit = 300000;
+    if(tempvalue < 0) mob->max_hit = 300000;
     else mob->max_hit	= tempvalue;
 
     mob->hit		= mob->max_hit;

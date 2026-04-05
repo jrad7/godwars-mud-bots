@@ -1,6 +1,6 @@
 CC      = gcc
 C_FLAGS = -Wall -g
-L_FLAGS = -rdynamic -lz -lcrypt -lpthread
+L_FLAGS = -rdynamic -lz -lcrypt -lpthread -lm
 
 O_FILES = act_comm.o act_info.o act_move.o act_obj.o act_wiz.o bit.o mccp.o \
 	board.o build.o clan.o comm.o daemon.o db.o angel.o socials.o\

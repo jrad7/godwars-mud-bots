@@ -3341,7 +3341,7 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
       xp = 0;
     }
     if (xp > 1000000 && get_age(gch) - 17 < 2 ) xp = 1000000 + number_range(-100,100) * number_range(-100,100);
-    else if (xp > 3000000) xp = 3000000 + number_range(-100,100) * number_range(-100,100);
+    else if (xp > 6000000) xp = 6000000 + number_range(-100,100) * number_range(-100,100);
     sprintf( buf, "You receive %d experience points.\n\r", xp );
     send_to_char( buf, gch );
     if ((mount = gch->mount) != NULL) send_to_char( buf, mount );
@@ -3355,10 +3355,12 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   double xp;
   int vnum;
   
-  if (victim->level < 100)
+  /* Below L50: original formula (200-550, peaks at L5+ at 550).
+   * L50+: base scales with level so total XP ~ level^2, matching mob HP growth. */
+  if (victim->level <= 50)
     xp = 300 - URANGE(-5, 3 - (victim->level*5/3), 6 ) * 50;
   else
-    xp = 300 - URANGE(-10, 3 - (victim->level*5/3), 6 ) * 50;   
+    xp = victim->level * 11;   /* 550 at L50, 1100 at L100, 4400 at L400 */
 
     
   /* 
