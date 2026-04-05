@@ -188,12 +188,31 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
             }
             if ( stuck )
             {
-                char echo[256];
-                snprintf( echo, sizeof(echo),
-                    "[STUCK] %s issued '%s' 10 times -- recalling and resetting\n\r",
-                    ch->name, buf );
-                bot_watch_msg( ch, echo );
-                log_string( echo );
+                char logbuf[512];
+                const char *area_name = ( ch->in_room && ch->in_room->area )
+                                        ? ch->in_room->area->name : "unknown area";
+                const char *room_name = ch->in_room ? ch->in_room->name : "unknown room";
+                int         vnum      = ch->in_room ? ch->in_room->vnum : -1;
+                FILE       *fp;
+
+                snprintf( logbuf, sizeof(logbuf),
+                    "[STUCK] bot %s stuck on '%s' -- room: %s (%d) in %s -- recalling",
+                    ch->name, buf, room_name, vnum, area_name );
+                log_string( logbuf );
+
+                /* Append to bugs.txt using the fpReserve pattern */
+                fclose( fpReserve );
+                if ( ( fp = fopen( BUG_FILE, "a" ) ) != NULL )
+                {
+                    fprintf( fp, "%s\n", logbuf );
+                    fclose( fp );
+                }
+                fpReserve = fopen( NULL_FILE, "r" );
+
+                /* Notify any watcher */
+                strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
+                bot_watch_msg( ch, logbuf );
+
                 /* Clear history so we don't spam recalls */
                 bot->cmd_history_count = 0;
                 bot->cmd_history_head  = 0;
