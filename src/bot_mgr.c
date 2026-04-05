@@ -404,6 +404,8 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     ch->pcdata->is_bot = TRUE;
     if ( !IS_SET(ch->extra, EXTRA_TRUSTED) )
         SET_BIT( ch->extra, EXTRA_TRUSTED );
+    if ( !IS_SET(ch->act, PLR_AUTOSAC) )
+        SET_BIT( ch->act, PLR_AUTOSAC );
 
     bot = (BOT_DATA *)alloc_mem( sizeof(BOT_DATA) );
     memset( bot, 0, sizeof(BOT_DATA) );
