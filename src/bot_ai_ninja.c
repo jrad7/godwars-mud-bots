@@ -236,6 +236,8 @@ static bool bot_ninja_buff_check( CHAR_DATA *ch )
 
 static void bot_ninja_combat_action( CHAR_DATA *ch )
 {
+    if ( !IS_CLASS(ch, CLASS_NINJA) ) return;
+
     /* Priority 1: tsume — IronClaws toggle (POS_FIGHTING required) */
     if ( ch->pcdata->powers[NPOWER_NINGENNO] >= 1
       && !IS_VAMPAFF(ch, VAM_CLAWS) )
