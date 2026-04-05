@@ -213,6 +213,8 @@ static const struct {
 } bot_area_rules[] = {
     /* Mud School / newbie arena (3700-3760): don't go up (exits back to temple) */
     { 3700, 3760, DIRMASK(DIR_UP) },
+    /* Mud School entrance (3700): down also leads back to Temple of Midgaard */
+    { 3700, 3700, DIRMASK(DIR_DOWN) },
     /* Elemental Canyon entrance (9201): don't go north back out to the world */
     { 9201, 9201, DIRMASK(DIR_NORTH) },
     /* Jobo's Hell (30100-30200): don't go up (exits back through haon.are shaft via D4) */
@@ -1231,6 +1233,45 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         bot_scatter_move( ch, bot );
         bot->scatter_steps--;
         return;
+    }
+
+    /* Area escape check: if the bot wandered out of its grind zone (e.g. via
+     * a door or exit not covered by bot_area_rules), recall and let the idle
+     * state re-navigate.  Only fires when nav queue is empty and scatter is done. */
+    if ( ch->in_room != NULL && ch->in_room->area != NULL
+      && ch->in_room->area->filename != NULL )
+    {
+        bool in_valid_zone = FALSE;
+        int  tier_i, route_i, rn;
+
+        for ( tier_i = 0; tier_i < GRIND_TIER_COUNT; tier_i++ )
+        {
+            if ( ch->max_hit >= grind_tiers[tier_i].max_hit ) continue;
+
+            for ( route_i = 0; route_i < grind_tiers[tier_i].num_routes && !in_valid_zone; route_i++ )
+            {
+                const char **route = grind_tiers[tier_i].routes[route_i];
+                if ( route == NULL ) continue;
+                for ( rn = 0; route_names[rn].route != NULL; rn++ )
+                {
+                    if ( route_names[rn].route == route
+                      && !str_cmp( ch->in_room->area->filename, route_names[rn].filename ) )
+                    {
+                        in_valid_zone = TRUE;
+                        break;
+                    }
+                }
+            }
+            break; /* only check first matching tier */
+        }
+
+        if ( !in_valid_zone )
+        {
+            bot_watch_msg( ch, "[GRIND] outside grind zone -- recalling to restart\n\r" );
+            bot_cmd( ch, "recall" );
+            bot_change_state( ch, bot, BOT_IDLE );
+            return;
+        }
     }
 
     if ( bot_needs_rest(ch) )
