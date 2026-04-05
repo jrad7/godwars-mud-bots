@@ -15,7 +15,7 @@ const struct area_level_type area_level_table[] =
     { "weed.are", 50 },
     { "canyon.are", 25 },    
     { "smurf.are", 15 },    
-    { "school.are", 5 },
+    { "school.are", 1 },
     { NULL, 0 }
 };
 

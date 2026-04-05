@@ -1798,8 +1798,8 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
                 current_mobs++;
         }
 
-        if ( current_mobs + to_spawn > 20 )
-            to_spawn = 20 - current_mobs;
+        if ( current_mobs + to_spawn > 10 )
+            to_spawn = 10 - current_mobs;
 
         for (i = 0; i < to_spawn; i++)
         {

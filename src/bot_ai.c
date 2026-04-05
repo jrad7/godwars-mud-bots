@@ -961,6 +961,21 @@ static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
         if ( IS_SET(pexit->exit_info, EX_CLOSED) )               continue;
         if ( IS_SET(pexit->to_room->room_flags, ROOM_PRIVATE) )  continue;
 
+        /* Stop scattering if destination has killable mobs and no other players */
+        {
+            CHAR_DATA *p;
+            bool has_mob = FALSE, has_player = FALSE;
+            for ( p = pexit->to_room->people; p != NULL; p = p->next_in_room )
+            {
+                if ( IS_NPC(p) && !p->fighting && !IS_AFFECTED(p, AFF_ETHEREAL)
+                     && IS_SET(p->act, ACT_IS_NPC) )
+                    has_mob = TRUE;
+                else if ( !IS_NPC(p) && p != ch )
+                    has_player = TRUE;
+            }
+            if ( has_mob && !has_player )
+                bot->scatter_steps = 0;
+        }
         bot->scatter_last_dir = door;
         bot_cmd( ch, dir_name[door] );
         return;
@@ -978,6 +993,21 @@ static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
         if ( IS_SET(pexit->exit_info, EX_CLOSED) )               continue;
         if ( IS_SET(pexit->to_room->room_flags, ROOM_PRIVATE) )  continue;
 
+        /* Stop scattering if destination has killable mobs and no other players */
+        {
+            CHAR_DATA *p;
+            bool has_mob = FALSE, has_player = FALSE;
+            for ( p = pexit->to_room->people; p != NULL; p = p->next_in_room )
+            {
+                if ( IS_NPC(p) && !p->fighting && !IS_AFFECTED(p, AFF_ETHEREAL)
+                     && IS_SET(p->act, ACT_IS_NPC) )
+                    has_mob = TRUE;
+                else if ( !IS_NPC(p) && p != ch )
+                    has_player = TRUE;
+            }
+            if ( has_mob && !has_player )
+                bot->scatter_steps = 0;
+        }
         bot->scatter_last_dir = door;
         bot_cmd( ch, dir_name[door] );
         return;
