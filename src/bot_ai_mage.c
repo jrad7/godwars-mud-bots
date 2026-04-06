@@ -383,7 +383,12 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
 
     /* ---- Normal color training ---- */
     color_idx = mage_lowest_color(ch, cap);
-    if ( color_idx < 0 ) return FALSE;  /* all at cap */
+    if ( color_idx < 0 )
+    {
+        /* All colors at cap — end any active training cycle */
+        bot->spell_training = FALSE;
+        return FALSE;
+    }
 
     if ( color_idx == YELLOW_MAGIC )
     {
@@ -413,10 +418,11 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
         return FALSE;
     }
 
-    /* All other colors: cast the training spell directly */
+    /* All other colors: cast the training spell and set the flag */
     sn = skill_lookup( color_train[color_idx].spell );
     if ( sn < 0 || ch->pcdata->learned[sn] < 1 ) return FALSE;
 
+    bot->spell_training = TRUE;
     if ( color_train[color_idx].arg[0] != '\0' )
         sprintf( cmd, "cast '%s' %s", color_train[color_idx].spell,
                  color_train[color_idx].arg );
