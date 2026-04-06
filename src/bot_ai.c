@@ -1760,19 +1760,6 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         }
     }
 
-    /* Vampires must heal in the crypt (93350-93359) -- only room that triggers
-     * update_vampire()'s regen tick */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) )
-    {
-        if ( ch->in_room != NULL && !(ch->in_room->vnum >= ROOM_VNUM_VAMP_CRYPT && ch->in_room->vnum <= ROOM_VNUM_VAMP_CRYPT + 9) )
-        {
-            bot_watch_msg( ch, "[REASON] Vampire retreating to crypt to heal\n\r" );
-            char_from_room(ch);
-            char_to_room(ch, get_room_index(ROOM_VNUM_VAMP_CRYPT));
-            bot_cmd(ch, "look");
-        }
-    }
-
     /* Mage-class bots must meditate to regain mana efficiently */
     if ( ch->position != POS_MEDITATING
       && ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
@@ -1949,6 +1936,35 @@ void bot_update( CHAR_DATA *ch )
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
+
+    /* Safety: eject any bot that wandered into the spider web area (rooms
+     * 93350-93356).  Those rooms form a sealed cluster with no world exit and
+     * the spider queen mobs web/trap anyone inside. */
+    if ( ch->in_room != NULL
+    &&   ch->in_room->vnum >= ROOM_VNUM_VAMP_CRYPT
+    &&   ch->in_room->vnum <= ROOM_VNUM_VAMP_CRYPT + 6 )
+    {
+        ROOM_INDEX_DATA *home;
+        char logbuf[256];
+        snprintf( logbuf, sizeof(logbuf),
+            "[BOT_SAFETY] %s trapped in spider web area (room %d) -- ejecting",
+            ch->name, ch->in_room->vnum );
+        log_string( logbuf );
+        strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
+        bot_watch_msg( ch, logbuf );
+        if ( ch->position == POS_FIGHTING )
+            stop_fighting( ch, TRUE );
+        home = get_room_index( ch->home );
+        if ( home == NULL ) home = get_room_index( ROOM_VNUM_TEMPLE );
+        if ( home != NULL )
+        {
+            char_from_room( ch );
+            char_to_room( ch, home );
+            bot_cmd( ch, "look" );
+        }
+        bot_change_state( ch, bot, BOT_IDLE );
+        return;
+    }
 
     /* While in "head" state (LOST_HEAD set after a decap) the bot has no body
      * and cannot act.  behead() already called "call all" so class gear is
