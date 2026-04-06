@@ -76,7 +76,8 @@ typedef enum {
     BOT_PVP_FIGHT   = 5,   /* Actively in PvP combat                   */
     BOT_SHOPPING    = 6,   /* Buying/selling at shops                  */
     BOT_RESTING     = 7,   /* Sitting/sleeping to recover HP/mana      */
-    BOT_LOGGING_OUT = 8    /* Saying goodbye, about to quit            */
+    BOT_LOGGING_OUT = 8,   /* Saying goodbye, about to quit            */
+    BOT_PVP_FLEE    = 9    /* Being hunted -- panic movement to escape */
 } bot_state_t;
 
 /* Global Bot PVP Modes */
@@ -152,6 +153,8 @@ struct bot_data {
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */
     bool                pvp_chasing;       /* TRUE = chasing fleeing target, skip health gate */
+    char                pvp_attacker[32];  /* Who attacked us (flee mode) -- cleared when fight_timer==0 */
+    char                pvp_flee_zone[64]; /* Area filename we fled from -- skip when picking hide zone */
     /* Stuck detection: ring buffer of last 10 commands issued */
     char                cmd_history[10][64];
     int                 cmd_history_head;  /* Next write slot (0-9)       */

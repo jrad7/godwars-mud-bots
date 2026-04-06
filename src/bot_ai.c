@@ -319,6 +319,8 @@ static bool bot_dir_allowed( CHAR_DATA *ch, int door )
 }
 
 static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch );
+static void bot_navigate_to_any_grind_zone( BOT_DATA *bot, CHAR_DATA *ch );
+static void bot_handle_pvp_attack( CHAR_DATA *ch, BOT_DATA *bot, CHAR_DATA *attacker );
 
 /* -----------------------------------------------------------------------
  * bot_change_state - transition to a new AI state
@@ -328,8 +330,9 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
 {
     static const char *state_names[] = {
         "IDLE", "EXPLORING", "GRINDING", "TRAINING",
-        "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT"
+        "PVP_HUNT", "PVP_FIGHT", "SHOPPING", "RESTING", "LOGGING_OUT", "PVP_FLEE"
     };
+    #define BOT_STATE_MAX BOT_PVP_FLEE
 
     /* Save progress whenever leaving the training state */
     if ( bot->state == BOT_TRAINING && bot->state != new_state )
@@ -342,8 +345,8 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
             char buf[MAX_STRING_LENGTH];
             sprintf( buf, "BOT DEBUG: %s changing state from %s to %s",
                 ch->name,
-                bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
-                new_state <= BOT_LOGGING_OUT ? state_names[new_state] : "UNKNOWN" );
+                bot->state <= BOT_STATE_MAX ? state_names[bot->state] : "UNKNOWN",
+                new_state <= BOT_STATE_MAX ? state_names[new_state] : "UNKNOWN" );
             log_string( buf );
         }
 #endif
@@ -354,8 +357,8 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
             char echo[256];
             snprintf( echo, sizeof(echo), "[STATE] %s: %s --> %s\n\r",
                 ch->name,
-                bot->state <= BOT_LOGGING_OUT ? state_names[bot->state] : "UNKNOWN",
-                new_state  <= BOT_LOGGING_OUT ? state_names[new_state]  : "UNKNOWN" );
+                (int)bot->state <= (int)BOT_STATE_MAX ? state_names[bot->state] : "UNKNOWN",
+                (int)new_state  <= (int)BOT_STATE_MAX ? state_names[new_state]  : "UNKNOWN" );
             write_to_buffer( ch->desc->snoop_by, echo, 0 );
         }
     }
@@ -397,6 +400,10 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         break;
     case BOT_LOGGING_OUT:
         bot->state_timer = number_range( BOT_TIMER_LOGOUT_MIN, BOT_TIMER_LOGOUT_MAX );
+        break;
+    case BOT_PVP_FLEE:
+        /* No fixed timer -- state exits when fight_timer reaches 0 */
+        bot->state_timer = 9999;
         break;
     default:
         bot->state_timer = number_range( BOT_TIMER_DEFAULT_MIN, BOT_TIMER_DEFAULT_MAX );
@@ -483,6 +490,126 @@ static void bot_navigate_to_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
             "[NAV] %s: queued %d-step route to %s (tier max_hit=%d, bot max_hit=%d)\n\r",
             ch->name, bot->nav_n, zone_name, tier->max_hit, ch->max_hit );
         write_to_buffer( ch->desc->snoop_by, echo, 0 );
+    }
+}
+
+/* -----------------------------------------------------------------------
+ * bot_navigate_to_any_grind_zone
+ *
+ * Like bot_navigate_to_grind_zone but ignores tier limits and picks from
+ * every zone in the table, skipping the zone stored in bot->pvp_flee_zone.
+ * Used by the flee state so bots hide somewhere far from where they were
+ * attacked -- mobs are not aggressive so any zone is equally safe.
+ * ----------------------------------------------------------------------- */
+static void bot_navigate_to_any_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
+{
+    const char **candidates[32];
+    int          count = 0;
+    int          tier_i, route_i, rn;
+
+    for ( tier_i = 0; tier_i < GRIND_TIER_COUNT && count < 32; tier_i++ )
+    {
+        const GRIND_TIER *tier = &grind_tiers[tier_i];
+        for ( route_i = 0; route_i < tier->num_routes && count < 32; route_i++ )
+        {
+            const char **route = tier->routes[route_i];
+            if ( route == NULL ) continue;
+
+            /* Skip the zone we fled from */
+            if ( bot->pvp_flee_zone[0] != '\0' )
+            {
+                bool is_flee_zone = FALSE;
+                for ( rn = 0; route_names[rn].route != NULL; rn++ )
+                {
+                    if ( route_names[rn].route == route
+                      && route_names[rn].filename != NULL
+                      && !str_cmp( route_names[rn].filename, bot->pvp_flee_zone ) )
+                    {
+                        is_flee_zone = TRUE;
+                        break;
+                    }
+                }
+                if ( is_flee_zone ) continue;
+            }
+
+            candidates[count++] = route;
+        }
+    }
+
+    if ( count == 0 )
+    {
+        /* Absolute fallback: just recall to the altar */
+        bot_nav_queue( bot, "recall" );
+        bot_watch_msg( ch, "[PVP_FLEE] No alternate zone found -- recalling.\n\r" );
+        return;
+    }
+
+    const char **route = candidates[number_range( 0, count - 1 )];
+    const char *zone_name = "unknown";
+
+    for ( rn = 0; route_names[rn].route != NULL; rn++ )
+    {
+        if ( route_names[rn].route == route )
+        {
+            zone_name = route_names[rn].name;
+            break;
+        }
+    }
+
+    bot->nav_n = 0;
+    for ( ; *route != NULL; route++ )
+        bot_nav_queue( bot, *route );
+
+    char msg[128];
+    snprintf( msg, sizeof(msg), "[PVP_FLEE] Hiding in %s (%d steps)\n\r", zone_name, bot->nav_n );
+    bot_watch_msg( ch, msg );
+}
+
+/* -----------------------------------------------------------------------
+ * bot_handle_pvp_attack
+ *
+ * Called the first time we detect a player/bot attacking us.  Decides
+ * whether to fight back (aggression roll) or run (BOT_PVP_FLEE).
+ * ----------------------------------------------------------------------- */
+static void bot_handle_pvp_attack( CHAR_DATA *ch, BOT_DATA *bot, CHAR_DATA *attacker )
+{
+    char msg[256];
+
+    /* Remember where we were attacked so we won't hide there */
+    if ( ch->in_room && ch->in_room->area && ch->in_room->area->filename )
+    {
+        strncpy( bot->pvp_flee_zone, ch->in_room->area->filename,
+                 sizeof(bot->pvp_flee_zone) - 1 );
+        bot->pvp_flee_zone[sizeof(bot->pvp_flee_zone)-1] = '\0';
+    }
+
+    snprintf( msg, sizeof(msg), "[PVP] Attacked by %s!\n\r", attacker->name );
+    bot_watch_msg( ch, msg );
+
+    /* Fight-back decision: aggression rating ± 20% chaos */
+    int chance = bot->roster ? bot->roster->aggression : 30;
+    chance += number_range( -20, 20 );
+    chance = UMAX( 0, UMIN( 100, chance ) );
+
+    if ( number_percent() < chance && fair_fight( ch, attacker ) )
+    {
+        /* Fight back -- treat attacker as the PvP target */
+        strncpy( bot->pvp_target, attacker->name, sizeof(bot->pvp_target) - 1 );
+        bot->pvp_target[sizeof(bot->pvp_target)-1] = '\0';
+        snprintf( msg, sizeof(msg), "[PVP] Fighting back vs %s! (chance=%d)\n\r",
+                  bot->pvp_target, chance );
+        bot_watch_msg( ch, msg );
+        bot_change_state( ch, bot, BOT_PVP_FIGHT );
+    }
+    else
+    {
+        /* Flee -- record attacker so we can detect if they follow */
+        strncpy( bot->pvp_attacker, attacker->name, sizeof(bot->pvp_attacker) - 1 );
+        bot->pvp_attacker[sizeof(bot->pvp_attacker)-1] = '\0';
+        snprintf( msg, sizeof(msg), "[PVP] Fleeing from %s! (chance=%d)\n\r",
+                  bot->pvp_attacker, chance );
+        bot_watch_msg( ch, msg );
+        bot_change_state( ch, bot, BOT_PVP_FLEE );
     }
 }
 
@@ -1743,6 +1870,14 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
+    /* Can't rest while being hunted -- go back to panic flee */
+    if ( bot->pvp_attacker[0] != '\0' )
+    {
+        bot_watch_msg( ch, "[REASON] still being hunted -- can't rest, fleeing\n\r" );
+        bot_change_state( ch, bot, BOT_PVP_FLEE );
+        return;
+    }
+
     /* Decapped bots are mortals (level 2) with no HP regen -- skip waiting and
      * go straight to training so they can 'train avatar' back to their class. */
     if ( ch->level == 2 && ch->max_hit >= 2000 )
@@ -1814,6 +1949,82 @@ static void bot_state_training( CHAR_DATA *ch, BOT_DATA *bot )
     /* Attempt to train; if nothing left or timer expired, resume grinding */
     if ( !bot_do_train(ch) || bot->state_timer <= 0 )
         bot_change_state( ch, bot, BOT_GRINDING );
+}
+
+/* -----------------------------------------------------------------------
+ * bot_state_pvp_flee
+ *
+ * Panic movement state entered when a bot chooses to run from an attacker.
+ * The bot stays here until fight_timer reaches 0, then hides in a
+ * different grind zone.  Movement is intentionally chaotic -- the bot
+ * makes mistakes like a real panicking player would.
+ * ----------------------------------------------------------------------- */
+static void bot_state_pvp_flee( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    /* Safe: fight timer gone -- clear attacker and go hide somewhere new */
+    if ( ch->fight_timer == 0 )
+    {
+        if ( bot->pvp_attacker[0] != '\0' )
+        {
+            char msg[256];
+            snprintf( msg, sizeof(msg), "[PVP_FLEE] Fight timer cleared -- hiding from %s.\n\r",
+                      bot->pvp_attacker );
+            bot_watch_msg( ch, msg );
+            bot->pvp_attacker[0] = '\0';
+        }
+        /* Change state first (sets timers, scatter, calls navigate_to_grind_zone
+         * for the tier-based route), then override the nav with any-zone routing
+         * so the bot hides far from where it was attacked. */
+        bot_change_state( ch, bot, BOT_GRINDING );
+        bot->nav_n = 0;
+        bot_navigate_to_any_grind_zone( bot, ch );
+        bot->pvp_flee_zone[0] = '\0';
+        return;
+    }
+
+    /* If in combat: try to flee, with occasional chaos freeze */
+    if ( ch->position == POS_FIGHTING )
+    {
+        if ( number_percent() < 15 )
+        {
+            bot_watch_msg( ch, "[PVP_FLEE] Panic -- forgot to flee this tick!\n\r" );
+            return;
+        }
+        do_flee( ch, "" );
+        return;
+    }
+
+    /* Must be standing to move */
+    if ( ch->position < POS_STANDING )
+    {
+        bot_cmd( ch, "stand" );
+        return;
+    }
+
+    /* Attacker walked into our room: bolt immediately */
+    if ( bot->pvp_attacker[0] != '\0' )
+    {
+        CHAR_DATA *hunter = get_char_room( ch, bot->pvp_attacker );
+        if ( hunter != NULL )
+        {
+            bot_watch_msg( ch, "[PVP_FLEE] Attacker in room! Running!\n\r" );
+            bot_try_move( ch );
+            return;
+        }
+    }
+
+    /* Running through the world: move each tick with chaos */
+    {
+        int roll = number_percent();
+        if ( roll < 10 )
+        {
+            /* Hesitate: bot freezes a tick */
+            bot_watch_msg( ch, "[PVP_FLEE] Hesitating...\n\r" );
+            return;
+        }
+        /* Move in any available direction -- no pathfinding, pure panic */
+        bot_try_move( ch );
+    }
 }
 
 static void bot_state_logging_out( CHAR_DATA *ch, BOT_DATA *bot )
@@ -2090,12 +2301,46 @@ void bot_update( CHAR_DATA *ch )
         return;
     }
 
-    /* Continuous WAR MODE check */
-    if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR 
-      && bot->state != BOT_PVP_HUNT 
-      && bot->state != BOT_PVP_FIGHT 
-      && bot->state != BOT_RESTING 
-      && bot->state != BOT_TRAINING 
+    /* -----------------------------------------------------------------------
+     * PvP victim detection (central, runs every tick before state dispatch)
+     *
+     * If a player or bot attacked us and we haven't recorded them yet,
+     * decide immediately: fight back or flee.  This fires from any state
+     * so the bot reacts even while grinding, exploring, or resting.
+     * ----------------------------------------------------------------------- */
+    if ( ch->fighting != NULL
+      && !IS_NPC( ch->fighting )
+      && bot->pvp_attacker[0] == '\0'   /* not already in flee mode */
+      && bot->state != BOT_PVP_FIGHT    /* not us being the aggressor */
+      && bot->state != BOT_PVP_FLEE )   /* not already fleeing */
+    {
+        bot_handle_pvp_attack( ch, bot, ch->fighting );
+        return;
+    }
+
+    /* If the attacker walked into our room while we're not in combat,
+     * snap back to panic-flee regardless of what state we're in. */
+    if ( bot->pvp_attacker[0] != '\0'
+      && ch->position != POS_FIGHTING
+      && bot->state != BOT_PVP_FLEE )
+    {
+        CHAR_DATA *hunter = get_char_room( ch, bot->pvp_attacker );
+        if ( hunter != NULL )
+        {
+            bot_watch_msg( ch, "[PVP] Attacker found us! Back to fleeing!\n\r" );
+            bot_change_state( ch, bot, BOT_PVP_FLEE );
+            return;
+        }
+    }
+
+    /* Continuous WAR MODE check (skip if we're already fleeing/being hunted) */
+    if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR
+      && bot->pvp_attacker[0] == '\0'
+      && bot->state != BOT_PVP_HUNT
+      && bot->state != BOT_PVP_FIGHT
+      && bot->state != BOT_PVP_FLEE
+      && bot->state != BOT_RESTING
+      && bot->state != BOT_TRAINING
       && bot->state != BOT_LOGGING_OUT )
     {
         /* Check randomly to spread CPU load from scanning the MUD */
@@ -2126,6 +2371,7 @@ void bot_update( CHAR_DATA *ch )
     case BOT_PVP_FIGHT:   bot_state_pvp_fight(  ch, bot ); break;
     case BOT_RESTING:     bot_state_resting(    ch, bot ); break;
     case BOT_LOGGING_OUT: bot_state_logging_out(ch, bot ); break;
+    case BOT_PVP_FLEE:    bot_state_pvp_flee(   ch, bot ); break;
     default:
         bot_change_state( ch, bot, BOT_IDLE );
         break;
