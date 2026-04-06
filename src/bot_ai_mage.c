@@ -167,12 +167,16 @@ static bool bot_mage_do_train( CHAR_DATA *ch )
             }
         }
 
-        /* Train mana toward 5000 */
+        /* Train mana toward 5000 if we can afford it */
         if ( ch->max_mana < 5000 && ch->exp >= ch->max_mana + 1 )
         {
             bot_cmd( ch, "train mana all" );
             return TRUE;
         }
+
+        /* Block selfclass until max_mana >= 5000 even if we can't afford to
+         * train right now — keep grinding and wait for exp to accumulate */
+        if ( ch->max_mana < 5000 ) return TRUE;
 
         /* Still waiting on colors (between_fights casts the training spells) */
         for ( i = 0; i < 5; i++ )
