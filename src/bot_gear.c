@@ -360,12 +360,12 @@ void bot_gear_check( CHAR_DATA *ch )
 
 
     /* Step 1: must be standing — class armor commands require POS_STANDING.
-     * If meditate_pending is already FALSE, gear is settled and the bot is
-     * intentionally meditating — don't stand it up again. */
+     * If bot is intentionally meditating (needs_meditate+ready_meditate both
+     * set) leave it alone — gear is already complete. */
     if ( ch->position < POS_STANDING )
     {
-        if ( !bot->meditate_pending )
-            return;   /* gear settled; bot is meditating — leave it alone */
+        if ( bot->needs_meditate && bot->ready_meditate )
+            return;   /* meditating intentionally — don't disturb */
         do_stand( ch, "" );
         return;
     }
@@ -486,9 +486,9 @@ void bot_gear_check( CHAR_DATA *ch )
         {
             if ( bot_fill_newbie_slot( ch, newbie_slots[i].wear_slot,
                                            newbie_slots[i].vnum ) )
-                return;   /* meditate_pending stays TRUE — more slots may need filling */
+                return;
         }
-        bot->meditate_pending = FALSE;   /* all newbiepack slots filled, nothing left */
+        bot->ready_meditate = TRUE;
         return;
     }
 
@@ -634,11 +634,11 @@ void bot_gear_check( CHAR_DATA *ch )
 
         if ( bot_fill_newbie_slot( ch, newbie_slots[i].wear_slot,
                                        newbie_slots[i].vnum ) )
-            return;   /* meditate_pending stays TRUE — more slots may need filling */
+            return;
     }
 
-    /* Fell through all steps with nothing to do — gear is complete. */
-    bot->meditate_pending = FALSE;
+    /* Fell through with nothing to do — gear is complete. */
+    bot->ready_meditate = TRUE;
 }
 
 /* -----------------------------------------------------------------------

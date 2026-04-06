@@ -389,8 +389,11 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( BOT_TIMER_TRAINING_MIN, BOT_TIMER_TRAINING_MAX );
         break;
     case BOT_RESTING:
-        bot->state_timer      = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
-        bot->meditate_pending = TRUE;   /* gear must settle before meditating */
+        bot->state_timer     = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
+        bot->needs_meditate  = ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
+                               || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
+                               || IS_CLASS(ch, CLASS_LICH) );
+        bot->ready_meditate  = FALSE;
         break;
     case BOT_LOGGING_OUT:
         bot->state_timer = number_range( BOT_TIMER_LOGOUT_MIN, BOT_TIMER_LOGOUT_MAX );
@@ -1770,26 +1773,19 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
             return;
     }
 
-    /* Mage-class bots must meditate to regain mana efficiently.
-     * Wait while bot_ensure_geared still has work to do (meditate_pending).
-     * Gear can take many ticks; the flag clears only when gear_check falls
-     * through with nothing left, preventing a meditate->stand->meditate loop. */
-    if ( ch->position != POS_MEDITATING
-      && ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
-        || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
-        || IS_CLASS(ch, CLASS_LICH) ) )
+    /* Meditate while recovering if needed and gear is ready */
+    if ( bot->needs_meditate && bot->ready_meditate
+      && ch->position != POS_MEDITATING )
     {
-        if ( bot->meditate_pending )
-            return;   /* gear not settled yet — wait */
         bot_cmd( ch, "meditate" );
         return;
     }
 
-    /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
+    /* Done -- stand up, clear flags, transition out */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
     {
-        /* Stand before leaving — bot may still be in POS_MEDITATING, and
-         * states like BOT_PVP_HUNT move without a position check. */
+        bot->needs_meditate = FALSE;
+        bot->ready_meditate = FALSE;
         if ( ch->position != POS_STANDING )
         {
             do_stand( ch, "" );
