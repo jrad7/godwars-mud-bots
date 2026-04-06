@@ -24,10 +24,10 @@
  *   GREEN_MAGIC  (3) = TAR_CHAR_SELF       -> "detect hidden"
  *   YELLOW_MAGIC (4) = TAR_OBJ_INV         -> "identify" (ring)
  *
- * YELLOW requires the ring to be in inventory (TAR_OBJ_INV).  The bot uses
- * a three-tick cycle: remove ring → spam identify → wear ring.  During the
- * cycle bot->spell_training is TRUE, which causes bot_ensure_geared() to
- * skip all gear management so the ring stays in inventory.
+ * YELLOW requires the ring to be in inventory (TAR_OBJ_INV).  The bot removes
+ * the ring once and keeps it off until YELLOW hits cap, then re-wears it once.
+ * bot->spell_training=TRUE during this period, causing bot_ensure_geared() to
+ * skip all gear management so the ring stays in inventory undisturbed.
  *
  * improve_spl fires after every cast attempt regardless of whether the
  * spell effect applied (e.g. already cursed, already detected), so spells
@@ -319,14 +319,17 @@ static void bot_mage_combat_action( CHAR_DATA *ch )
  * that hasn't yet reached the current cap (100 pre-class, 240 post-class).
  *
  * YELLOW training (TAR_OBJ_INV) requires the ring to be in inventory, not
- * worn.  When YELLOW is selected the bot enters a three-tick cycle:
+ * worn.  The ring is removed ONCE and kept off until YELLOW reaches cap,
+ * regardless of whether other colors temporarily become lower in between.
+ * The ring is only re-worn after YELLOW fully caps out.
  *
- *   Tick 1: set spell_training=TRUE, "remove ring"
- *   Tick 2+: "cast 'identify' ring" (repeats while YELLOW is still lowest)
- *   Final:   "wear ring", clear spell_training
+ *   Enter: spell_training=FALSE, YELLOW < cap → "remove ring", set flag
+ *   While spell_training=TRUE:
+ *     YELLOW < cap → "cast 'identify' ring"  (stays off the whole time)
+ *     YELLOW >= cap → "wear ring", clear flag
  *
  * bot_ensure_geared skips the gear check while spell_training is set so
- * the ring stays in inventory for the full duration of the cycle.
+ * the ring stays in inventory undisturbed.
  *
  * Returns TRUE when a command was issued, FALSE otherwise.
  * ----------------------------------------------------------------------- */
@@ -351,33 +354,31 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
     /* ---- YELLOW identify cycle ---- */
     if ( bot->spell_training )
     {
-        /* Find the ring that is currently in inventory (not worn) */
-        OBJ_DATA *inv_ring = NULL;
-        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        /* YELLOW reached cap: re-wear the ring and end the cycle */
+        if ( ch->spl[YELLOW_MAGIC] >= cap )
         {
-            if ( obj->wear_loc == WEAR_NONE && is_name("ring", obj->name) )
-            { inv_ring = obj; break; }
-        }
-
-        /* Check if YELLOW is still the priority color */
-        color_idx = mage_lowest_color(ch, cap);
-
-        if ( inv_ring != NULL && color_idx == YELLOW_MAGIC )
-        {
-            /* Still training: cast identify on the inventory ring */
-            bot_cmd( ch, "cast 'identify' ring" );
+            if ( get_eq_char(ch, WEAR_FINGER_L) == NULL
+              || get_eq_char(ch, WEAR_FINGER_R) == NULL )
+            {
+                bot_cmd( ch, "wear ring" );
+            }
+            bot->spell_training = FALSE;
             return TRUE;
         }
 
-        /* Done: YELLOW hit cap, another color took priority, or ring vanished.
-         * Re-wear the ring if a finger slot is empty, then clear the flag. */
-        if ( get_eq_char(ch, WEAR_FINGER_L) == NULL
-          || get_eq_char(ch, WEAR_FINGER_R) == NULL )
+        /* Find the ring in inventory and keep casting identify */
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
         {
-            bot_cmd( ch, "wear ring" );
+            if ( obj->wear_loc == WEAR_NONE && is_name("ring", obj->name) )
+            {
+                bot_cmd( ch, "cast 'identify' ring" );
+                return TRUE;
+            }
         }
+
+        /* Ring vanished somehow — end cycle cleanly */
         bot->spell_training = FALSE;
-        return TRUE;
+        return FALSE;
     }
 
     /* ---- Normal color training ---- */
@@ -386,7 +387,7 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
 
     if ( color_idx == YELLOW_MAGIC )
     {
-        /* Start the identify cycle: remove the ring to put it in inventory */
+        /* Find a worn ring to remove and start the cycle */
         OBJ_DATA *worn_ring = get_eq_char(ch, WEAR_FINGER_L);
         if ( worn_ring == NULL ) worn_ring = get_eq_char(ch, WEAR_FINGER_R);
 
@@ -397,7 +398,7 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
             return TRUE;
         }
 
-        /* Ring already in inventory (e.g. from a previous incomplete cycle) */
+        /* Ring already in inventory — enter cycle directly */
         for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
         {
             if ( obj->wear_loc == WEAR_NONE && is_name("ring", obj->name) )
@@ -408,11 +409,11 @@ static bool bot_mage_between_fights( CHAR_DATA *ch )
             }
         }
 
-        /* No ring available at all this tick — skip */
+        /* No ring available this tick — skip */
         return FALSE;
     }
 
-    /* All other colors: just cast the training spell */
+    /* All other colors: cast the training spell directly */
     sn = skill_lookup( color_train[color_idx].spell );
     if ( sn < 0 || ch->pcdata->learned[sn] < 1 ) return FALSE;
 

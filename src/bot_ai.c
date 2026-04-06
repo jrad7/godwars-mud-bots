@@ -176,7 +176,7 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
         if ( bot->cmd_history_count < 10 )
             bot->cmd_history_count++;
 
-        if ( bot->cmd_history_count >= 10 )
+        if ( bot->cmd_history_count >= 10 && !bot->spell_training )
         {
             bool stuck = TRUE;
             int i;
@@ -750,7 +750,14 @@ static bool bot_do_train( CHAR_DATA *ch )
             const BOT_CLASS_AI *ai = bot_class_ai[BOT_CLASS_MAGE];
             if ( ai && ai->do_train && ai->do_train(ch) )
                 return TRUE;
-            /* prereqs met — fall through to selfclass below */
+            /* prereqs met — but selfclass requires current mana >= 5000.
+             * Force a rest cycle if not at full mana/hp yet. */
+            if ( ch->mana < ch->max_mana || ch->hit < ch->max_hit )
+            {
+                bot_change_state( ch, bot, BOT_RESTING );
+                return TRUE;
+            }
+            /* fall through to selfclass below */
         }
 
         char cmd[64];
