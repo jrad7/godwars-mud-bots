@@ -1788,6 +1788,13 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
     {
+        /* Stand before leaving — bot may still be in POS_MEDITATING, and
+         * states like BOT_PVP_HUNT move without a position check. */
+        if ( ch->position != POS_STANDING )
+        {
+            do_stand( ch, "" );
+            return;
+        }
         if ( bot->pvp_target[0] != '\0' )
         {
             bot_watch_msg( ch, "[PVP] Recovered -- resuming hunt.\n\r" );
