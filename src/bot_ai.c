@@ -1760,6 +1760,15 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         }
     }
 
+    /* Remove curse before anything else -- AFF_CURSE blocks recall so a bot
+     * stuck in a no-exit classhq zone (e.g. Hell) can never escape until it
+     * is cleared.  bot_generic_buff_check handles the skill check. */
+    if ( IS_AFFECTED(ch, AFF_CURSE) )
+    {
+        if ( bot_generic_buff_check(ch) )
+            return;
+    }
+
     /* Mage-class bots must meditate to regain mana efficiently */
     if ( ch->position != POS_MEDITATING
       && ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
@@ -1937,33 +1946,40 @@ void bot_update( CHAR_DATA *ch )
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
 
-    /* Safety: eject any bot that wandered into the spider web area (rooms
-     * 93350-93356).  Those rooms form a sealed cluster with no world exit and
-     * the spider queen mobs web/trap anyone inside. */
-    if ( ch->in_room != NULL
-    &&   ch->in_room->vnum >= ROOM_VNUM_VAMP_CRYPT
-    &&   ch->in_room->vnum <= ROOM_VNUM_VAMP_CRYPT + 6 )
+    /* Safety: eject any bot trapped in a sealed classhq cluster.
+     * 93350-93356: spider web area (vampire HQ) -- queen webs/traps.
+     * 93420-93426: Hell (demon HQ) -- non-demon bots swallowed by spec_eater Satan.
+     * Demon bots belong in Hell to heal, but non-demons have no exit and get stuck.
+     * All exits in both clusters loop back internally with no path to the world. */
     {
-        ROOM_INDEX_DATA *home;
-        char logbuf[256];
-        snprintf( logbuf, sizeof(logbuf),
-            "[BOT_SAFETY] %s trapped in spider web area (room %d) -- ejecting",
-            ch->name, ch->in_room->vnum );
-        log_string( logbuf );
-        strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
-        bot_watch_msg( ch, logbuf );
-        if ( ch->position == POS_FIGHTING )
-            stop_fighting( ch, TRUE );
-        home = get_room_index( ch->home );
-        if ( home == NULL ) home = get_room_index( ROOM_VNUM_TEMPLE );
-        if ( home != NULL )
+        int vnum = ch->in_room ? ch->in_room->vnum : 0;
+        bool in_vamp_trap = ( vnum >= ROOM_VNUM_VAMP_CRYPT && vnum <= ROOM_VNUM_VAMP_CRYPT + 6 );
+        bool in_hell_trap = ( vnum >= ROOM_VNUM_HELL && vnum <= ROOM_VNUM_HELL + 6 )
+                         && !IS_CLASS(ch, CLASS_DEMON);
+        bool in_trap      = in_vamp_trap || in_hell_trap;
+        if ( in_trap )
         {
-            char_from_room( ch );
-            char_to_room( ch, home );
-            bot_cmd( ch, "look" );
+            ROOM_INDEX_DATA *home;
+            char logbuf[256];
+            snprintf( logbuf, sizeof(logbuf),
+                "[BOT_SAFETY] %s trapped in classhq cluster (room %d) -- ejecting",
+                ch->name, vnum );
+            log_string( logbuf );
+            strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
+            bot_watch_msg( ch, logbuf );
+            if ( ch->position == POS_FIGHTING )
+                stop_fighting( ch, TRUE );
+            home = get_room_index( ch->home );
+            if ( home == NULL ) home = get_room_index( ROOM_VNUM_TEMPLE );
+            if ( home != NULL )
+            {
+                char_from_room( ch );
+                char_to_room( ch, home );
+                bot_cmd( ch, "look" );
+            }
+            bot_change_state( ch, bot, BOT_IDLE );
+            return;
         }
-        bot_change_state( ch, bot, BOT_IDLE );
-        return;
     }
 
     /* While in "head" state (LOST_HEAD set after a decap) the bot has no body
