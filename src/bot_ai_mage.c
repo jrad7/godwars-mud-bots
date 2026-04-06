@@ -170,7 +170,7 @@ static bool bot_mage_do_train( CHAR_DATA *ch )
         /* Train mana toward 5000 */
         if ( ch->max_mana < 5000 && ch->exp >= ch->max_mana + 1 )
         {
-            bot_cmd( ch, "train mana" );
+            bot_cmd( ch, "train mana all" );
             return TRUE;
         }
 
@@ -278,6 +278,7 @@ static void bot_mage_combat_action( CHAR_DATA *ch )
     char       cmd[MAX_INPUT_LENGTH];
 
     if ( target == NULL || ch->pcdata == NULL ) return;
+    if ( !IS_CLASS(ch, CLASS_MAGE) ) return;
 
     /* Priority 0: emergency heal */
     if ( ch->hit < ch->max_hit * 2 / 5 && ch->mana >= 1500 )
