@@ -1668,7 +1668,9 @@ void do_meditate( CHAR_DATA *ch, char *argument )
 	break;
 
     case POS_RESTING:
-	send_to_char( "You are already resting.\n\r", ch );
+	send_to_char( "You shift from resting into a meditative state.\n\r", ch );
+	act( "$n shifts from resting into a meditative state.", ch, NULL, NULL, TO_ROOM );
+	ch->position = POS_MEDITATING;
 	break;
 
     case POS_MEDITATING:

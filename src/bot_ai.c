@@ -1773,6 +1773,16 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         }
     }
 
+    /* Mage-class bots must meditate to regain mana efficiently */
+    if ( ch->position != POS_MEDITATING
+      && ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
+        || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
+        || IS_CLASS(ch, CLASS_LICH) ) )
+    {
+        bot_cmd( ch, "meditate" );
+        return;
+    }
+
     /* Just wait for HP to recover -- bot_ensure_geared handles standing/gearing */
     if ( bot_is_healthy(ch) || bot->state_timer <= 0 )
     {
