@@ -358,17 +358,14 @@ void bot_gear_check( CHAR_DATA *ch )
     if ( ch->position == POS_FIGHTING )
         return;
 
-    /* Assume gear work is needed this tick; cleared only when we fall through
-     * to the end with nothing left to do.  bot_state_resting uses this to
-     * delay re-meditating until gear is fully settled. */
-    bot->meditate_pending = TRUE;
 
     /* Step 1: must be standing — class armor commands require POS_STANDING.
-     * Set meditate_pending so bot_state_resting waits until gear is fully
-     * settled before re-meditating (gear can take many ticks). */
+     * If meditate_pending is already FALSE, gear is settled and the bot is
+     * intentionally meditating — don't stand it up again. */
     if ( ch->position < POS_STANDING )
     {
-        bot->meditate_pending = TRUE;
+        if ( !bot->meditate_pending )
+            return;   /* gear settled; bot is meditating — leave it alone */
         do_stand( ch, "" );
         return;
     }

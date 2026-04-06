@@ -389,7 +389,8 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer = number_range( BOT_TIMER_TRAINING_MIN, BOT_TIMER_TRAINING_MAX );
         break;
     case BOT_RESTING:
-        bot->state_timer = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
+        bot->state_timer      = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
+        bot->meditate_pending = TRUE;   /* gear must settle before meditating */
         break;
     case BOT_LOGGING_OUT:
         bot->state_timer = number_range( BOT_TIMER_LOGOUT_MIN, BOT_TIMER_LOGOUT_MAX );
