@@ -104,7 +104,8 @@ typedef enum {
 #define BOT_CLASS_DEMON     3
 #define BOT_CLASS_DROW      4
 #define BOT_CLASS_WEREWOLF  5
-#define BOT_CLASS_COUNT     6
+#define BOT_CLASS_MAGE      6
+#define BOT_CLASS_COUNT     7
 
 /*
  * Bot roster entry - one per named bot character.
@@ -142,6 +143,7 @@ struct bot_data {
     int                 scatter_last_dir;   /* Last dir moved during scatter (-1=none) */
     time_t              last_gear_warn;     /* Last time a gear-skip msg was sent */
     bool                decap_recovery;     /* TRUE from decap until call all issued */
+    bool                spell_training;     /* TRUE while mage is identify-cycling a ring; suppresses gear management */
     bool                limb_gear_call;     /* TRUE = call all issued for limb-loss gear, not yet confirmed back */
     bool                blind_recovery;     /* TRUE after recall for blindness - cure next tick */
     char                nav_cmds[32][32];  /* Queued navigation commands  */
@@ -197,7 +199,7 @@ static const GRIND_TIER grind_tiers[] = {
     { 20000, { zone_smurf, zone_sewer, zone_shire   }, 3 },
     { 30000, { zone_canyon, zone_moria, zone_thalos }, 3 },
     { 40000, { zone_weed, zone_plains               }, 2 },
-    { 50000, { zone_jobo_hell, zone_jobo_heaven     }, 2 },
+    { 999999, { zone_jobo_hell, zone_jobo_heaven     }, 2 },
     //{ 888888, { zone_jobo_hell                   }, 1 },
     //{ 999999,{ zone_jobo_heaven                  }, 1 },
 };

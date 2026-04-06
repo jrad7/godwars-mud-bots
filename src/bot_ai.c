@@ -24,6 +24,7 @@ extern const BOT_CLASS_AI bot_ninja_ai;
 extern const BOT_CLASS_AI bot_demon_ai;
 extern const BOT_CLASS_AI bot_drow_ai;
 extern const BOT_CLASS_AI bot_werewolf_ai;
+extern const BOT_CLASS_AI bot_mage_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
@@ -35,7 +36,8 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_ninja_ai,     /* BOT_CLASS_NINJA     */
     &bot_demon_ai,     /* BOT_CLASS_DEMON     */
     &bot_drow_ai,      /* BOT_CLASS_DROW      */
-    &bot_werewolf_ai   /* BOT_CLASS_WEREWOLF  */
+    &bot_werewolf_ai,  /* BOT_CLASS_WEREWOLF  */
+    &bot_mage_ai       /* BOT_CLASS_MAGE      */
 };
 
 /* Forward declarations for stance functions defined in kav_fight.c / fight.c */
@@ -495,6 +497,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_DEMON:   return "demon";
     case BOT_CLASS_DROW:      return "drow";
     case BOT_CLASS_WEREWOLF:  return "werewolf";
+    case BOT_CLASS_MAGE:      return "mage";
     default:                  return "demon";
     }
 }
@@ -738,6 +741,18 @@ static bool bot_do_train( CHAR_DATA *ch )
     {
         BOT_DATA *bot = ch->pcdata->botdata;
         int pref = ( bot && bot->roster ) ? bot->roster->class_pref : BOT_CLASS_DEMON;
+
+        /* Battlemage prereqs: all 5 spell colors >= 100 and max_mana >= 5000.
+         * Let the mage do_train grind them; it returns TRUE while still working
+         * and FALSE when all prereqs are satisfied so we fall through to selfclass. */
+        if ( pref == BOT_CLASS_MAGE )
+        {
+            const BOT_CLASS_AI *ai = bot_class_ai[BOT_CLASS_MAGE];
+            if ( ai && ai->do_train && ai->do_train(ch) )
+                return TRUE;
+            /* prereqs met — fall through to selfclass below */
+        }
+
         char cmd[64];
         sprintf( cmd, "selfclass %s", bot_class_name(pref) );
         bot_cmd( ch, cmd );
@@ -1819,6 +1834,10 @@ static void bot_state_logging_out( CHAR_DATA *ch, BOT_DATA *bot )
  * ----------------------------------------------------------------------- */
 static void bot_ensure_geared( CHAR_DATA *ch )
 {
+    BOT_DATA *bot = ch->pcdata ? ch->pcdata->botdata : NULL;
+    /* Mage spell-training cycle: ring is intentionally in inventory for identify.
+     * Skip all gear management until the cycle completes and the flag clears. */
+    if ( bot && bot->spell_training ) return;
     bot_gear_check( ch );
 }
 

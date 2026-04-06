@@ -1,0 +1,438 @@
+/*
+ * bot_ai_mage.c - Battlemage class AI for Dystopia MUD bots
+ *
+ * Implements the BOT_CLASS_AI vtable for CLASS_MAGE.
+ * Registered in bot_ai.c as bot_class_ai[BOT_CLASS_MAGE].
+ *
+ * Functions here are intentionally file-scoped (static) except for the
+ * exported vtable object at the bottom.  Do not call them directly from
+ * other translation units; go through bot_class_ai[BOT_CLASS_MAGE].
+ *
+ * --- Class Overview ---
+ * Battlemage is a caster/melee hybrid gated behind hard prereqs: all five
+ * spell colors (purple/red/blue/green/yellow) must reach 100 and max_mana
+ * must reach 5000 before selfclass can fire.
+ *
+ * Color training works through the standard improve_spl() mechanism in
+ * magic.c: every cast of a spell whose skill_table[sn].target matches a
+ * color index has a random chance to increment spl[color].  The five target
+ * values map as follows (merc.h):
+ *
+ *   PURPLE_MAGIC (0) = TAR_IGNORE          -> "faerie fog"
+ *   RED_MAGIC    (1) = TAR_CHAR_OFFENSIVE  -> "curse" (self-cast)
+ *   BLUE_MAGIC   (2) = TAR_CHAR_DEFENSIVE  -> "cure light" (self-cast)
+ *   GREEN_MAGIC  (3) = TAR_CHAR_SELF       -> "detect hidden"
+ *   YELLOW_MAGIC (4) = TAR_OBJ_INV         -> "identify" (ring)
+ *
+ * YELLOW requires the ring to be in inventory (TAR_OBJ_INV).  The bot uses
+ * a three-tick cycle: remove ring → spam identify → wear ring.  During the
+ * cycle bot->spell_training is TRUE, which causes bot_ensure_geared() to
+ * skip all gear management so the ring stays in inventory.
+ *
+ * improve_spl fires after every cast attempt regardless of whether the
+ * spell effect applied (e.g. already cursed, already detected), so spells
+ * can be spammed repeatedly for color grinding.
+ *
+ * Post-class training unlocks Invoke powers 1-10 via "invoke learn", each
+ * costing (current_PINVOKE+1)*20 primal.  Active buffs (mageshield etc.)
+ * are toggled on by buff_check each time they are detected as missing.
+ * Mageshield is intentionally re-applied on the tick AFTER a discharge.
+ */
+
+#if defined(macintosh)
+#include <types.h>
+#else
+#include <sys/types.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "merc.h"
+#include "bot.h"
+
+/* -----------------------------------------------------------------------
+ * Color training tables
+ * ----------------------------------------------------------------------- */
+
+typedef struct { int color; const char *spell; const char *arg; } COLOR_TRAIN;
+
+/* One representative spell per color.  The arg is appended to the cast
+ * command; empty string means no argument (TAR_IGNORE / TAR_CHAR_SELF). */
+static const COLOR_TRAIN color_train[5] = {
+    { PURPLE_MAGIC, "faerie fog",    ""     },  /* TAR_IGNORE          */
+    { RED_MAGIC,    "curse",         "self" },  /* TAR_CHAR_OFFENSIVE  */
+    { BLUE_MAGIC,   "cure light",    "self" },  /* TAR_CHAR_DEFENSIVE  */
+    { GREEN_MAGIC,  "detect hidden", ""     },  /* TAR_CHAR_SELF       */
+    { YELLOW_MAGIC, "identify",      "ring" },  /* TAR_OBJ_INV         */
+};
+
+/* Spells the bot must practice before between_fights can cast them.
+ * Practicing costs 5000 exp the first time (see do_practice in act_info.c). */
+static const char *pre_class_practice[] = {
+    "faerie fog",
+    "curse",
+    "remove curse",
+    "cure light",
+    "armor",
+    "bless",
+    "detect hidden",
+    "detect invis",
+    "stone skin",
+    "identify",
+    NULL
+};
+
+/* -----------------------------------------------------------------------
+ * Helpers
+ * ----------------------------------------------------------------------- */
+
+/* Mirrors bot_should_practice() from bot_ai.c (which is static there). */
+static bool mage_can_practice( CHAR_DATA *ch, const char *spell_name )
+{
+    int sn = skill_lookup( spell_name );
+    if ( sn < 0 ) return FALSE;
+    if ( ch->level < skill_table[sn].skill_level ) return FALSE;
+    if ( ch->pcdata->learned[sn] >= 100 ) return FALSE;
+    if ( ch->exp < 5000 ) return FALSE;
+    return TRUE;
+}
+
+/* Returns the index (0-4) of the color with the lowest spl[] value that
+ * has not yet reached cap.  Returns -1 if all colors are at or above cap. */
+static int mage_lowest_color( CHAR_DATA *ch, int cap )
+{
+    int i, min_val = cap, min_idx = -1;
+    for ( i = 0; i < 5; i++ )
+    {
+        if ( ch->spl[i] < min_val )
+        {
+            min_val = ch->spl[i];
+            min_idx = i;
+        }
+    }
+    return min_idx;
+}
+
+/* -----------------------------------------------------------------------
+ * Vtable: should_train
+ * ----------------------------------------------------------------------- */
+
+static bool bot_mage_should_train( CHAR_DATA *ch )
+{
+    int i;
+
+    /* Pre-class: always grinding colors / mana */
+    if ( ch->level == 3 && ch->class == 0 )
+        return TRUE;
+
+    if ( !IS_CLASS(ch, CLASS_MAGE) ) return FALSE;
+
+    /* Colors below cap */
+    for ( i = 0; i < 5; i++ )
+        if ( ch->spl[i] < 240 ) return TRUE;
+
+    /* Invokes not fully unlocked */
+    if ( ch->pcdata->powers[PINVOKE] < 10 ) return TRUE;
+
+    return FALSE;
+}
+
+/* -----------------------------------------------------------------------
+ * Vtable: do_train
+ *
+ * Pre-class: practices required spells and trains mana; returns TRUE while
+ * still grinding prereqs so bot_do_train does not fire selfclass early.
+ * Returns FALSE when all five colors >= 100 and max_mana >= 5000, letting
+ * the selfclass block in bot_do_train proceed normally.
+ *
+ * Post-class: buys next invoke level when primal is available.
+ * ----------------------------------------------------------------------- */
+
+static bool bot_mage_do_train( CHAR_DATA *ch )
+{
+    int i;
+
+    /* ---- Pre-class gate ---- */
+    if ( ch->level == 3 && ch->class == 0 )
+    {
+        /* Practice required spells first so between_fights can cast them */
+        for ( i = 0; pre_class_practice[i] != NULL; i++ )
+        {
+            if ( mage_can_practice(ch, pre_class_practice[i]) )
+            {
+                char cmd[64];
+                sprintf( cmd, "practice %s", pre_class_practice[i] );
+                bot_cmd( ch, cmd );
+                return TRUE;
+            }
+        }
+
+        /* Train mana toward 5000 */
+        if ( ch->max_mana < 5000 && ch->exp >= ch->max_mana + 1 )
+        {
+            bot_cmd( ch, "train mana" );
+            return TRUE;
+        }
+
+        /* Still waiting on colors (between_fights casts the training spells) */
+        for ( i = 0; i < 5; i++ )
+            if ( ch->spl[i] < 100 ) return TRUE;
+
+        /* All prereqs met - return FALSE so selfclass fires */
+        return FALSE;
+    }
+
+    /* ---- Post-class: invoke ladder ---- */
+    if ( !IS_CLASS(ch, CLASS_MAGE) ) return FALSE;
+
+    if ( ch->pcdata->powers[PINVOKE] < 10 )
+    {
+        int cost = (ch->pcdata->powers[PINVOKE] + 1) * 20;
+        if ( ch->practice >= cost )
+        {
+            bot_cmd( ch, "invoke learn" );
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+/* -----------------------------------------------------------------------
+ * Vtable: buff_check
+ *
+ * Activates invoke buffs that are missing.  Issues at most one command per
+ * call.  Mageshield is re-applied here on the tick after discharge removes
+ * it, which is the intended aggressive cycling pattern.
+ * ----------------------------------------------------------------------- */
+
+static bool bot_mage_buff_check( CHAR_DATA *ch )
+{
+    int pinvoke, totalcost;
+
+    if ( !IS_CLASS(ch, CLASS_MAGE) ) return FALSE;
+
+    pinvoke = ch->pcdata->powers[PINVOKE];
+
+    /* Once all five invokes are unlocked, use "invoke all" for efficiency */
+    if ( pinvoke >= 9 )
+    {
+        totalcost = 0;
+        if ( !IS_ITEMAFF(ch, ITEMA_MAGESHIELD) )  totalcost += 25;
+        if ( !IS_ITEMAFF(ch, ITEMA_DEFLECTOR) )   totalcost += 5;
+        if ( !IS_ITEMAFF(ch, ITEMA_STEELSHIELD) ) totalcost += 5;
+        if ( !IS_ITEMAFF(ch, ITEMA_ILLUSIONS) )   totalcost += 5;
+        if ( !IS_ITEMAFF(ch, ITEMA_BEAST) )       totalcost += 10;
+
+        if ( totalcost > 0 && ch->practice >= totalcost )
+        {
+            bot_cmd( ch, "invoke all" );
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    /* Individual activation in priority order */
+    if ( pinvoke >= 2
+      && !IS_ITEMAFF(ch, ITEMA_MAGESHIELD)
+      && ch->practice >= 25 )
+    { bot_cmd( ch, "invoke mageshield" ); return TRUE; }
+
+    if ( pinvoke >= 5
+      && !IS_ITEMAFF(ch, ITEMA_DEFLECTOR)
+      && ch->practice >= 5 )
+    { bot_cmd( ch, "invoke deflector" ); return TRUE; }
+
+    if ( pinvoke >= 6
+      && !IS_ITEMAFF(ch, ITEMA_STEELSHIELD)
+      && ch->practice >= 5 )
+    { bot_cmd( ch, "invoke steelshield" ); return TRUE; }
+
+    if ( pinvoke >= 8
+      && !IS_ITEMAFF(ch, ITEMA_ILLUSIONS)
+      && ch->practice >= 5 )
+    { bot_cmd( ch, "invoke illusions" ); return TRUE; }
+
+    if ( pinvoke >= 9
+      && !IS_ITEMAFF(ch, ITEMA_BEAST)
+      && ch->practice >= 10 )
+    { bot_cmd( ch, "invoke beast" ); return TRUE; }
+
+    return FALSE;
+}
+
+/* -----------------------------------------------------------------------
+ * Vtable: combat_action
+ *
+ * Priority:
+ *   0. chant heal  - when HP < 40% and mana >= 1500
+ *   1. discharge   - aggressively whenever mageshield is up (PINVOKE >= 4)
+ *                    buff_check re-applies mageshield on the next tick
+ *   2. chaos magic - 15% random chance when mana >= 1500
+ *   3. chant damage - default when mana >= 1000
+ * ----------------------------------------------------------------------- */
+
+static void bot_mage_combat_action( CHAR_DATA *ch )
+{
+    CHAR_DATA *target = ch->fighting;
+    char       cmd[MAX_INPUT_LENGTH];
+
+    if ( target == NULL || ch->pcdata == NULL ) return;
+
+    /* Priority 0: emergency heal */
+    if ( ch->hit < ch->max_hit * 2 / 5 && ch->mana >= 1500 )
+    {
+        bot_cmd( ch, "chant heal" );
+        return;
+    }
+
+    /* Priority 1: discharge aggressively - removes mageshield for AoE blast;
+     * buff_check will re-apply mageshield next tick */
+    if ( IS_ITEMAFF(ch, ITEMA_MAGESHIELD)
+      && ch->pcdata->powers[PINVOKE] >= 4 )
+    {
+        bot_cmd( ch, "discharge" );
+        return;
+    }
+
+    /* Priority 2: chaos magic (random 15%) */
+    if ( ch->mana >= 1500 && number_range(1, 100) <= 15 )
+    {
+        sprintf( cmd, "chaos %s", target->name );
+        bot_cmd( ch, cmd );
+        return;
+    }
+
+    /* Default: chant damage (5 elemental hits scaled by color levels) */
+    if ( ch->mana >= 1000 )
+    {
+        bot_cmd( ch, "chant damage" );
+        return;
+    }
+}
+
+/* -----------------------------------------------------------------------
+ * Vtable: between_fights
+ *
+ * Spams color training spells one per call, targeting the lowest color
+ * that hasn't yet reached the current cap (100 pre-class, 240 post-class).
+ *
+ * YELLOW training (TAR_OBJ_INV) requires the ring to be in inventory, not
+ * worn.  When YELLOW is selected the bot enters a three-tick cycle:
+ *
+ *   Tick 1: set spell_training=TRUE, "remove ring"
+ *   Tick 2+: "cast 'identify' ring" (repeats while YELLOW is still lowest)
+ *   Final:   "wear ring", clear spell_training
+ *
+ * bot_ensure_geared skips the gear check while spell_training is set so
+ * the ring stays in inventory for the full duration of the cycle.
+ *
+ * Returns TRUE when a command was issued, FALSE otherwise.
+ * ----------------------------------------------------------------------- */
+
+static bool bot_mage_between_fights( CHAR_DATA *ch )
+{
+    BOT_DATA *bot = ch->pcdata ? ch->pcdata->botdata : NULL;
+    int       cap, color_idx, sn;
+    char      cmd[MAX_INPUT_LENGTH];
+    OBJ_DATA *obj;
+
+    if ( !bot ) return FALSE;
+
+    /* Determine training cap */
+    if ( ch->class == 0 )
+        cap = 100;
+    else if ( IS_CLASS(ch, CLASS_MAGE) )
+        cap = 240;
+    else
+        return FALSE;
+
+    /* ---- YELLOW identify cycle ---- */
+    if ( bot->spell_training )
+    {
+        /* Find the ring that is currently in inventory (not worn) */
+        OBJ_DATA *inv_ring = NULL;
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        {
+            if ( obj->wear_loc == WEAR_NONE && is_name("ring", obj->name) )
+            { inv_ring = obj; break; }
+        }
+
+        /* Check if YELLOW is still the priority color */
+        color_idx = mage_lowest_color(ch, cap);
+
+        if ( inv_ring != NULL && color_idx == YELLOW_MAGIC )
+        {
+            /* Still training: cast identify on the inventory ring */
+            bot_cmd( ch, "cast 'identify' ring" );
+            return TRUE;
+        }
+
+        /* Done: YELLOW hit cap, another color took priority, or ring vanished.
+         * Re-wear the ring if a finger slot is empty, then clear the flag. */
+        if ( get_eq_char(ch, WEAR_FINGER_L) == NULL
+          || get_eq_char(ch, WEAR_FINGER_R) == NULL )
+        {
+            bot_cmd( ch, "wear ring" );
+        }
+        bot->spell_training = FALSE;
+        return TRUE;
+    }
+
+    /* ---- Normal color training ---- */
+    color_idx = mage_lowest_color(ch, cap);
+    if ( color_idx < 0 ) return FALSE;  /* all at cap */
+
+    if ( color_idx == YELLOW_MAGIC )
+    {
+        /* Start the identify cycle: remove the ring to put it in inventory */
+        OBJ_DATA *worn_ring = get_eq_char(ch, WEAR_FINGER_L);
+        if ( worn_ring == NULL ) worn_ring = get_eq_char(ch, WEAR_FINGER_R);
+
+        if ( worn_ring != NULL )
+        {
+            bot->spell_training = TRUE;
+            bot_cmd( ch, "remove ring" );
+            return TRUE;
+        }
+
+        /* Ring already in inventory (e.g. from a previous incomplete cycle) */
+        for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
+        {
+            if ( obj->wear_loc == WEAR_NONE && is_name("ring", obj->name) )
+            {
+                bot->spell_training = TRUE;
+                bot_cmd( ch, "cast 'identify' ring" );
+                return TRUE;
+            }
+        }
+
+        /* No ring available at all this tick — skip */
+        return FALSE;
+    }
+
+    /* All other colors: just cast the training spell */
+    sn = skill_lookup( color_train[color_idx].spell );
+    if ( sn < 0 || ch->pcdata->learned[sn] < 1 ) return FALSE;
+
+    if ( color_train[color_idx].arg[0] != '\0' )
+        sprintf( cmd, "cast '%s' %s", color_train[color_idx].spell,
+                 color_train[color_idx].arg );
+    else
+        sprintf( cmd, "cast '%s'", color_train[color_idx].spell );
+
+    bot_cmd( ch, cmd );
+    return TRUE;
+}
+
+/* -----------------------------------------------------------------------
+ * Exported vtable
+ * ----------------------------------------------------------------------- */
+
+const BOT_CLASS_AI bot_mage_ai = {
+    bot_mage_should_train,   /* should_train   */
+    bot_mage_do_train,       /* do_train       */
+    bot_mage_buff_check,     /* buff_check     */
+    bot_mage_combat_action,  /* combat_action  */
+    bot_mage_between_fights  /* between_fights */
+};

@@ -202,6 +202,27 @@ static const BOT_GEAR_PIECE gear_werewolf[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+static const BOT_GEAR_PIECE gear_mage[] = {
+    { WEAR_FINGER_L, "magearmor ring",     60 },
+    { WEAR_FINGER_R, "magearmor ring",     60 },
+    { WEAR_NECK_1,   "magearmor collar",   60 },
+    { WEAR_NECK_2,   "magearmor collar",   60 },
+    { WEAR_BODY,     "magearmor robe",     60 },
+    { WEAR_HEAD,     "magearmor cap",      60 },
+    { WEAR_LEGS,     "magearmor leggings", 60 },
+    { WEAR_FEET,     "magearmor boots",    60 },
+    { WEAR_HANDS,    "magearmor gloves",   60 },
+    { WEAR_ARMS,     "magearmor sleeves",  60 },
+    { WEAR_ABOUT,    "magearmor cape",     60 },
+    { WEAR_WAIST,    "magearmor belt",     60 },
+    { WEAR_WRIST_L,  "magearmor bracer",   60 },
+    { WEAR_WRIST_R,  "magearmor bracer",   60 },
+    { WEAR_FACE,     "magearmor mask",     60 },
+    { WEAR_WIELD,    "magearmor staff",    60 },
+    { WEAR_HOLD,     "magearmor dagger",   60 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -209,7 +230,8 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_ninja,     /* BOT_CLASS_NINJA    */
     gear_demon,     /* BOT_CLASS_DEMON    */
     gear_drow,      /* BOT_CLASS_DROW     */
-    gear_werewolf   /* BOT_CLASS_WEREWOLF */
+    gear_werewolf,  /* BOT_CLASS_WEREWOLF */
+    gear_mage       /* BOT_CLASS_MAGE     */
 };
 
 /* -----------------------------------------------------------------------

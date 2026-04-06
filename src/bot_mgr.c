@@ -68,6 +68,11 @@ static const struct {
     { "Torval",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 45, 70, 65 },
     { "Hakon",   BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 25, 85, 30 },
     { "Bjarga",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 70, 60, 50 },
+    { "Zorn",    BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 45, 70, 50 },
+    { "Elyx",    BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 70, 55, 65 },
+    { "Siveth",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 60, 65, 45 },
+    { "Kavar",   BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 35, 80, 35 },
+    { "Vordyn",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 80, 45, 60 },
 
     /* --- Long-lived roster: stay weeks before retiring --- */
     { "Vex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      30, 90, 50 },
@@ -100,6 +105,11 @@ static const struct {
     { "Sigrun",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      65, 60, 65 },
     { "Mordak",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      40, 85, 40 },
     { "Skaldi",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      55, 70, 55 },
+    { "Arcyn",   BOT_CLASS_MAGE,      BOT_LIFE_LONG,      55, 70, 55 },
+    { "Rendal",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      65, 60, 50 },
+    { "Calix",   BOT_CLASS_MAGE,      BOT_LIFE_LONG,      40, 80, 40 },
+    { "Pyrion",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      75, 50, 65 },
+    { "Thexan",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      30, 85, 35 },
 
     /* --- Short-lived roster: cycle through, retire fast --- */
     { "Thresh",  BOT_CLASS_MONK,    BOT_LIFE_SHORT,     80, 30, 50 },
@@ -128,6 +138,10 @@ static const struct {
     { "Skoll",   BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     35, 85, 45 },
     { "Hati",    BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     50, 80, 35 },
     { "Wulfric", BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     70, 65, 60 },
+    { "Flux",    BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     50, 75, 55 },
+    { "Lyrex",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     70, 60, 45 },
+    { "Nexar",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     40, 80, 50 },
+    { "Oryx",    BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     60, 65, 65 },
     { NULL }
 };
 
