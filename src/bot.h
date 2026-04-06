@@ -146,6 +146,7 @@ struct bot_data {
     bool                spell_training;     /* TRUE while mage is identify-cycling a ring; suppresses gear management */
     bool                limb_gear_call;     /* TRUE = call all issued for limb-loss gear, not yet confirmed back */
     bool                blind_recovery;     /* TRUE after recall for blindness - cure next tick */
+    bool                meditate_pending;   /* TRUE = gear stood us up; meditate after gear settles */
     char                nav_cmds[32][32];  /* Queued navigation commands  */
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */

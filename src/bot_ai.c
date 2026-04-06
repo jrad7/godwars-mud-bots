@@ -1769,12 +1769,17 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
             return;
     }
 
-    /* Mage-class bots must meditate to regain mana efficiently */
+    /* Mage-class bots must meditate to regain mana efficiently.
+     * Wait while bot_ensure_geared still has work to do (meditate_pending).
+     * Gear can take many ticks; the flag clears only when gear_check falls
+     * through with nothing left, preventing a meditate->stand->meditate loop. */
     if ( ch->position != POS_MEDITATING
       && ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
         || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
         || IS_CLASS(ch, CLASS_LICH) ) )
     {
+        if ( bot->meditate_pending )
+            return;   /* gear not settled yet — wait */
         bot_cmd( ch, "meditate" );
         return;
     }
