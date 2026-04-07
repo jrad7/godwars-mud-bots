@@ -436,7 +436,8 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         bot->state_timer     = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
         bot->needs_meditate  = ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
                                || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
-                               || IS_CLASS(ch, CLASS_LICH) );
+                               || IS_CLASS(ch, CLASS_LICH) || IS_CLASS(ch, CLASS_ANGEL)
+                               || IS_CLASS(ch, CLASS_TANARRI) );
         bot->ready_meditate  = FALSE;
         break;
     case BOT_LOGGING_OUT:

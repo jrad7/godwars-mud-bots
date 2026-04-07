@@ -1654,8 +1654,7 @@ void do_sit( CHAR_DATA *ch, char *argument )
 
 void do_meditate( CHAR_DATA *ch, char *argument )
 {
-    if (IS_NPC(ch) || (!IS_CLASS(ch, CLASS_MAGE) && !IS_CLASS(ch, CLASS_MONK)
-&& !IS_CLASS(ch, CLASS_NINJA) && !IS_CLASS(ch, CLASS_DROW) && !IS_CLASS(ch, CLASS_LICH)))
+    if ( IS_NPC(ch) )
     {
 	send_to_char("You are unable to attain the correct state of mind.\n\r",ch);
 	return;
