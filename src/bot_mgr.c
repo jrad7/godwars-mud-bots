@@ -73,6 +73,16 @@ static const struct {
     { "Siveth",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 60, 65, 45 },
     { "Kavar",   BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 35, 80, 35 },
     { "Vordyn",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 80, 45, 60 },
+    { "Vaknor",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 35, 85, 35 },
+    { "Yzrath",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 25, 90, 25 },
+    { "Grazath", BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 45, 80, 45 },
+    { "Sulkath", BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 55, 75, 30 },
+    { "Daemos",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 30, 95, 20 },
+    { "Seravyn", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 75, 35, 65 },
+    { "Lumael",  BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 85, 25, 70 },
+    { "Caelith", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 65, 45, 55 },
+    { "Auren",   BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 70, 30, 75 },
+    { "Theriel", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 90, 20, 60 },
 
     /* --- Long-lived roster: stay weeks before retiring --- */
     { "Vex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      30, 90, 50 },
@@ -110,6 +120,16 @@ static const struct {
     { "Calix",   BOT_CLASS_MAGE,      BOT_LIFE_LONG,      40, 80, 40 },
     { "Pyrion",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      75, 50, 65 },
     { "Thexan",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      30, 85, 35 },
+    { "Kazthar", BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      40, 85, 40 },
+    { "Morax",   BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      30, 90, 30 },
+    { "Tyrith",  BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      50, 75, 50 },
+    { "Nazzar",  BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      35, 80, 45 },
+    { "Vexrath", BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      60, 70, 35 },
+    { "Valael",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      80, 25, 65 },
+    { "Dawniel", BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      70, 30, 70 },
+    { "Sorath",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      75, 35, 60 },
+    { "Lirien",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      85, 20, 75 },
+    { "Auryn",   BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      65, 45, 55 },
 
     /* --- Short-lived roster: cycle through, retire fast --- */
     { "Thresh",  BOT_CLASS_MONK,    BOT_LIFE_SHORT,     80, 30, 50 },
@@ -142,6 +162,14 @@ static const struct {
     { "Lyrex",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     70, 60, 45 },
     { "Nexar",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     40, 80, 50 },
     { "Oryx",    BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     60, 65, 65 },
+    { "Omrath",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     25, 95, 25 },
+    { "Lazath",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     45, 80, 40 },
+    { "Zraketh", BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     30, 85, 30 },
+    { "Belrak",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     55, 75, 35 },
+    { "Celael",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     75, 40, 60 },
+    { "Mirel",   BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     80, 30, 70 },
+    { "Radael",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     65, 45, 65 },
+    { "Zoriel",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     85, 25, 55 },
     { NULL }
 };
 
