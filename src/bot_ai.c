@@ -2217,15 +2217,20 @@ void bot_update( CHAR_DATA *ch )
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
 
-    /* Per-tick status prompt to any watchbot watcher */
+    /* Per-tick status prompt to any watchbot watcher (every 3 ticks) */
     if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
     {
-        char prompt[256];
-        snprintf( prompt, sizeof(prompt),
-            "[TICK] %s (%s) | %-11s | %dhp %dm %dmv %dxp\n\r",
-            ch->name, bot_class_str(ch), bot_state_str(bot->state),
-            ch->hit, ch->mana, ch->move, ch->exp );
-        write_to_buffer( ch->desc->snoop_by, prompt, 0 );
+        bot->watch_tick++;
+        if ( bot->watch_tick >= 3 )
+        {
+            char prompt[256];
+            bot->watch_tick = 0;
+            snprintf( prompt, sizeof(prompt),
+                "[TICK] %s (%s) | %-11s | %dhp %dm %dmv %dxp\n\r",
+                ch->name, bot_class_str(ch), bot_state_str(bot->state),
+                ch->hit, ch->mana, ch->move, ch->exp );
+            write_to_buffer( ch->desc->snoop_by, prompt, 0 );
+        }
     }
 
     /* Safety: eject any bot trapped in a sealed classhq cluster.

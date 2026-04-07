@@ -168,6 +168,7 @@ struct bot_data {
     char                cmd_history[10][64];
     int                 cmd_history_head;  /* Next write slot (0-9)       */
     int                 cmd_history_count; /* How many slots are filled   */
+    int                 watch_tick;        /* Counts ticks for prompt throttle */
 };
 typedef struct bot_data BOT_DATA;
 
