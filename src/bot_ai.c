@@ -634,13 +634,17 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_WEREWOLF:  return "werewolf";
     case BOT_CLASS_MAGE:      return "mage";
     case BOT_CLASS_TANARRI:   return "tanarri";
-    default:                  return "demon";
+    case BOT_CLASS_ANGEL:     return "angel";
+    default:
+        bug( "bot_class_name: unknown class_pref %d", class_pref );
+        return NULL;
     }
 }
 
 /*
  * bot_primal_target - how much primal this bot needs to afford one class gear piece.
- * Werewolf gear costs 150; all others cost 60.
+ * Tanarri (taneq) and Angel (angelicarmor) gear costs 150 primal/piece.
+ * All other classed bots cost 60 primal/piece.
  * Returns 0 if the bot has no class yet (unclassed bots don't need primal).
  */
 static int bot_primal_target( CHAR_DATA *ch )
@@ -648,7 +652,10 @@ static int bot_primal_target( CHAR_DATA *ch )
     BOT_DATA *bot = ch->pcdata->botdata;
     if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
         return 0;
-    return 60;   /* moonarmour costs 60 primal/piece — same as other classes */
+    if ( bot->roster->class_pref == BOT_CLASS_TANARRI
+      || bot->roster->class_pref == BOT_CLASS_ANGEL )
+        return 150;
+    return 60;
 }
 
 /*
@@ -889,8 +896,10 @@ static bool bot_do_train( CHAR_DATA *ch )
             /* fall through to selfclass — game checks max_mana >= 5000 */
         }
 
+        const char *cname = bot_class_name(pref);
+        if ( cname == NULL ) return FALSE;
         char cmd[64];
-        sprintf( cmd, "selfclass %s", bot_class_name(pref) );
+        sprintf( cmd, "selfclass %s", cname );
         bot_cmd( ch, cmd );
         return TRUE;
     }
