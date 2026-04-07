@@ -220,8 +220,8 @@ void load_bot_roster( void )
         r->offline_until = 0;
     }
 
-    /* 20 Long-lived */
-    for ( i = 0; i < 20; i++ )
+    /* 28 Long-lived */
+    for ( i = 0; i < 28; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
@@ -236,8 +236,8 @@ void load_bot_roster( void )
         r->offline_until = 0;
     }
 
-    /* 20 Short-lived */
-    for ( i = 0; i < 20; i++ )
+    /* 28 Short-lived */
+    for ( i = 0; i < 28; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
