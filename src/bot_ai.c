@@ -26,6 +26,7 @@ extern const BOT_CLASS_AI bot_drow_ai;
 extern const BOT_CLASS_AI bot_werewolf_ai;
 extern const BOT_CLASS_AI bot_mage_ai;
 extern const BOT_CLASS_AI bot_tanarri_ai;
+extern const BOT_CLASS_AI bot_angel_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
@@ -39,7 +40,8 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_drow_ai,      /* BOT_CLASS_DROW      */
     &bot_werewolf_ai,  /* BOT_CLASS_WEREWOLF  */
     &bot_mage_ai,      /* BOT_CLASS_MAGE      */
-    &bot_tanarri_ai    /* BOT_CLASS_TANARRI   */
+    &bot_tanarri_ai,   /* BOT_CLASS_TANARRI   */
+    &bot_angel_ai      /* BOT_CLASS_ANGEL     */
 };
 
 /* Forward declarations for stance functions defined in kav_fight.c / fight.c */

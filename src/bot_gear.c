@@ -223,6 +223,50 @@ static const BOT_GEAR_PIECE gear_mage[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Tanar'ri: claymore wield, 13 armor slots. Command: taneq. Cost: 150 primal.
+ * No hold slot — only one weapon piece exists (claymore, vnum 33200). */
+static const BOT_GEAR_PIECE gear_tanarri[] = {
+    { WEAR_FINGER_L, "taneq ring",      150 },
+    { WEAR_FINGER_R, "taneq ring",      150 },
+    { WEAR_NECK_1,   "taneq collar",    150 },
+    { WEAR_NECK_2,   "taneq collar",    150 },
+    { WEAR_BODY,     "taneq plate",     150 },
+    { WEAR_HEAD,     "taneq helmet",    150 },
+    { WEAR_LEGS,     "taneq leggings",  150 },
+    { WEAR_FEET,     "taneq boots",     150 },
+    { WEAR_HANDS,    "taneq gauntlets", 150 },
+    { WEAR_ARMS,     "taneq sleeves",   150 },
+    { WEAR_ABOUT,    "taneq cloak",     150 },
+    { WEAR_WAIST,    "taneq belt",      150 },
+    { WEAR_WRIST_L,  "taneq bracer",    150 },
+    { WEAR_WRIST_R,  "taneq bracer",    150 },
+    { WEAR_FACE,     "taneq visor",     150 },
+    { WEAR_WIELD,    "taneq claymore",  150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
+/* Angel: sword wield, 13 armor slots. Command: angelicarmor. Cost: 150 primal.
+ * No hold slot — only one weapon piece exists (sword, vnum 33192). */
+static const BOT_GEAR_PIECE gear_angel[] = {
+    { WEAR_FINGER_L, "angelicarmor ring",      150 },
+    { WEAR_FINGER_R, "angelicarmor ring",      150 },
+    { WEAR_NECK_1,   "angelicarmor necklace",  150 },
+    { WEAR_NECK_2,   "angelicarmor necklace",  150 },
+    { WEAR_BODY,     "angelicarmor plate",     150 },
+    { WEAR_HEAD,     "angelicarmor helmet",    150 },
+    { WEAR_LEGS,     "angelicarmor leggings",  150 },
+    { WEAR_FEET,     "angelicarmor boots",     150 },
+    { WEAR_HANDS,    "angelicarmor gauntlets", 150 },
+    { WEAR_ARMS,     "angelicarmor sleeves",   150 },
+    { WEAR_ABOUT,    "angelicarmor cloak",     150 },
+    { WEAR_WAIST,    "angelicarmor belt",      150 },
+    { WEAR_WRIST_L,  "angelicarmor bracer",    150 },
+    { WEAR_WRIST_R,  "angelicarmor bracer",    150 },
+    { WEAR_FACE,     "angelicarmor visor",     150 },
+    { WEAR_WIELD,    "angelicarmor sword",     150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -231,7 +275,9 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_demon,     /* BOT_CLASS_DEMON    */
     gear_drow,      /* BOT_CLASS_DROW     */
     gear_werewolf,  /* BOT_CLASS_WEREWOLF */
-    gear_mage       /* BOT_CLASS_MAGE     */
+    gear_mage,      /* BOT_CLASS_MAGE     */
+    gear_tanarri,   /* BOT_CLASS_TANARRI  */
+    gear_angel      /* BOT_CLASS_ANGEL    */
 };
 
 /* -----------------------------------------------------------------------
