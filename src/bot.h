@@ -36,6 +36,15 @@ struct descriptor_data;
 #define BOT_MIN_ONLINE      20
 #define BOT_MAX_ONLINE      40
 
+/* Bot Class Testing Array
+ * Set BOT_TEST_CLASSES_COUNT > 0 to restrict which classes log into the game.
+ * Example to only run Vampires and Monks: 
+ * #define BOT_TEST_CLASSES_COUNT 2
+ * and define bot_test_classes in bot_mgr.c as: { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK }
+ */
+#define BOT_TEST_CLASSES_COUNT 0
+extern const int bot_test_classes[];
+
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
 #define BOT_SESSION_MAX  (240 * 60)   /* 4 hours    */

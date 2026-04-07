@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include "merc.h"
 #include "bot.h"
 
@@ -25,153 +26,122 @@ static bool      bot_roster_dirty  = FALSE;
 
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
-/*
- * Default bot roster - used if bots.txt doesn't exist yet.
- * Mix of classes, lifespans, and personalities.
- */
-static const struct {
-    const char *name;
-    int         class_pref;
-    int         lifespan;
-    int         chattiness;
-    int         aggression;
-    int         explorer;
-} bot_defaults[] = {
-    /* --- Permanent roster: world fixtures, always come back --- */
-    { "Krael",   BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 60, 80, 40 },
-    { "Sylas",   BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 80, 40, 60 },
-    { "Zara",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 70, 50, 80 },
-    { "Kira",    BOT_CLASS_NINJA,   BOT_LIFE_PERMANENT, 50, 60, 90 },
-    { "Rael",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 60, 40, 70 },
-    { "Arix",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 40, 75, 35 },
-    { "Caius",   BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 55, 65, 55 },
-    { "Eris",    BOT_CLASS_NINJA,   BOT_LIFE_PERMANENT, 75, 55, 65 },
-    { "Grix",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 45, 45, 80 },
-    { "Jade",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 85, 35, 50 },
-    { "Lorn",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 30, 85, 30 },
-    { "Mael",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 70, 50, 60 },
-    { "Oryn",    BOT_CLASS_NINJA,   BOT_LIFE_PERMANENT, 60, 70, 45 },
-    { "Reth",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 50, 80, 40 },
-    { "Skai",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 65, 60, 70 },
-    { "Thorn",   BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 35, 90, 25 },
-    { "Vael",    BOT_CLASS_NINJA,   BOT_LIFE_PERMANENT, 80, 40, 55 },
-    { "Wrex",    BOT_CLASS_DEMON,   BOT_LIFE_PERMANENT, 25, 95, 20 },
-    { "Ashe",    BOT_CLASS_VAMPIRE, BOT_LIFE_PERMANENT, 90, 30, 75 },
-    { "Cael",    BOT_CLASS_MONK,    BOT_LIFE_PERMANENT, 55, 55, 55 },
-    { "Zilvra",  BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 40, 70, 50 },
-    { "Drisnil", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 55, 60, 45 },
-    { "Garak",   BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 35, 75, 55 },
-    { "Fenris",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 50, 65, 40 },
-    { "Xolvrae", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 30, 80, 40 },
-    { "Nathrae", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 65, 55, 65 },
-    { "Valdris", BOT_CLASS_DROW,      BOT_LIFE_PERMANENT, 50, 65, 35 },
-    { "Torval",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 45, 70, 65 },
-    { "Hakon",   BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 25, 85, 30 },
-    { "Bjarga",  BOT_CLASS_WEREWOLF,  BOT_LIFE_PERMANENT, 70, 60, 50 },
-    { "Zorn",    BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 45, 70, 50 },
-    { "Elyx",    BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 70, 55, 65 },
-    { "Siveth",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 60, 65, 45 },
-    { "Kavar",   BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 35, 80, 35 },
-    { "Vordyn",  BOT_CLASS_MAGE,      BOT_LIFE_PERMANENT, 80, 45, 60 },
-    { "Vaknor",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 35, 75, 35 },
-    { "Yzrath",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 25, 60, 25 },
-    { "Grazath", BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 45, 50, 45 },
-    { "Sulkath", BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 55, 25, 30 },
-    { "Daemos",  BOT_CLASS_TANARRI,   BOT_LIFE_PERMANENT, 30, 95, 20 },
-    { "Seravyn", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 75, 35, 65 },
-    { "Lumael",  BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 85, 25, 70 },
-    { "Caelith", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 65, 45, 55 },
-    { "Auren",   BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 70, 30, 75 },
-    { "Theriel", BOT_CLASS_ANGEL,     BOT_LIFE_PERMANENT, 90, 20, 60 },
+/* Define the current bot test classes */
+const int bot_test_classes[] = { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK };
 
-    /* --- Long-lived roster: stay weeks before retiring --- */
-    { "Vex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      30, 90, 50 },
-    { "Mordain", BOT_CLASS_DEMON,   BOT_LIFE_LONG,      40, 90, 30 },
-    { "Nyx",     BOT_CLASS_DEMON,   BOT_LIFE_LONG,      30, 85, 40 },
-    { "Soren",   BOT_CLASS_NINJA,   BOT_LIFE_LONG,      70, 60, 50 },
-    { "Bael",    BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      50, 70, 60 },
-    { "Dex",     BOT_CLASS_NINJA,   BOT_LIFE_LONG,      40, 80, 55 },
-    { "Fane",    BOT_CLASS_DEMON,   BOT_LIFE_LONG,      60, 65, 45 },
-    { "Haze",    BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      75, 45, 70 },
-    { "Ivar",    BOT_CLASS_MONK,    BOT_LIFE_LONG,      45, 60, 65 },
-    { "Jael",    BOT_CLASS_NINJA,   BOT_LIFE_LONG,      65, 55, 50 },
-    { "Keth",    BOT_CLASS_DEMON,   BOT_LIFE_LONG,      35, 85, 35 },
-    { "Nexx",    BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      55, 75, 45 },
-    { "Pax",     BOT_CLASS_MONK,    BOT_LIFE_LONG,      80, 25, 80 },
-    { "Seraph",  BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      70, 40, 75 },
-    { "Tyral",   BOT_CLASS_NINJA,   BOT_LIFE_LONG,      60, 65, 60 },
-    { "Ulric",   BOT_CLASS_DEMON,   BOT_LIFE_LONG,      45, 80, 30 },
-    { "Vynn",    BOT_CLASS_MONK,    BOT_LIFE_LONG,      75, 35, 70 },
-    { "Xan",     BOT_CLASS_VAMPIRE, BOT_LIFE_LONG,      50, 60, 85 },
-    { "Yrel",    BOT_CLASS_NINJA,   BOT_LIFE_LONG,      85, 45, 55 },
-    { "Zeth",    BOT_CLASS_DEMON,   BOT_LIFE_LONG,      40, 75, 50 },
-    { "Vrae",    BOT_CLASS_DROW,      BOT_LIFE_LONG,      60, 65, 55 },
-    { "Ilvaen",  BOT_CLASS_DROW,      BOT_LIFE_LONG,      50, 75, 50 },
-    { "Szoryn",  BOT_CLASS_DROW,      BOT_LIFE_LONG,      35, 80, 45 },
-    { "Quelzar", BOT_CLASS_DROW,      BOT_LIFE_LONG,      75, 60, 60 },
-    { "Delvrae", BOT_CLASS_DROW,      BOT_LIFE_LONG,      45, 70, 70 },
-    { "Lykan",   BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      45, 80, 60 },
-    { "Ulfgar",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      30, 90, 35 },
-    { "Sigrun",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      65, 60, 65 },
-    { "Mordak",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      40, 85, 40 },
-    { "Skaldi",  BOT_CLASS_WEREWOLF,  BOT_LIFE_LONG,      55, 70, 55 },
-    { "Arcyn",   BOT_CLASS_MAGE,      BOT_LIFE_LONG,      55, 70, 55 },
-    { "Rendal",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      65, 60, 50 },
-    { "Calix",   BOT_CLASS_MAGE,      BOT_LIFE_LONG,      40, 80, 40 },
-    { "Pyrion",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      75, 50, 65 },
-    { "Thexan",  BOT_CLASS_MAGE,      BOT_LIFE_LONG,      30, 85, 35 },
-    { "Kazthar", BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      40, 75, 40 },
-    { "Morax",   BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      30, 90, 30 },
-    { "Tyrith",  BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      50, 55, 50 },
-    { "Nazzar",  BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      35, 30, 45 },
-    { "Vexrath", BOT_CLASS_TANARRI,   BOT_LIFE_LONG,      60, 70, 35 },
-    { "Valael",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      80, 25, 65 },
-    { "Dawniel", BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      70, 30, 70 },
-    { "Sorath",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      75, 35, 60 },
-    { "Lirien",  BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      85, 20, 75 },
-    { "Auryn",   BOT_CLASS_ANGEL,     BOT_LIFE_LONG,      65, 45, 55 },
+/* Extensible name generation */
+typedef struct {
+    int         bot_class;
+    const char *prefixes[32];
+    const char *suffixes[32];
+} BOT_NAME_SYLLABLES;
 
-    /* --- Short-lived roster: cycle through, retire fast --- */
-    { "Thresh",  BOT_CLASS_MONK,    BOT_LIFE_SHORT,     80, 30, 50 },
-    { "Draven",  BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     70, 50, 40 },
-    { "Mira",    BOT_CLASS_DEMON,   BOT_LIFE_SHORT,     80, 30, 70 },
-    { "Bran",    BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     50, 75, 60 },
-    { "Dusk",    BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     65, 55, 50 },
-    { "Emyr",    BOT_CLASS_MONK,    BOT_LIFE_SHORT,     90, 20, 85 },
-    { "Fex",     BOT_CLASS_DEMON,   BOT_LIFE_SHORT,     30, 90, 40 },
-    { "Gael",    BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     55, 65, 70 },
-    { "Hex",     BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     40, 80, 45 },
-    { "Krix",    BOT_CLASS_MONK,    BOT_LIFE_SHORT,     70, 40, 65 },
-    { "Luxe",    BOT_CLASS_DEMON,   BOT_LIFE_SHORT,     85, 35, 55 },
-    { "Naxi",    BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     60, 60, 75 },
-    { "Omix",    BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     45, 70, 50 },
-    { "Prex",    BOT_CLASS_MONK,    BOT_LIFE_SHORT,     75, 45, 60 },
-    { "Quen",    BOT_CLASS_DEMON,   BOT_LIFE_SHORT,     55, 65, 45 },
-    { "Rex",     BOT_CLASS_NINJA,   BOT_LIFE_SHORT,     35, 85, 35 },
-    { "Urax",    BOT_CLASS_VAMPIRE, BOT_LIFE_SHORT,     80, 40, 65 },
-    { "Wex",     BOT_CLASS_MONK,    BOT_LIFE_SHORT,     50, 55, 80 },
-    { "Sylvrix", BOT_CLASS_DROW,      BOT_LIFE_SHORT,     70, 55, 60 },
-    { "Chal",    BOT_CLASS_DROW,      BOT_LIFE_SHORT,     60, 65, 55 },
-    { "Belryn",  BOT_CLASS_DROW,      BOT_LIFE_SHORT,     80, 50, 70 },
-    { "Nizzre",  BOT_CLASS_DROW,      BOT_LIFE_SHORT,     45, 75, 45 },
-    { "Ragna",   BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     60, 70, 50 },
-    { "Skoll",   BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     35, 85, 45 },
-    { "Hati",    BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     50, 80, 35 },
-    { "Wulfric", BOT_CLASS_WEREWOLF,  BOT_LIFE_SHORT,     70, 65, 60 },
-    { "Flux",    BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     50, 75, 55 },
-    { "Lyrex",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     70, 60, 45 },
-    { "Nexar",   BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     40, 80, 50 },
-    { "Oryx",    BOT_CLASS_MAGE,      BOT_LIFE_SHORT,     60, 65, 65 },
-    { "Omrath",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     25, 95, 25 },
-    { "Lazath",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     45, 80, 40 },
-    { "Zraketh", BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     30, 85, 30 },
-    { "Belrak",  BOT_CLASS_TANARRI,   BOT_LIFE_SHORT,     55, 75, 35 },
-    { "Celael",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     75, 40, 60 },
-    { "Mirel",   BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     80, 30, 70 },
-    { "Radael",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     65, 45, 65 },
-    { "Zoriel",  BOT_CLASS_ANGEL,     BOT_LIFE_SHORT,     85, 25, 55 },
-    { NULL }
+static const BOT_NAME_SYLLABLES bot_names[] = {
+    { BOT_CLASS_VAMPIRE, 
+      {"Val","Luc","Dra","Syl","Vlad","Carm","Ser","Ale","Nic","Vik","Vym","Zar","Kael","Lor","Mor","Ves","Str","Cor","Noc","San","Var","Ery","Dae","Mar","Fer","Mal","Cas","Rav","Vor","Syn", NULL},
+      {"erius","ius","con","as","imir","illa","ena","ander","olai","tor","bat","ik","th","n","ien","ina","ia","us","os","is","el","ix","ar","on","yn","ith","in","us","an", NULL}
+    },
+    { BOT_CLASS_MONK,
+      {"Wei","Shen","Ten","Ryu","Li","Sok","Hak","Ken","Zou","Jin","Bo","Kai","Ren","Gou","Ak","Zhen","Ping","Tae","Chun","Min","Han","Hwa","Lei","Sun","Yun","Shi","Kwan","Jang","Fa","Wo", NULL},
+      {"zin","shi","do","po","chi","san","ku","ji","ma","pa","ho","feng","lin","ki","uma","su","wei","min","hua","tai","lo","shou","za","la","ko","no","zi","li","lu", NULL}
+    },
+    { BOT_CLASS_NINJA,
+      {"Ka","Shi","Han","Ku","Yo","Sa","Fu","Tsu","Rai","Kin","Gen","Oro","Za","Kyo","Iga","Kou","Yama","Masa","Ta","No","Mo","Ko","Sho","Jo","Gyu","Hya","Ryo","Ryu","Sö","Myo", NULL},
+      {"ge","no","zou","ro","ru","ya","ma","ki","jin","ji","chi","bu","ka","ho","tori","shu","goro","suke","bo","zo","ki","to","shi","sa","ko","ta","mi","wa","yu", NULL}
+    },
+    { BOT_CLASS_DEMON,
+      {"Az","Xa","Ka","Za","Ba","Me","Be","Lu","As","Mal","Bal","Gor","Mor","Zar","Bel","Xyl","Vex","Oru","Rak","Ghu","Paz","Neb","Dra","Kha","Urz","Vak","Zug","Gha","Ab","Xar", NULL},
+      {"azel","ph","el","riel","al","phisto","lial","cifer","taroth","phas","rog","goth","bus","ak","ial","xos","ox","ul","shur","gol","zu","ath","ak","ul","oz","ok","mot","don","us", NULL}
+    },
+    { BOT_CLASS_DROW,
+      {"Vhae","Dri","Pha","Jar","Zil","Na","Xol","Mal","Ili","Que","Niz","Szor","Ilv","Del","Bel","Dae","Zak","Rik","Jha","Nal","Dyr","Vel","Sol","Gom","Tir","Sab","Mer","El","Zin","Yas", NULL},
+      {"run","zz","raun","laxle","vra","thrae","vrae","ice","za","lzar","zre","yn","aen","vrae","ryn","mon","nafein","al","zen","tar","r","drin","aufein","phir","en","rae","il","a", NULL}
+    },
+    { BOT_CLASS_WEREWOLF,
+      {"Fen","Ly","Ga","Hati","Skoll","Wulf","Rag","Gar","Tor","Hak","Bjar","Sig","Mor","Skal","Ulf","Bori","Hroth","Sven","Tyr","Odi","Garm","Lup","Can","Varg","Ruf","Rho","Gunn","Bor","Haf","Ivar", NULL},
+      {"rir","can","rou","ric","na","ak","val","on","ga","run","dak","di","gar","is","gar","son","ulf","n","us","a","i","en","ar","o","ar","is","al","ik","i", NULL}
+    },
+    { BOT_CLASS_MAGE,
+      {"El","Merd","Ala","Sar","Rad","Fiz","Gand","Pug","Rin","Ari","Zor","Ely","Siv","Kav","Vor","Ig","Tho","Mag","Arch","Myst","Sol","Aza","Zeph","Ast","Obe","Nef","Tym","Cor","Vig","Sy", NULL},
+      {"minster","in","tar","uman","agast","ban","alf","cewind","en","n","x","eth","ar","dyn","nis","dor","us","on","ar","on","oth","yr","ral","ron","us","ia","on","or","l", NULL}
+    },
+    { BOT_CLASS_TANARRI,
+      {"Gra","Or","De","Pa","Be","Ma","Ba","Yen","Kaz","Mor","Tyr","Naz","Vex","Sulk","Mar","Fraz","Ju","Koz","Sith","Vul","Yee","Zzy","Alu","Baph","Dra","Gor","Hez","Nal","Qas","Tur", NULL},
+      {"zzt","cus","mogorgon","zuzu","lial","rilith","lor","oghu","thar","ax","ith","zar","rath","ath","leth","urbaa","iblex","zuh","is","mar","noghu","cz","nd","omet","gloth","gist","rou","fesh","sit","ag", NULL}
+    },
+    { BOT_CLASS_ANGEL,
+      {"Ga","Mi","U","Ra","Se","Lu","Cae","Au","The","Va","Daw","So","Li","Ce","Rad","Aza","Bara","Cama","Zad","Zaph","Joph","Mata","Pha","Sari","Tari","Zech","Gala","Leva","Nuri","Oph", NULL},
+      {"briel","chael","riel","phael","ravyn","mael","lith","ren","riel","lael","niel","rath","rien","lael","ael","zel","kiel","el","kiel","kiel","iel","tron","nuel","el","el","riel","driel","nael","el","anim", NULL}
+    },
+    /* Catchall for any new classes added in the future */
+    { -1,
+      {"Ka","Zo","Ve","Ja","Qui","Ny","Pa","Re","Lu","To","Ma","Da","Ga","Za","Xi","Xo","Xa","Xu","Xe","Ki","Ko","Ku","Ke","Zi","Zu","Ze","Vi","Vo","Vu","Va", NULL},
+      {"el","is","in","on","ar","us","ia","or","io","il","ex","os","ix","ax","ox","ux","a","o","i","e","u","ya","yo","yi","ye","yu","za","zo","zi", NULL}
+    }
 };
+
+static void bot_generate_name(int bot_class, char *buf, size_t buf_size)
+{
+    int i, p_count = 0, s_count = 0;
+    const BOT_NAME_SYLLABLES *syllables = NULL;
+
+    for (i = 0; bot_names[i].bot_class != -1; i++) {
+        if (bot_names[i].bot_class == bot_class) {
+            syllables = &bot_names[i];
+            break;
+        }
+    }
+    if (syllables == NULL) {
+        /* fallback to the catchall at the end */
+        for (i = 0; ; i++) {
+            if (bot_names[i].bot_class == -1) {
+                syllables = &bot_names[i];
+                break;
+            }
+        }
+    }
+
+    while (syllables->prefixes[p_count] != NULL) p_count++;
+    while (syllables->suffixes[s_count] != NULL) s_count++;
+
+    /* We have at least 15 items in each list above, but check safely anyway */
+    if (p_count > 0 && s_count > 0) {
+        snprintf(buf, buf_size, "%s%s", 
+                 syllables->prefixes[number_range(0, p_count - 1)],
+                 syllables->suffixes[number_range(0, s_count - 1)]);
+    } else {
+        snprintf(buf, buf_size, "Botguy");
+    }
+
+    /* ensure lowercase with uppercase first char */
+    buf[0] = toupper(buf[0]);
+    for (i = 1; buf[i] != '\0'; i++) {
+        buf[i] = tolower(buf[i]);
+    }
+}
+
+static void bot_generate_unique_name(int bot_class, char *buf, size_t buf_size)
+{
+    int attempts = 0;
+    bool unique = FALSE;
+
+    while (!unique && attempts < 100) {
+        bot_generate_name(bot_class, buf, buf_size);
+        unique = TRUE;
+        for (int i = 0; i < bot_roster_count; i++) {
+            if (!str_cmp(bot_roster[i].name, buf)) {
+                unique = FALSE;
+                break;
+            }
+        }
+        attempts++;
+    }
+    /* If we really can't find a unique one in 100 attempts, add a digit */
+    if (!unique) {
+        int r = number_range(1, 999);
+        snprintf(buf + strlen(buf), buf_size - strlen(buf), "%d", r);
+    }
+}
 
 /* -----------------------------------------------------------------------
  * Roster persistence
@@ -222,18 +192,52 @@ void load_bot_roster( void )
         }
     }
 
-    /* No file or empty - seed from defaults */
+    /* No file or empty - generate a fresh roster dynamically */
     bot_roster_count = 0;
-    for ( i = 0; bot_defaults[i].name != NULL && i < MAX_BOT_ROSTER; i++ )
+
+    /* 45 Permanent */
+    for ( i = 0; i < 45; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
-        strncpy( r->name,       bot_defaults[i].name,      sizeof(r->name)-1 );
-        r->class_pref   = bot_defaults[i].class_pref;
-        r->lifespan     = bot_defaults[i].lifespan;
-        r->chattiness   = bot_defaults[i].chattiness;
-        r->aggression   = bot_defaults[i].aggression;
-        r->explorer     = bot_defaults[i].explorer;
+        r->class_pref   = i % BOT_CLASS_COUNT;
+        bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
+        r->lifespan     = BOT_LIFE_PERMANENT;
+        r->chattiness   = number_range(30, 90);
+        r->aggression   = number_range(30, 90);
+        r->explorer     = number_range(30, 90);
+        r->retired      = FALSE;
+        r->online       = FALSE;
+        r->offline_until = 0;
+    }
+
+    /* 20 Long-lived */
+    for ( i = 0; i < 20; i++ )
+    {
+        BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
+        memset( r, 0, sizeof(*r) );
+        r->class_pref   = i % BOT_CLASS_COUNT;
+        bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
+        r->lifespan     = BOT_LIFE_LONG;
+        r->chattiness   = number_range(30, 90);
+        r->aggression   = number_range(30, 90);
+        r->explorer     = number_range(30, 90);
+        r->retired      = FALSE;
+        r->online       = FALSE;
+        r->offline_until = 0;
+    }
+
+    /* 20 Short-lived */
+    for ( i = 0; i < 20; i++ )
+    {
+        BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
+        memset( r, 0, sizeof(*r) );
+        r->class_pref   = i % BOT_CLASS_COUNT;
+        bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
+        r->lifespan     = BOT_LIFE_SHORT;
+        r->chattiness   = number_range(30, 90);
+        r->aggression   = number_range(30, 90);
+        r->explorer     = number_range(30, 90);
         r->retired      = FALSE;
         r->online       = FALSE;
         r->offline_until = 0;
@@ -631,18 +635,39 @@ void bot_logout( CHAR_DATA *ch )
             + (time_t)number_range( BOT_OFFLINE_MIN, BOT_OFFLINE_MAX );
 
         /* Retirement check */
+        bool retiring = FALSE;
         switch ( bot->roster->lifespan )
         {
         case BOT_LIFE_SHORT:
             if ( bot->roster->total_playtime >= BOT_RETIRE_SHORT )
-                bot->roster->retired = TRUE;
+                retiring = TRUE;
             break;
         case BOT_LIFE_LONG:
             if ( bot->roster->total_playtime >= BOT_RETIRE_LONG )
-                bot->roster->retired = TRUE;
+                retiring = TRUE;
             break;
         default:
             break;
+        }
+
+        if ( retiring )
+        {
+            char old_file[256];
+            char new_file[256];
+            snprintf(old_file, sizeof(old_file), "%s%s", PLAYER_DIR, capitalize(ch->name));
+            snprintf(new_file, sizeof(new_file), "%sretired/%s", PLAYER_DIR, capitalize(ch->name));
+            rename(old_file, new_file);
+
+            /* Replace the bot directly within its roster slot to maintain constraints */
+            bot_generate_unique_name(bot->roster->class_pref, bot->roster->name, sizeof(bot->roster->name));
+            bot->roster->total_playtime = 0;
+            bot->roster->retired = FALSE;
+            bot->roster->chattiness = number_range(30, 90);
+            bot->roster->aggression = number_range(30, 90);
+            bot->roster->explorer = number_range(30, 90);
+            
+            sprintf( log_buf, "Bot Mgr: A bot has retired. Roster slot replaced with new bot %s.", bot->roster->name );
+            log_string( log_buf );
         }
     }
 
@@ -769,6 +794,21 @@ void bot_manager_update( void )
             BOT_ROSTER_ENTRY *r = &bot_roster[ order[i] ];
             if ( r->retired || r->online ) continue;
             if ( r->offline_until != 0 && current_time < r->offline_until ) continue;
+
+            /* If there is a test class filter active, skip bots not in the array */
+            if ( BOT_TEST_CLASSES_COUNT > 0 )
+            {
+                bool allowed = FALSE;
+                for ( int t = 0; t < BOT_TEST_CLASSES_COUNT; t++ )
+                {
+                    if ( r->class_pref == bot_test_classes[t] )
+                    {
+                        allowed = TRUE;
+                        break;
+                    }
+                }
+                if ( !allowed ) continue;
+            }
 
             if ( bot_login(r) )
                 break;   /* one at a time to stagger logins */
