@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK };
+const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_SHAPESHIFTER };
 
 /* Extensible name generation */
 typedef struct {
@@ -76,6 +76,10 @@ static const BOT_NAME_SYLLABLES bot_names[] = {
     { BOT_CLASS_UNDEAD_KNIGHT,
       {"Mor","Mal","Kra","Nek","Val","Gri","Sha","Dar","Bla","Cor","Dea","Dys","Gra","Hel","Kor","Lir","Mar","Nec","Oss","Pla","Riv","Sar","Ter","Umb","Vor","War","Xer","Yal","Zan","Zul", NULL},
       {"thus","ius","vok","ros","rak","mor","ath","eth","oth","bos","dam","dor","far","gul","hor","ith","kor","lar","mok","nor","oth","por","rak","sor","tar","usk","var","wor","xus","zar", NULL}
+    },
+    { BOT_CLASS_SHAPESHIFTER,
+      {"Syl","Fae","Bri","Thal","Aeo","Ozo","Myr","Vio","Cor","Lu","Gla","Spi","Mne","Iri","Nai","Xyl","Zep","Aqu","Pyr","Ter","Aet","Lun","Sol","Aya","Nym","Rhi","Tia","Flo","Fau","Ver", NULL},
+      {"van","ra","is","on","lus","ris","iad","let","vus","men","dius","ral","mos","dis","dae","lon","hur","is","os","ra","her","is","ar","la","pha","a","mat","ra","na","mis", NULL}
     },
     /* Catchall for any new classes added in the future */
     { -1,
@@ -204,8 +208,8 @@ void load_bot_roster( void )
     /* No file or empty - generate a fresh roster dynamically */
     bot_roster_count = 0;
 
-    /* 45 Permanent */
-    for ( i = 0; i < 45; i++ )
+    /* 56 Permanent */
+    for ( i = 0; i < 56; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );

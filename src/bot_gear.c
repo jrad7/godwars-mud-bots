@@ -297,6 +297,28 @@ static const BOT_GEAR_PIECE gear_undead_knight[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Shapeshifter: Uses shapearmor. Cost 150 primal per piece. */
+static const BOT_GEAR_PIECE gear_shapeshifter[] = {
+    { WEAR_WIELD,    "shapearmor knife",    150 },
+    { WEAR_HOLD,     "shapearmor kane",     150 },
+    { WEAR_FINGER_L, "shapearmor ring",     150 },
+    { WEAR_FINGER_R, "shapearmor ring",     150 },
+    { WEAR_NECK_1,   "shapearmor necklace", 150 },
+    { WEAR_NECK_2,   "shapearmor necklace", 150 },
+    { WEAR_BODY,     "shapearmor jacket",   150 },
+    { WEAR_HEAD,     "shapearmor helmet",   150 },
+    { WEAR_LEGS,     "shapearmor pants",    150 },
+    { WEAR_FEET,     "shapearmor boots",    150 },
+    { WEAR_HANDS,    "shapearmor gloves",   150 },
+    { WEAR_ARMS,     "shapearmor shirt",    150 },
+    { WEAR_ABOUT,    "shapearmor cloak",    150 },
+    { WEAR_WAIST,    "shapearmor belt",     150 },
+    { WEAR_WRIST_L,  "shapearmor bands",    150 },
+    { WEAR_WRIST_R,  "shapearmor bands",    150 },
+    { WEAR_FACE,     "shapearmor visor",    150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -308,7 +330,8 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_mage,      /* BOT_CLASS_MAGE     */
     gear_tanarri,        /* BOT_CLASS_TANARRI       */
     gear_angel,          /* BOT_CLASS_ANGEL         */
-    gear_undead_knight   /* BOT_CLASS_UNDEAD_KNIGHT */
+    gear_undead_knight,  /* BOT_CLASS_UNDEAD_KNIGHT */
+    gear_shapeshifter    /* BOT_CLASS_SHAPESHIFTER  */
 };
 
 /* -----------------------------------------------------------------------
