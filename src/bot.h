@@ -122,9 +122,10 @@ typedef enum {
 #define BOT_CLASS_DROW      4
 #define BOT_CLASS_WEREWOLF  5
 #define BOT_CLASS_MAGE      6
-#define BOT_CLASS_TANARRI   7
-#define BOT_CLASS_ANGEL     8
-#define BOT_CLASS_COUNT     9
+#define BOT_CLASS_TANARRI        7
+#define BOT_CLASS_ANGEL          8
+#define BOT_CLASS_UNDEAD_KNIGHT  9
+#define BOT_CLASS_COUNT         10
 
 /*
  * Bot roster entry - one per named bot character.

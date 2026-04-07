@@ -27,21 +27,23 @@ extern const BOT_CLASS_AI bot_werewolf_ai;
 extern const BOT_CLASS_AI bot_mage_ai;
 extern const BOT_CLASS_AI bot_tanarri_ai;
 extern const BOT_CLASS_AI bot_angel_ai;
+extern const BOT_CLASS_AI bot_undead_knight_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
  * Add a row here when registering a new class.
  */
 const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
-    &bot_vamp_ai,      /* BOT_CLASS_VAMPIRE   */
-    &bot_monk_ai,      /* BOT_CLASS_MONK      */
-    &bot_ninja_ai,     /* BOT_CLASS_NINJA     */
-    &bot_demon_ai,     /* BOT_CLASS_DEMON     */
-    &bot_drow_ai,      /* BOT_CLASS_DROW      */
-    &bot_werewolf_ai,  /* BOT_CLASS_WEREWOLF  */
-    &bot_mage_ai,      /* BOT_CLASS_MAGE      */
-    &bot_tanarri_ai,   /* BOT_CLASS_TANARRI   */
-    &bot_angel_ai      /* BOT_CLASS_ANGEL     */
+    &bot_vamp_ai,           /* BOT_CLASS_VAMPIRE        */
+    &bot_monk_ai,           /* BOT_CLASS_MONK           */
+    &bot_ninja_ai,          /* BOT_CLASS_NINJA          */
+    &bot_demon_ai,          /* BOT_CLASS_DEMON          */
+    &bot_drow_ai,           /* BOT_CLASS_DROW           */
+    &bot_werewolf_ai,       /* BOT_CLASS_WEREWOLF       */
+    &bot_mage_ai,           /* BOT_CLASS_MAGE           */
+    &bot_tanarri_ai,        /* BOT_CLASS_TANARRI        */
+    &bot_angel_ai,          /* BOT_CLASS_ANGEL          */
+    &bot_undead_knight_ai   /* BOT_CLASS_UNDEAD_KNIGHT  */
 };
 
 /* Forward declarations for stance functions defined in kav_fight.c / fight.c */
@@ -671,8 +673,9 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_DROW:      return "drow";
     case BOT_CLASS_WEREWOLF:  return "werewolf";
     case BOT_CLASS_MAGE:      return "mage";
-    case BOT_CLASS_TANARRI:   return "tanarri";
-    case BOT_CLASS_ANGEL:     return "angel";
+    case BOT_CLASS_TANARRI:        return "tanarri";
+    case BOT_CLASS_ANGEL:          return "angel";
+    case BOT_CLASS_UNDEAD_KNIGHT:  return "undead_knight";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
@@ -691,7 +694,8 @@ static int bot_primal_target( CHAR_DATA *ch )
     if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
         return 0;
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
-      || bot->roster->class_pref == BOT_CLASS_ANGEL )
+      || bot->roster->class_pref == BOT_CLASS_ANGEL
+      || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT )
         return 150;
     return 60;
 }

@@ -73,6 +73,10 @@ static const BOT_NAME_SYLLABLES bot_names[] = {
       {"Ga","Mi","U","Ra","Se","Lu","Cae","Au","The","Va","Daw","So","Li","Ce","Rad","Aza","Bara","Cama","Zad","Zaph","Joph","Mata","Pha","Sari","Tari","Zech","Gala","Leva","Nuri","Oph", NULL},
       {"briel","chael","riel","phael","ravyn","mael","lith","ren","riel","lael","niel","rath","rien","lael","ael","zel","kiel","el","kiel","kiel","iel","tron","nuel","el","el","riel","driel","nael","el","anim", NULL}
     },
+    { BOT_CLASS_UNDEAD_KNIGHT,
+      {"Mor","Mal","Kra","Nek","Val","Gri","Sha","Dar","Bla","Cor","Dea","Dys","Gra","Hel","Kor","Lir","Mar","Nec","Oss","Pla","Riv","Sar","Ter","Umb","Vor","War","Xer","Yal","Zan","Zul", NULL},
+      {"thus","ius","vok","ros","rak","mor","ath","eth","oth","bos","dam","dor","far","gul","hor","ith","kor","lar","mok","nor","oth","por","rak","sor","tar","usk","var","wor","xus","zar", NULL}
+    },
     /* Catchall for any new classes added in the future */
     { -1,
       {"Ka","Zo","Ve","Ja","Qui","Ny","Pa","Re","Lu","To","Ma","Da","Ga","Za","Xi","Xo","Xa","Xu","Xe","Ki","Ko","Ku","Ke","Zi","Zu","Ze","Vi","Vo","Vu","Va", NULL},

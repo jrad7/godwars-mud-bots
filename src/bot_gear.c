@@ -61,10 +61,13 @@ static bool bot_is_newbiepack_vnum( int vnum )
     return FALSE;
 }
 
-/* All player-craftable class armor lives in the 33000-33299 range. */
+/* All player-craftable class armor lives in the 33000-33299 range.
+ * Undead Knight armor (knightarmor) occupies 29975-29991 — a separate range. */
 static bool bot_is_class_gear_vnum( int vnum )
 {
-    return ( vnum >= 33000 && vnum <= 33299 );
+    if ( vnum >= 33000 && vnum <= 33299 ) return TRUE;
+    if ( vnum >= 29975 && vnum <= 29991 ) return TRUE;  /* undead knight */
+    return FALSE;
 }
 
 /* -----------------------------------------------------------------------
@@ -269,6 +272,31 @@ static const BOT_GEAR_PIECE gear_angel[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Undead Knight: longsword wield + shortsword hold, 13 armor slots.
+ * Command: knightarmor. Cost: 150 primal per piece.
+ * Vnums 29975-29991 — outside normal 33000-33299 range, handled separately
+ * in bot_is_class_gear_vnum(). */
+static const BOT_GEAR_PIECE gear_undead_knight[] = {
+    { WEAR_WIELD,    "knightarmor longsword", 150 },
+    { WEAR_HOLD,     "knightarmor shortsword",150 },
+    { WEAR_FINGER_L, "knightarmor ring",      150 },
+    { WEAR_FINGER_R, "knightarmor ring",      150 },
+    { WEAR_NECK_1,   "knightarmor collar",    150 },
+    { WEAR_NECK_2,   "knightarmor collar",    150 },
+    { WEAR_BODY,     "knightarmor plate",     150 },
+    { WEAR_HEAD,     "knightarmor helmet",    150 },
+    { WEAR_LEGS,     "knightarmor leggings",  150 },
+    { WEAR_FEET,     "knightarmor boots",     150 },
+    { WEAR_HANDS,    "knightarmor gauntlets", 150 },
+    { WEAR_ARMS,     "knightarmor chains",    150 },
+    { WEAR_ABOUT,    "knightarmor cloak",     150 },
+    { WEAR_WAIST,    "knightarmor belt",      150 },
+    { WEAR_WRIST_L,  "knightarmor bracer",    150 },
+    { WEAR_WRIST_R,  "knightarmor bracer",    150 },
+    { WEAR_FACE,     "knightarmor visor",     150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -278,8 +306,9 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_drow,      /* BOT_CLASS_DROW     */
     gear_werewolf,  /* BOT_CLASS_WEREWOLF */
     gear_mage,      /* BOT_CLASS_MAGE     */
-    gear_tanarri,   /* BOT_CLASS_TANARRI  */
-    gear_angel      /* BOT_CLASS_ANGEL    */
+    gear_tanarri,        /* BOT_CLASS_TANARRI       */
+    gear_angel,          /* BOT_CLASS_ANGEL         */
+    gear_undead_knight   /* BOT_CLASS_UNDEAD_KNIGHT */
 };
 
 /* -----------------------------------------------------------------------
