@@ -31,6 +31,7 @@
 #endif
 #include <string.h>
 #include "merc.h"
+#include "bot.h"
 
 /*
 ===========================================================================
@@ -198,17 +199,23 @@ void do_classself(CHAR_DATA *ch, char *argument)
     send_to_char("You already have a class.\n\r",ch);
     return;
   }
+#if !SELFCLASS_ALLOW_UPGRADES
   if (ch->level < 3)
   {
     send_to_char("You must be avatar to selfclass.\n\r",ch);
     return;
   }
+#endif
 if ( arg1[0] == '\0' )
 {
   send_to_char("Classes: Type selfclass <class> to get classed.\n\r\n\r",ch);
   send_to_char("#R[#0Demon#R]#n             #y((#LWerewolf#y))#n         #P.o0#0Drow#P0o.#n\n\r",ch);
   send_to_char("#C***#yNinja#C***#n         #0<<#RVampire#0>>#n          #0.x[#lMonk#0]x.\n\r",ch);
   send_to_char("#n{{#CBattlemage#n}}\n\r", ch);
+#if SELFCLASS_ALLOW_UPGRADES
+  send_to_char("\n\r#y[TESTING] Upgrade classes:#n\n\r", ch);
+  send_to_char("  tanarri  droid  samurai  undead_knight  angel  shapeshifter  lich\n\r", ch);
+#endif
   return;
 }
 do_clearstats2(ch,"");
@@ -268,7 +275,51 @@ else if (!str_cmp(arg1,"mage") || !str_cmp(arg1,"battlemage"))
     return;
   }
 }
-  else do_classself(ch,"");   
+#if SELFCLASS_ALLOW_UPGRADES
+else if (!str_cmp(arg1,"tanarri"))
+{
+  ch->class = CLASS_TANARRI;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You are reborn as a #RTanar'ri#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"droid"))
+{
+  ch->class = CLASS_DROID;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You make the ultimate sacrifice to #PLloth#n as a #PSpiderDroid#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"samurai"))
+{
+  ch->class = CLASS_SAMURAI;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You become a true master of weapons, a #ySamurai#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"undead_knight"))
+{
+  ch->class = CLASS_UNDEAD_KNIGHT;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You walk the darker path as an #0Undead Knight#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"angel"))
+{
+  ch->class = CLASS_ANGEL;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You become one with God as an #CAngel#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"shapeshifter"))
+{
+  ch->class = CLASS_SHAPESHIFTER;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You revert to the true form of the #GMalaugrym#n.\n\r", ch);
+}
+else if (!str_cmp(arg1,"lich"))
+{
+  ch->class = CLASS_LICH;
+  set_learnable_disciplines(ch);
+  send_to_char( "#R[TESTING]#n You sacrifice life for power as a #lLich#n.\n\r", ch);
+}
+#endif
+  else do_classself(ch,"");
   return;
 }
  

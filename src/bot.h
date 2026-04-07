@@ -16,6 +16,13 @@ struct descriptor_data;
 /* Set to 1 to enable verbose bot debug logging, 0 to disable */
 #define BOT_DEBUG  0
 
+/* Set to 1 to allow selfclass into upgrade classes (tanarri, droid, samurai,
+ * undead_knight, angel, shapeshifter, lich) without meeting upgrade
+ * prerequisites.  Also waives the avatar-level requirement so completely
+ * fresh characters can pick one for testing.  Set to 0 to restore normal
+ * upgrade-only restrictions. */
+#define SELFCLASS_ALLOW_UPGRADES  1
+
 /* Set to 1 to disable hardcoded NPC social aggro (mob assists mob of same vnum
  * and 12.5% random NPC-assists-NPC in fight.c).  Useful while bots are active
  * so a bot pulling one mob doesn't chain-aggro its entire spawn group. */
