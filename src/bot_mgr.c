@@ -136,10 +136,13 @@ static void bot_generate_unique_name(int bot_class, char *buf, size_t buf_size)
         }
         attempts++;
     }
-    /* If we really can't find a unique one in 100 attempts, add a digit */
+    /* If we really can't find a unique one in 100 attempts, append an 'x' */
     if (!unique) {
-        int r = number_range(1, 999);
-        snprintf(buf + strlen(buf), buf_size - strlen(buf), "%d", r);
+        size_t len = strlen(buf);
+        if (len < buf_size - 2) {
+            buf[len] = 'x';
+            buf[len+1] = '\0';
+        }
     }
 }
 
