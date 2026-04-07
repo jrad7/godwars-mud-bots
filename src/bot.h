@@ -32,7 +32,7 @@ struct descriptor_data;
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 
 /* Population settings */
-#define MAX_BOT_ROSTER      100
+#define MAX_BOT_ROSTER      128
 #define BOT_MIN_ONLINE      20
 #define BOT_MAX_ONLINE      40
 
