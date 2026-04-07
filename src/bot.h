@@ -125,7 +125,7 @@ typedef enum {
  * #define BOT_TEST_CLASSES_COUNT 2
  * and define bot_test_classes in bot_mgr.c as: { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK }
  */
-#define BOT_TEST_CLASSES_COUNT 2
+#define BOT_TEST_CLASSES_COUNT 4
 extern const int bot_test_classes[];
 
 /*
