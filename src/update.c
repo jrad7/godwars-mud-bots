@@ -1754,6 +1754,15 @@ void update_angel(CHAR_DATA *ch)
       werewolf_regen(ch, 2);
     regen_limb(ch);
   }
+  if ( ch->hit < ch->max_hit || ch->mana < ch->max_mana || ch->move < ch->max_move )
+    werewolf_regen(ch, 2);
+  regen_limb(ch);
+  if (ch->position == POS_MEDITATING && ch->mana < ch->max_mana)
+  {
+    ch->mana += number_range(1000,2000);
+    if (ch->mana > ch->max_mana)
+      ch->mana = ch->max_mana;
+  }
   if (ch->pcdata->powers[ANGEL_PEACE_COUNTER] > 0) ch->pcdata->powers[ANGEL_PEACE_COUNTER]--;
   if ( ch->in_room != NULL && ( ch->in_room->vnum >= 93340 && ch->in_room->vnum <= 93349))
   {
