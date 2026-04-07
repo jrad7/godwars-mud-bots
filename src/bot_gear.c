@@ -78,6 +78,8 @@ static bool bot_is_class_gear_vnum( int vnum )
  * ----------------------------------------------------------------------- */
 
 static const BOT_GEAR_PIECE gear_vampire[] = {
+    { WEAR_WIELD,    "vamparmor longsword", 60 },
+    { WEAR_HOLD,     "vamparmor dagger",    60 },
     { WEAR_FINGER_L, "vamparmor ring",      60 },
     { WEAR_FINGER_R, "vamparmor ring",      60 },
     { WEAR_NECK_1,   "vamparmor collar",    60 },
@@ -93,8 +95,6 @@ static const BOT_GEAR_PIECE gear_vampire[] = {
     { WEAR_WRIST_L,  "vamparmor bracer",    60 },
     { WEAR_WRIST_R,  "vamparmor bracer",    60 },
     { WEAR_FACE,     "vamparmor visor",     60 },
-    { WEAR_WIELD,    "vamparmor longsword", 60 },
-    { WEAR_HOLD,     "vamparmor dagger",    60 },
     { WEAR_NONE, NULL, 0 }
 };
 
@@ -118,6 +118,8 @@ static const BOT_GEAR_PIECE gear_monk[] = {
 };
 
 static const BOT_GEAR_PIECE gear_ninja[] = {
+    { WEAR_WIELD,    "ninjaarmor sword",     60 },
+    { WEAR_HOLD,     "ninjaarmor dagger",    60 },
     { WEAR_FINGER_L, "ninjaarmor ring",      60 },
     { WEAR_FINGER_R, "ninjaarmor ring",      60 },
     { WEAR_NECK_1,   "ninjaarmor collar",    60 },
@@ -133,12 +135,12 @@ static const BOT_GEAR_PIECE gear_ninja[] = {
     { WEAR_WRIST_L,  "ninjaarmor bracer",    60 },
     { WEAR_WRIST_R,  "ninjaarmor bracer",    60 },
     { WEAR_FACE,     "ninjaarmor mask",      60 },
-    { WEAR_WIELD,    "ninjaarmor sword",     60 },
-    { WEAR_HOLD,     "ninjaarmor dagger",    60 },
     { WEAR_NONE, NULL, 0 }
 };
 
 static const BOT_GEAR_PIECE gear_demon[] = {
+    { WEAR_WIELD,    "demonarmour longsword",   60 },
+    { WEAR_HOLD,     "demonarmour shortsword",  60 },
     { WEAR_FINGER_L, "demonarmour ring",      60 },
     { WEAR_FINGER_R, "demonarmour ring",      60 },
     { WEAR_NECK_1,   "demonarmour collar",    60 },
@@ -154,12 +156,12 @@ static const BOT_GEAR_PIECE gear_demon[] = {
     { WEAR_WRIST_L,  "demonarmour bracer",    60 },
     { WEAR_WRIST_R,  "demonarmour bracer",    60 },
     { WEAR_FACE,     "demonarmour visor",     60 },
-    { WEAR_WIELD,    "demonarmour longsword",   60 },
-    { WEAR_HOLD,     "demonarmour shortsword",  60 },
     { WEAR_NONE, NULL, 0 }
 };
 
 static const BOT_GEAR_PIECE gear_drow[] = {
+    { WEAR_WIELD,    "drowcreate whip",      60 },
+    { WEAR_HOLD,     "drowcreate dagger",    60 },
     { WEAR_FINGER_L, "drowcreate ring",      60 },
     { WEAR_FINGER_R, "drowcreate ring",      60 },
     { WEAR_NECK_1,   "drowcreate amulet",    60 },
@@ -175,8 +177,6 @@ static const BOT_GEAR_PIECE gear_drow[] = {
     { WEAR_WRIST_L,  "drowcreate bracer",    60 },
     { WEAR_WRIST_R,  "drowcreate bracer",    60 },
     { WEAR_FACE,     "drowcreate mask",      60 },
-    { WEAR_WIELD,    "drowcreate whip",      60 },
-    { WEAR_HOLD,     "drowcreate dagger",    60 },
     { WEAR_NONE, NULL, 0 }
 };
 
@@ -203,6 +203,8 @@ static const BOT_GEAR_PIECE gear_werewolf[] = {
 };
 
 static const BOT_GEAR_PIECE gear_mage[] = {
+    { WEAR_WIELD,    "magearmor staff",    60 },
+    { WEAR_HOLD,     "magearmor dagger",   60 },
     { WEAR_FINGER_L, "magearmor ring",     60 },
     { WEAR_FINGER_R, "magearmor ring",     60 },
     { WEAR_NECK_1,   "magearmor collar",   60 },
@@ -218,14 +220,14 @@ static const BOT_GEAR_PIECE gear_mage[] = {
     { WEAR_WRIST_L,  "magearmor bracer",   60 },
     { WEAR_WRIST_R,  "magearmor bracer",   60 },
     { WEAR_FACE,     "magearmor mask",     60 },
-    { WEAR_WIELD,    "magearmor staff",    60 },
-    { WEAR_HOLD,     "magearmor dagger",   60 },
     { WEAR_NONE, NULL, 0 }
 };
 
 /* Tanar'ri: claymore wield, 13 armor slots. Command: taneq. Cost: 150 primal.
  * No hold slot — only one weapon piece exists (claymore, vnum 33200). */
 static const BOT_GEAR_PIECE gear_tanarri[] = {
+    { WEAR_WIELD,    "taneq claymore",  150 },
+    { WEAR_HOLD,     "taneq claymore",  150 },
     { WEAR_FINGER_L, "taneq ring",      150 },
     { WEAR_FINGER_R, "taneq ring",      150 },
     { WEAR_NECK_1,   "taneq collar",    150 },
@@ -241,13 +243,14 @@ static const BOT_GEAR_PIECE gear_tanarri[] = {
     { WEAR_WRIST_L,  "taneq bracer",    150 },
     { WEAR_WRIST_R,  "taneq bracer",    150 },
     { WEAR_FACE,     "taneq visor",     150 },
-    { WEAR_WIELD,    "taneq claymore",  150 },
     { WEAR_NONE, NULL, 0 }
 };
 
 /* Angel: sword wield, 13 armor slots. Command: angelicarmor. Cost: 150 primal.
  * No hold slot — only one weapon piece exists (sword, vnum 33192). */
 static const BOT_GEAR_PIECE gear_angel[] = {
+    { WEAR_WIELD,    "angelicarmor sword",     150 },
+    { WEAR_HOLD,     "angelicarmor sword",     150 },
     { WEAR_FINGER_L, "angelicarmor ring",      150 },
     { WEAR_FINGER_R, "angelicarmor ring",      150 },
     { WEAR_NECK_1,   "angelicarmor necklace",  150 },
@@ -263,7 +266,6 @@ static const BOT_GEAR_PIECE gear_angel[] = {
     { WEAR_WRIST_L,  "angelicarmor bracer",    150 },
     { WEAR_WRIST_R,  "angelicarmor bracer",    150 },
     { WEAR_FACE,     "angelicarmor visor",     150 },
-    { WEAR_WIELD,    "angelicarmor sword",     150 },
     { WEAR_NONE, NULL, 0 }
 };
 
