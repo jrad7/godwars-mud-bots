@@ -129,6 +129,8 @@ static void bot_generate_unique_name(int bot_class, char *buf, size_t buf_size)
         bot_generate_name(bot_class, buf, buf_size);
         unique = TRUE;
         for (int i = 0; i < bot_roster_count; i++) {
+            if (buf == bot_roster[i].name)
+                continue;
             if (!str_cmp(bot_roster[i].name, buf)) {
                 unique = FALSE;
                 break;
