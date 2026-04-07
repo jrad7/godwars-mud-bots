@@ -265,7 +265,7 @@ static void bot_tan_combat_action( CHAR_DATA *ch )
       && roll <= 75
       && ch->mana >= 2000 )
     {
-        bot_cmd( ch, "infernal" );
+        //bot_cmd( ch, "infernal" );
         return;
     }
 
@@ -275,7 +275,7 @@ static void bot_tan_combat_action( CHAR_DATA *ch )
       && roll <= 90
       && ch->mana >= 1000 )
     {
-        bot_cmd( ch, "earthquake" );
+        //bot_cmd( ch, "earthquake" );
         return;
     }
 
