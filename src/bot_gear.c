@@ -61,10 +61,10 @@ static bool bot_is_newbiepack_vnum( int vnum )
     return FALSE;
 }
 
-/* All player-craftable class armor lives in the 33000-33199 range. */
+/* All player-craftable class armor lives in the 33000-33299 range. */
 static bool bot_is_class_gear_vnum( int vnum )
 {
-    return ( vnum >= 33000 && vnum <= 33199 );
+    return ( vnum >= 33000 && vnum <= 33299 );
 }
 
 /* -----------------------------------------------------------------------
