@@ -252,6 +252,43 @@ void bot_watch_msg( CHAR_DATA *ch, const char *msg )
     write_to_buffer( ch->desc->snoop_by, msg, 0 );
 }
 
+static const char *bot_class_str( CHAR_DATA *ch )
+{
+    if ( IS_CLASS(ch, CLASS_ANGEL) )        return "angel";
+    if ( IS_CLASS(ch, CLASS_TANARRI) )      return "tanarri";
+    if ( IS_CLASS(ch, CLASS_UNDEAD_KNIGHT)) return "undead_knight";
+    if ( IS_CLASS(ch, CLASS_DROID) )        return "droid";
+    if ( IS_CLASS(ch, CLASS_LICH) )         return "lich";
+    if ( IS_CLASS(ch, CLASS_SHAPESHIFTER) ) return "shapeshifter";
+    if ( IS_CLASS(ch, CLASS_NINJA) )        return "ninja";
+    if ( IS_CLASS(ch, CLASS_MONK) )         return "monk";
+    if ( IS_CLASS(ch, CLASS_DROW) )         return "drow";
+    if ( IS_CLASS(ch, CLASS_SAMURAI) )      return "samurai";
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) )      return "vampire";
+    if ( IS_CLASS(ch, CLASS_WEREWOLF) )     return "werewolf";
+    if ( IS_CLASS(ch, CLASS_MAGE) )         return "mage";
+    if ( IS_CLASS(ch, CLASS_DEMON) )        return "demon";
+    return "mortal";
+}
+
+static const char *bot_state_str( bot_state_t state )
+{
+    switch ( state )
+    {
+    case BOT_IDLE:        return "IDLE";
+    case BOT_EXPLORING:   return "EXPLORING";
+    case BOT_GRINDING:    return "GRINDING";
+    case BOT_TRAINING:    return "TRAINING";
+    case BOT_PVP_HUNT:    return "PVP_HUNT";
+    case BOT_PVP_FIGHT:   return "PVP_FIGHT";
+    case BOT_SHOPPING:    return "SHOPPING";
+    case BOT_RESTING:     return "RESTING";
+    case BOT_LOGGING_OUT: return "LOGGING_OUT";
+    case BOT_PVP_FLEE:    return "PVP_FLEE";
+    default:              return "UNKNOWN";
+    }
+}
+
 /* Queue a navigation command to be executed before normal AI resumes */
 static void bot_nav_queue( BOT_DATA *bot, const char *cmd )
 {
@@ -2179,6 +2216,17 @@ void bot_update( CHAR_DATA *ch )
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
+
+    /* Per-tick status prompt to any watchbot watcher */
+    if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
+    {
+        char prompt[256];
+        snprintf( prompt, sizeof(prompt),
+            "[TICK] %s (%s) | %-11s | %dhp %dm %dmv %dxp\n\r",
+            ch->name, bot_class_str(ch), bot_state_str(bot->state),
+            ch->hit, ch->mana, ch->move, ch->exp );
+        write_to_buffer( ch->desc->snoop_by, prompt, 0 );
+    }
 
     /* Safety: eject any bot trapped in a sealed classhq cluster.
      * 93350-93356: spider web area (vampire HQ) -- queen webs/traps.
