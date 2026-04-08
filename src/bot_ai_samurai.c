@@ -113,23 +113,23 @@ static void bot_samurai_combat_action( CHAR_DATA *ch )
     
     switch(move) {
         case 1:
-            if (IS_SET(martials, SAM_SLIDE)) { bot_cmd(ch, "martial slide"); return; }
+            if (IS_SET(martials, SAM_SLIDE)) { bot_cmd(ch, "slide"); return; }
             break;
         case 2:
-            if (IS_SET(martials, SAM_SIDESTEP)) { bot_cmd(ch, "martial sidestep"); return; }
+            if (IS_SET(martials, SAM_SIDESTEP)) { bot_cmd(ch, "sidestep"); return; }
             break;
         case 3:
-            if (IS_SET(martials, SAM_BLOCK)) { bot_cmd(ch, "martial block"); return; }
+            if (IS_SET(martials, SAM_BLOCK)) { bot_cmd(ch, "block"); return; }
             break;
         case 4:
-            if (IS_SET(martials, SAM_COUNTERMOVE)) { bot_cmd(ch, "martial countermove"); return; }
+            if (IS_SET(martials, SAM_COUNTERMOVE)) { bot_cmd(ch, "countermove"); return; }
             break;
     }
     
-    if (IS_SET(martials, SAM_SLIDE)) bot_cmd(ch, "martial slide");
-    if (IS_SET(martials, SAM_SIDESTEP)) bot_cmd(ch, "martial sidestep");
-    if (IS_SET(martials, SAM_BLOCK)) bot_cmd(ch, "martial block");
-    if (IS_SET(martials, SAM_COUNTERMOVE)) bot_cmd(ch, "martial countermove");
+    if (IS_SET(martials, SAM_SLIDE))      { bot_cmd(ch, "slide");      return; }
+    if (IS_SET(martials, SAM_SIDESTEP))   { bot_cmd(ch, "sidestep");   return; }
+    if (IS_SET(martials, SAM_BLOCK))      { bot_cmd(ch, "block");      return; }
+    if (IS_SET(martials, SAM_COUNTERMOVE)){ bot_cmd(ch, "countermove"); return; }
 }
 
 /* -----------------------------------------------------------------------
