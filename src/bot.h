@@ -294,6 +294,9 @@ void    bot_gear_check      ( struct char_data *ch );
 bool    bot_is_gearing      ( struct char_data *ch );
 bool    bot_watch_assign_random ( struct char_data *watcher, struct char_data *skip );
 
+int     bot_primal_target           ( struct char_data *ch );
+bool    bot_should_train_primal     ( struct char_data *ch );
+
 void    bot_chat_init       ( void );
 const char *bot_get_response( const char *trigger, int chattiness );
 void    bot_hear_say        ( struct char_data *bot, struct char_data *speaker, char *msg );

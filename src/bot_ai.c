@@ -701,7 +701,7 @@ static const char *bot_class_name( int class_pref )
  * All other classed bots cost 60 primal/piece.
  * Returns 0 if the bot has no class yet (unclassed bots don't need primal).
  */
-static int bot_primal_target( CHAR_DATA *ch )
+int bot_primal_target( CHAR_DATA *ch )
 {
     BOT_DATA *bot = ch->pcdata->botdata;
     if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
@@ -720,7 +720,7 @@ static int bot_primal_target( CHAR_DATA *ch )
  * bot_should_train_primal - TRUE if bot needs more primal and can afford one point.
  * Cost for the next primal point is (current_practice + 1) * 500 exp.
  */
-static bool bot_should_train_primal( CHAR_DATA *ch )
+bool bot_should_train_primal( CHAR_DATA *ch )
 {
     int target = bot_primal_target( ch );
     int cost_next;
