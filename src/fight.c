@@ -2215,7 +2215,39 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
     if ( !IS_NPC(ch) && IS_NPC(victim) )
     {
       if ( IS_SET(ch->act, PLR_AUTOSAC) )
+      {
+        /* Before sacrificing, rescue forge items from the corpse for real players */
+        if ( !ch->pcdata->is_bot )
+        {
+          OBJ_DATA *corpse;
+          for ( corpse = ch->in_room->contents; corpse != NULL; corpse = corpse->next_content )
+          {
+            if ( corpse->item_type == ITEM_CORPSE_NPC )
+            {
+              OBJ_DATA *forge_obj, *forge_next;
+              for ( forge_obj = corpse->contains; forge_obj != NULL; forge_obj = forge_next )
+              {
+                forge_next = forge_obj->next_content;
+                if ( forge_obj->item_type == ITEM_STEEL
+                  || forge_obj->item_type == ITEM_ADAMANTITE
+                  || forge_obj->item_type == ITEM_GEMSTONE
+                  || forge_obj->item_type == ITEM_HILT )
+                {
+                  if ( ch->carry_number < can_carry_n(ch)
+                    && ch->carry_weight + forge_obj->weight <= can_carry_w(ch) )
+                  {
+                    obj_from_obj( forge_obj );
+                    obj_to_char( forge_obj, ch );
+                    act( "You rescue $p from the corpse before sacrificing it.", ch, forge_obj, NULL, TO_CHAR );
+                  }
+                }
+              }
+              break; /* only handle the first NPC corpse */
+            }
+          }
+        }
         do_sacrifice( ch, "corpse" );
+      }
     }
     return;
   }
