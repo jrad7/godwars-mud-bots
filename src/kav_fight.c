@@ -1089,6 +1089,10 @@ critical=100;
     if (number_percent() > critical) return;
 	if (IS_CLASS(victim, CLASS_DROW) && IS_POLYAFF(victim, POLY_SPIDER))
 		return;
+    /* Mobs lose limbs far less often than players to avoid rooms filling
+     * with body parts. Only 5% of critical hits on NPCs proceed to
+     * actually sever a limb or drop a body part object. */
+    if (IS_NPC(victim) && number_percent() >= 5) return;
     critical = number_range(1,23);
     if (critical == 1)
     {

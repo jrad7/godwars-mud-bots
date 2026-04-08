@@ -3650,6 +3650,11 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
   }
   if ( attack == "slash" || attack == "slice" )
   {
+    /* Suppress body part drops on mobs 90% of the time to avoid
+     * rooms filling up with limbs and entrails during grinding.  The
+     * flavour-text messages below are still shown but make_part()
+     * is never reached on the early-out path. */
+    if (IS_NPC(victim) && number_percent() >= 10) return;
     damp=number_range(1,8);
     if ( damp == 1 )
     {
@@ -3766,6 +3771,7 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
   }
   else if ( attack == "stab" || attack == "pierce" )
   {
+    if (IS_NPC(victim) && number_percent() >= 10) return;
     damp=number_range(1,5);
     if ( damp == 1 )
     {
@@ -3804,6 +3810,7 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
   }
   else if ( attack == "blast" || attack == "pound" || attack == "crush" )
   {
+    if (IS_NPC(victim) && number_percent() >= 10) return;
     damp=number_range(1,3);
     bodyloc = 0;
     if ( damp == 1)
@@ -3851,6 +3858,7 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
   }
   else if ( !IS_NPC( ch ) && (attack == "bite" ||IS_VAMPAFF(ch,VAM_FANGS)))
   {
+    if (IS_NPC(victim) && number_percent() >= 10) return;
     act("You sink your teeth into $N's throat and tear out $S jugular vein.\n\rYou wipe the blood from your chin with one hand.", ch, NULL, victim, TO_CHAR);
     act("$n sink $s teeth into $N's throat and tears out $S jugular vein.\n\r$n wipes the blood from $s chin with one hand.", ch, NULL, victim, TO_NOTVICT);
     act("$n sink $s teeth into your throat and tears out your jugular vein.\n\r$n wipes the blood from $s chin with one hand.", ch, NULL, victim, TO_VICT);
@@ -3860,6 +3868,7 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
   }
   else if ( !IS_NPC(ch) && (attack == "claw" || IS_VAMPAFF(ch,VAM_CLAWS)))
   {
+    if (IS_NPC(victim) && number_percent() >= 10) return;
     damp=number_range(1,2);
     if ( damp == 1 )
     {
