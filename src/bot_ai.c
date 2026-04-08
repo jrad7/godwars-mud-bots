@@ -1002,13 +1002,13 @@ static bool bot_do_train( CHAR_DATA *ch )
     }
 
     /* Primal for class gear.
-     * Buy as many primal points as we can afford in one shot, up to the
-     * target ceiling.  The "train primal N" command loops internally and
-     * stops when exp runs out, so passing the full remaining amount is safe. */
+     * The "train primal N" command caps at 200 per invocation, so clamp the
+     * request; the bot will loop back on the next tick for the remainder. */
     if ( bot_should_train_primal(ch) )
     {
         int target  = bot_primal_target(ch);
         int needed  = target - ch->practice;   /* always >= 1 here */
+        if ( needed > 200 ) needed = 200;
         char cmd[32];
         sprintf( cmd, "train primal %d", needed );
         bot_cmd( ch, cmd );
