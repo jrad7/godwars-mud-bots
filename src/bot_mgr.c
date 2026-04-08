@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_UNDEAD_KNIGHT, BOT_CLASS_DROID };
+const int bot_test_classes[] = { BOT_CLASS_DROID, BOT_CLASS_SAMURAI };
 
 /* Extensible name generation */
 typedef struct {
@@ -84,6 +84,10 @@ static const BOT_NAME_SYLLABLES bot_names[] = {
     { BOT_CLASS_DROID,
       {"Cyb","Mech","Spid","Tox","Steel","Iron","Chrome","Wire","Volt","Tech","Byte","Syn","Neo","Opt","Plas","Flux","Gear","Cog","Allo","Grid","Zin","Xen","Nul","Vek","Omni","Tek","Mac","Auto","Droid","Kinet", NULL},
       {"ron","org","tron","web","fang","bot","oid","ix","ex","us","ar","os","um","ium","on","ic","id","er","or","is","ox","ax","uk","ak","ok","ik","ek","al","el", NULL}
+    },
+    { BOT_CLASS_SAMURAI,
+      {"Akira","Ken","Shin","Ryu","Jin","Tatsu","Baku","Hideo","Goro","Juzo","Kuro","Masa","San","Yasu","Yoshi","Zan","Sei","Katsu","Go","Nobu","Soji","Tori","Musashi","Zoro","Date","Oda","Hojo","Kama","Takeda","Tokugawa", NULL},
+      {"zawa","shima","moto","naka","mura","ro","ru","do","shi","ki","ta","ko","go","yuki","ji","ma","kaze","giri","wara","kawa","guchi","miya","maru","tsugu","hiko","suke","toshi","mori","yoshi","kuni", NULL}
     },
     /* Catchall for any new classes added in the future */
     { -1,

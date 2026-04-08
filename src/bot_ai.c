@@ -31,6 +31,7 @@ extern const BOT_CLASS_AI bot_angel_ai;
 extern const BOT_CLASS_AI bot_undead_knight_ai;
 extern const BOT_CLASS_AI bot_shapeshifter_ai;
 extern const BOT_CLASS_AI bot_droid_ai;
+extern const BOT_CLASS_AI bot_samurai_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
@@ -47,8 +48,9 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_tanarri_ai,        /* BOT_CLASS_TANARRI        */
     &bot_angel_ai,          /* BOT_CLASS_ANGEL          */
     &bot_undead_knight_ai,  /* BOT_CLASS_UNDEAD_KNIGHT  */
-    &bot_shapeshifter_ai,   /* BOT_CLASS_SHAPESHIFTER   */
-    &bot_droid_ai           /* BOT_CLASS_DROID          */
+    &bot_shapeshifter_ai,       /* BOT_CLASS_SHAPESHIFTER   */
+    &bot_droid_ai,              /* BOT_CLASS_DROID          */
+    &bot_samurai_ai             /* BOT_CLASS_SAMURAI        */
 };
 
 /* Forward declarations for stance functions defined in kav_fight.c / fight.c */
@@ -683,6 +685,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_UNDEAD_KNIGHT:  return "undead_knight";
     case BOT_CLASS_SHAPESHIFTER:  return "shapeshifter";
     case BOT_CLASS_DROID:  return "droid";
+    case BOT_CLASS_SAMURAI return "samurai";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
@@ -1129,6 +1132,18 @@ static bool bot_do_train( CHAR_DATA *ch )
                 /* Waiting for mastery */
                 return FALSE;
             }
+        }
+    }
+
+    /* Samurai: Pool exp for martial techniques once we hit the HP gate */
+    if ( ch->class == CLASS_SAMURAI && ch->max_hit >= 20000 )
+    {
+        if ( !IS_SET(ch->pcdata->powers[SAMURAI_MARTIAL], SAM_SLIDE)
+          || !IS_SET(ch->pcdata->powers[SAMURAI_MARTIAL], SAM_SIDESTEP)
+          || !IS_SET(ch->pcdata->powers[SAMURAI_MARTIAL], SAM_BLOCK)
+          || !IS_SET(ch->pcdata->powers[SAMURAI_MARTIAL], SAM_COUNTERMOVE) )
+        {
+            return FALSE; /* Pool */
         }
     }
 

@@ -118,7 +118,8 @@ typedef enum {
 #define BOT_CLASS_UNDEAD_KNIGHT  9
 #define BOT_CLASS_SHAPESHIFTER  10
 #define BOT_CLASS_DROID         11
-#define BOT_CLASS_COUNT         12
+#define BOT_CLASS_SAMURAI       12
+#define BOT_CLASS_COUNT         13
 
 /* Bot Class Testing Array
  * Set BOT_TEST_CLASSES_COUNT > 0 to restrict which classes log into the game.
@@ -126,7 +127,7 @@ typedef enum {
  * #define BOT_TEST_CLASSES_COUNT 2
  * and define bot_test_classes in bot_mgr.c as: { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK }
  */
-#define BOT_TEST_CLASSES_COUNT 3
+#define BOT_TEST_CLASSES_COUNT 4
 extern const int bot_test_classes[];
 
 /*

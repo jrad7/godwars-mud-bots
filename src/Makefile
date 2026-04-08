@@ -13,7 +13,8 @@ O_FILES = act_comm.o act_info.o act_move.o act_obj.o act_wiz.o bit.o mccp.o \
         bot_mgr.o bot_ai.o bot_chat.o bot_gear.o \
         bot_ai_vampire.o bot_ai_monk.o bot_ai_ninja.o bot_ai_demon.o \
         bot_ai_drow.o bot_ai_werewolf.o bot_ai_mage.o bot_ai_tanarri.o \
-        bot_ai_angel.o bot_ai_undead_knight.o bot_ai_shapeshifter.o bot_ai_droid.o
+        bot_ai_angel.o bot_ai_undead_knight.o bot_ai_shapeshifter.o bot_ai_droid.o \
+        bot_ai_samurai.o
 
 merc: $(O_FILES)
 	rm -f dystopia

@@ -79,7 +79,15 @@ void improve_wpn( CHAR_DATA *ch, int dtype, int right_hand )
     if (ch->wpn[dtype] >= max_skl) return;
     trapper = ch->wpn[dtype];
     if ((dice1 > ch->wpn[dtype] || dice2 > ch->wpn[dtype]) || (dice1>= 99 || dice2>=99))
+    {
 	ch->wpn[dtype] += 1;
+	if ( IS_CLASS(ch, CLASS_SAMURAI) && (dtype == 0 || dtype == 1 || dtype == 3) )
+	{
+	    if (dtype != 0 && ch->wpn[0] < max_skl) ch->wpn[0] += 1;
+	    if (dtype != 1 && ch->wpn[1] < max_skl) ch->wpn[1] += 1;
+	    if (dtype != 3 && ch->wpn[3] < max_skl) ch->wpn[3] += 1;
+	}
+    }
     else return;
     if (trapper == ch->wpn[dtype]) return;
 

@@ -355,6 +355,13 @@ static const BOT_GEAR_PIECE gear_droid[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Samurai: katana wield+hold, rest uses newbiepack gear from step 5 sweep. */
+static const BOT_GEAR_PIECE gear_samurai[] = {
+    { WEAR_WIELD,    "katana", 250 },
+    { WEAR_HOLD,     "katana", 250 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -368,7 +375,8 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_angel,          /* BOT_CLASS_ANGEL         */
     gear_undead_knight,  /* BOT_CLASS_UNDEAD_KNIGHT */
     gear_shapeshifter,   /* BOT_CLASS_SHAPESHIFTER  */
-    gear_droid           /* BOT_CLASS_DROID         */
+    gear_droid,          /* BOT_CLASS_DROID         */
+    gear_samurai         /* BOT_CLASS_SAMURAI       */
 };
 
 /* -----------------------------------------------------------------------
