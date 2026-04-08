@@ -706,6 +706,9 @@ int bot_primal_target( CHAR_DATA *ch )
     BOT_DATA *bot = ch->pcdata->botdata;
     if ( ch->class == 0 || bot == NULL || bot->roster == NULL )
         return 0;
+    /* Katana costs 250 primal per piece */
+    if ( bot->roster->class_pref == BOT_CLASS_SAMURAI )
+        return 250;
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
       || bot->roster->class_pref == BOT_CLASS_ANGEL
       || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT
