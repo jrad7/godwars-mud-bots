@@ -10,5 +10,10 @@ for %%F in ("%PLAYER_DIR%\*") do (
     )
 )
 
+if exist "%~dp0txt\bots.txt" (
+    del "%~dp0txt\bots.txt"
+    echo Deleted txt\bots.txt.
+)
+
 echo Done. Kept Kast and Claude.
 endlocal
