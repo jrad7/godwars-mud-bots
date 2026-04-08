@@ -2205,22 +2205,29 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
     bool is_blind;
     bool is_blindfolded;
 
-    /* Drow and Droid have native darkvision - darkness never affects them */
-    if ( !IS_CLASS(ch, CLASS_DROW) && !IS_CLASS(ch, CLASS_DROID)
-      && ch->in_room != NULL )
+    /* Mirror the vision checks in can_see() to determine if the bot is
+     * actually blind due to darkness.  Several abilities bypass all darkness:
+     *   PLR_HOLYLIGHT  - Angel gsenses, Drow drowsight, Droid unholy sight,
+     *                    Ninja kanzuite, Monk divine sight, Vampire power
+     *   VAM_SONIC      - vampire bat form echolocation
+     *   ITEMA_VISION   - certain artifact items
+     * Drow/Droid are also immune to ROOM_TOTAL_DARKNESS specifically. */
+    in_darkness = FALSE;
+    if ( ch->in_room != NULL
+      && !IS_IMMORTAL(ch)
+      && !IS_ITEMAFF(ch, ITEMA_VISION)
+      && !IS_SET(ch->act, PLR_HOLYLIGHT)
+      && !IS_VAMPAFF(ch, VAM_SONIC) )
     {
-        if ( IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS) )
+        if ( IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS)
+          && !IS_CLASS(ch, CLASS_DROW)
+          && !IS_CLASS(ch, CLASS_DROID) )
             in_darkness = TRUE;
-        /* Regular dark room: bot can see with infrared or vampire nightsight */
         else if ( room_is_dark( ch->in_room )
                && !IS_AFFECTED(ch, AFF_INFRARED)
                && !IS_VAMPAFF(ch, VAM_NIGHTSIGHT) )
             in_darkness = TRUE;
-        else
-            in_darkness = FALSE;
     }
-    else
-        in_darkness = FALSE;
 
     is_blindfolded = IS_EXTRA(ch, BLINDFOLDED);
     is_blind       = ( IS_AFFECTED(ch, AFF_BLIND)
