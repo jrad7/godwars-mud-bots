@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_UNDEAD_KNIGHT, BOT_CLASS_ANGEL, BOT_CLASS_TANARRI };
+const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_UNDEAD_KNIGHT, BOT_CLASS_ANGEL, BOT_CLASS_TANARRI, BOT_CLASS_DROID };
 
 /* Extensible name generation */
 typedef struct {
@@ -80,6 +80,10 @@ static const BOT_NAME_SYLLABLES bot_names[] = {
     { BOT_CLASS_SHAPESHIFTER,
       {"Syl","Fae","Bri","Thal","Aeo","Ozo","Myr","Vio","Cor","Lu","Gla","Spi","Mne","Iri","Nai","Xyl","Zep","Aqu","Pyr","Ter","Aet","Lun","Sol","Aya","Nym","Rhi","Tia","Flo","Fau","Ver", NULL},
       {"van","ra","is","on","lus","ris","iad","let","vus","men","dius","ral","mos","dis","dae","lon","hur","is","os","ra","her","is","ar","la","pha","a","mat","ra","na","mis", NULL}
+    },
+    { BOT_CLASS_DROID,
+      {"Cyb","Mech","Spid","Tox","Steel","Iron","Chrome","Wire","Volt","Tech","Byte","Syn","Neo","Opt","Plas","Flux","Gear","Cog","Allo","Grid","Zin","Xen","Nul","Vek","Omni","Tek","Mac","Auto","Droid","Kinet", NULL},
+      {"ron","org","tron","web","fang","bot","oid","ix","ex","us","ar","os","um","ium","on","ic","id","er","or","is","ox","ax","uk","ak","ok","ik","ek","al","el", NULL}
     },
     /* Catchall for any new classes added in the future */
     { -1,

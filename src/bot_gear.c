@@ -333,6 +333,28 @@ static const BOT_GEAR_PIECE gear_shapeshifter[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Droid: Uses dridereq. Cost 150 primal per piece. */
+static const BOT_GEAR_PIECE gear_droid[] = {
+    { WEAR_WIELD,    "dridereq whip",     150 },
+    { WEAR_HOLD,     "dridereq whip",     150 },
+    { WEAR_FINGER_L, "dridereq ring",     150 },
+    { WEAR_FINGER_R, "dridereq ring",     150 },
+    { WEAR_NECK_1,   "dridereq collar",   150 },
+    { WEAR_NECK_2,   "dridereq collar",   150 },
+    { WEAR_BODY,     "dridereq armor",    150 },
+    { WEAR_HEAD,     "dridereq helmet",   150 },
+    { WEAR_LEGS,     "dridereq leggings", 150 },
+    { WEAR_FEET,     "dridereq boots",    150 },
+    { WEAR_HANDS,    "dridereq gloves",   150 },
+    { WEAR_ARMS,     "dridereq sleeves",  150 },
+    { WEAR_ABOUT,    "dridereq cloak",    150 },
+    { WEAR_WAIST,    "dridereq belt",     150 },
+    { WEAR_WRIST_L,  "dridereq bracer",   150 },
+    { WEAR_WRIST_R,  "dridereq bracer",   150 },
+    { WEAR_FACE,     "dridereq mask",     150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -345,7 +367,8 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_tanarri,        /* BOT_CLASS_TANARRI       */
     gear_angel,          /* BOT_CLASS_ANGEL         */
     gear_undead_knight,  /* BOT_CLASS_UNDEAD_KNIGHT */
-    gear_shapeshifter    /* BOT_CLASS_SHAPESHIFTER  */
+    gear_shapeshifter,   /* BOT_CLASS_SHAPESHIFTER  */
+    gear_droid           /* BOT_CLASS_DROID         */
 };
 
 /* -----------------------------------------------------------------------
