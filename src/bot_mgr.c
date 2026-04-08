@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_DROID, BOT_CLASS_SAMURAI };
+const int bot_test_classes[] = { BOT_CLASS_DROID, BOT_CLASS_SAMURAI, BOT_CLASS_LICH };
 
 /* Extensible name generation */
 typedef struct {
@@ -88,6 +88,10 @@ static const BOT_NAME_SYLLABLES bot_names[] = {
     { BOT_CLASS_SAMURAI,
       {"Akira","Ken","Shin","Ryu","Jin","Tatsu","Baku","Hideo","Goro","Juzo","Kuro","Masa","San","Yasu","Yoshi","Zan","Sei","Katsu","Go","Nobu","Soji","Tori","Musashi","Zoro","Date","Oda","Hojo","Kama","Takeda","Tokugawa", NULL},
       {"zawa","shima","moto","naka","mura","ro","ru","do","shi","ki","ta","ko","go","yuki","ji","ma","kaze","giri","wara","kawa","guchi","miya","maru","tsugu","hiko","suke","toshi","mori","yoshi","kuni", NULL}
+    },
+    { BOT_CLASS_LICH,
+      {"Ase","Bael","Cor","Dae","Ere","Fau","Gol","Hek","Ith","Jol","Kae","Lir","Mal","Nok","Oru","Pha","Qua","Riz","Syr","Thy","Ul","Vok","Wra","Xal","Yr","Zar","Az","Bel","Cyr","Dra", NULL},
+      {"thas","zor","vus","mon","bus","stus","dax","tar","zyl","kor","lum","nak","kai","rul","phix","sith","tix","zog","nix","mus","tys","xar","guz","zix","thul","nok","rix","zath","vux","lox", NULL}
     },
     /* Catchall for any new classes added in the future */
     { -1,

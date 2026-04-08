@@ -362,6 +362,28 @@ static const BOT_GEAR_PIECE gear_samurai[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
+/* Lich: scythe wield, 13 armor slots. Command: licharmor. Cost: 150 primal. */
+static const BOT_GEAR_PIECE gear_lich[] = {
+    { WEAR_WIELD,    "licharmor scythe",    150 },
+    { WEAR_HOLD,     "licharmor scythe",    150 },
+    { WEAR_FINGER_L, "licharmor ring",      150 },
+    { WEAR_FINGER_R, "licharmor ring",      150 },
+    { WEAR_NECK_1,   "licharmor amulet",    150 },
+    { WEAR_NECK_2,   "licharmor amulet",    150 },
+    { WEAR_BODY,     "licharmor plate",     150 },
+    { WEAR_HEAD,     "licharmor helmet",    150 },
+    { WEAR_LEGS,     "licharmor leggings",  150 },
+    { WEAR_FEET,     "licharmor boots",     150 },
+    { WEAR_HANDS,    "licharmor gauntlets", 150 },
+    { WEAR_ARMS,     "licharmor sleeves",   150 },
+    { WEAR_ABOUT,    "licharmor cloak",     150 },
+    { WEAR_WAIST,    "licharmor belt",      150 },
+    { WEAR_WRIST_L,  "licharmor bracer",    150 },
+    { WEAR_WRIST_R,  "licharmor bracer",    150 },
+    { WEAR_FACE,     "licharmor mask",      150 },
+    { WEAR_NONE, NULL, 0 }
+};
+
 /* Indexed by BOT_CLASS_* */
 const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_vampire,   /* BOT_CLASS_VAMPIRE  */
@@ -376,7 +398,8 @@ const BOT_GEAR_PIECE *bot_class_gear[BOT_CLASS_COUNT] = {
     gear_undead_knight,  /* BOT_CLASS_UNDEAD_KNIGHT */
     gear_shapeshifter,   /* BOT_CLASS_SHAPESHIFTER  */
     gear_droid,          /* BOT_CLASS_DROID         */
-    gear_samurai         /* BOT_CLASS_SAMURAI       */
+    gear_samurai,        /* BOT_CLASS_SAMURAI       */
+    gear_lich            /* BOT_CLASS_LICH          */
 };
 
 /* -----------------------------------------------------------------------

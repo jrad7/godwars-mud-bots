@@ -32,6 +32,7 @@ extern const BOT_CLASS_AI bot_undead_knight_ai;
 extern const BOT_CLASS_AI bot_shapeshifter_ai;
 extern const BOT_CLASS_AI bot_droid_ai;
 extern const BOT_CLASS_AI bot_samurai_ai;
+extern const BOT_CLASS_AI bot_lich_ai;
 
 /*
  * bot_class_ai - vtable table indexed by BOT_CLASS_*
@@ -50,7 +51,8 @@ const BOT_CLASS_AI *bot_class_ai[BOT_CLASS_COUNT] = {
     &bot_undead_knight_ai,  /* BOT_CLASS_UNDEAD_KNIGHT  */
     &bot_shapeshifter_ai,       /* BOT_CLASS_SHAPESHIFTER   */
     &bot_droid_ai,              /* BOT_CLASS_DROID          */
-    &bot_samurai_ai             /* BOT_CLASS_SAMURAI        */
+    &bot_samurai_ai,            /* BOT_CLASS_SAMURAI        */
+    &bot_lich_ai                /* BOT_CLASS_LICH           */
 };
 
 /* Forward declarations for stance functions defined in kav_fight.c / fight.c */
@@ -686,6 +688,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_SHAPESHIFTER:  return "shapeshifter";
     case BOT_CLASS_DROID:  return "droid";
     case BOT_CLASS_SAMURAI: return "samurai";
+    case BOT_CLASS_LICH:    return "lich";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
@@ -707,7 +710,8 @@ static int bot_primal_target( CHAR_DATA *ch )
       || bot->roster->class_pref == BOT_CLASS_ANGEL
       || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT
       || bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER
-      || bot->roster->class_pref == BOT_CLASS_DROID )
+      || bot->roster->class_pref == BOT_CLASS_DROID
+      || bot->roster->class_pref == BOT_CLASS_LICH )
         return 150;
     return 60;
 }
