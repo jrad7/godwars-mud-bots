@@ -33,8 +33,8 @@ struct descriptor_data;
 
 /* Population settings */
 #define MAX_BOT_ROSTER      128
-#define BOT_MIN_ONLINE      10
-#define BOT_MAX_ONLINE      10
+#define BOT_MIN_ONLINE      15
+#define BOT_MAX_ONLINE      45
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
