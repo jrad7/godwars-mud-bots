@@ -134,7 +134,7 @@ static bool bot_droid_buff_check( CHAR_DATA *ch )
         {
             if ( !IS_SET(ch->act, PLR_HOLYLIGHT) )
             {
-                bot_cmd( ch, "infravision" );
+                bot_cmd( ch, "llothsight" );
                 return TRUE;
             }
         }
@@ -142,7 +142,7 @@ static bool bot_droid_buff_check( CHAR_DATA *ch )
         {
             if ( !IS_SET(ch->affected_by, AFF_SHADOWSIGHT) || !IS_SET(ch->pcdata->stats[UNI_AFF], VAM_NIGHTSIGHT) )
             {
-                bot_cmd( ch, "infravision" );
+                bot_cmd( ch, "llothsight" );
                 return TRUE;
             }
         }
@@ -150,7 +150,7 @@ static bool bot_droid_buff_check( CHAR_DATA *ch )
         {
             if ( !IS_SET(ch->pcdata->stats[UNI_AFF], VAM_NIGHTSIGHT) )
             {
-                bot_cmd( ch, "infravision" );
+                bot_cmd( ch, "llothsight" );
                 return TRUE;
             }
         }

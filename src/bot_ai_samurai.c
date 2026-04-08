@@ -83,7 +83,7 @@ static bool bot_samurai_buff_check( CHAR_DATA *ch )
     {
         if ( ch->wpn[0] >= 1000 && ch->wpn[1] >= 1000 && ch->wpn[3] >= 1000 )
         {
-            bot_cmd(ch, "bladespin");
+            bot_cmd(ch, "techniques");
             return TRUE;
         }
     }

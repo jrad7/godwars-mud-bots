@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_DROID, BOT_CLASS_SAMURAI, BOT_CLASS_LICH };
+const int bot_test_classes[] = {};
 
 /* Extensible name generation */
 typedef struct {
