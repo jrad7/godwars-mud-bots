@@ -685,7 +685,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_UNDEAD_KNIGHT:  return "undead_knight";
     case BOT_CLASS_SHAPESHIFTER:  return "shapeshifter";
     case BOT_CLASS_DROID:  return "droid";
-    case BOT_CLASS_SAMURAI return "samurai";
+    case BOT_CLASS_SAMURAI: return "samurai";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
