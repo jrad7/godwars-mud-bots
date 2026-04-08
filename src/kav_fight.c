@@ -83,9 +83,13 @@ void improve_wpn( CHAR_DATA *ch, int dtype, int right_hand )
 	ch->wpn[dtype] += 1;
 	if ( IS_CLASS(ch, CLASS_SAMURAI) && (dtype == 0 || dtype == 1 || dtype == 3) )
 	{
-	    if (dtype != 0 && ch->wpn[0] < max_skl) ch->wpn[0] += 1;
-	    if (dtype != 1 && ch->wpn[1] < max_skl) ch->wpn[1] += 1;
-	    if (dtype != 3 && ch->wpn[3] < max_skl) ch->wpn[3] += 1;
+	    /* Sync all three Samurai weapon skills to the same level.
+	     * Using UMIN so the lagging ones are brought up to match
+	     * the newly incremented skill, never exceeding max_skl. */
+	    int new_val = ch->wpn[dtype];
+	    if (ch->wpn[0] < new_val) ch->wpn[0] = UMIN(new_val, max_skl);
+	    if (ch->wpn[1] < new_val) ch->wpn[1] = UMIN(new_val, max_skl);
+	    if (ch->wpn[3] < new_val) ch->wpn[3] = UMIN(new_val, max_skl);
 	}
     }
     else return;
