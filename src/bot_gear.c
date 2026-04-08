@@ -61,11 +61,25 @@ static bool bot_is_newbiepack_vnum( int vnum )
     return FALSE;
 }
 
-/* All player-craftable class armor lives in the 33000-33299 range.
- * Undead Knight armor (knightarmor) occupies 29975-29991 — a separate range. */
+/* Player-craftable class armor ranges (classeq.are + knightarmor command). */
 static bool bot_is_class_gear_vnum( int vnum )
 {
-    if ( vnum >= 33000 && vnum <= 33299 ) return TRUE;
+    if ( vnum >= 33000 && vnum <= 33014 ) return TRUE;  /* mage */
+    if ( vnum >= 33020 && vnum <= 33032 ) return TRUE;  /* monk */
+    if ( vnum >= 33040 && vnum <= 33055 ) return TRUE;  /* vampire */
+    if ( vnum >= 33060 && vnum <= 33074 ) return TRUE;  /* drow */
+    if ( vnum >= 33080 && vnum <= 33094 ) return TRUE;  /* ninja */
+    if ( vnum >= 33100 && vnum <= 33114 ) return TRUE;  /* werewolf */
+    if ( vnum >= 33120 && vnum <= 33134 ) return TRUE;  /* demon */
+    if ( vnum >= 33140 && vnum <= 33153 ) return TRUE;  /* drider */
+    if ( vnum >= 33160 && vnum <= 33177 ) return TRUE;  /* shapeshifter */
+    if ( vnum >= 33180 && vnum <= 33193 ) return TRUE;  /* angel */
+    if ( vnum >= 33200 && vnum <= 33213 ) return TRUE;  /* tanarri */
+    if ( vnum >= 33220 && vnum <= 33233 ) return TRUE;  /* lich */
+    if ( vnum >= 33240 && vnum <= 33255 ) return TRUE;  /* hobbit */
+    if ( vnum >= 33260 && vnum <= 33261 ) return TRUE;  /* fae */
+    if ( vnum >= 33280 && vnum <= 33293 ) return TRUE;  /* giant */
+    if ( vnum >= 33300 && vnum <= 33313 ) return TRUE;  /* drone (spiderdroid) */
     if ( vnum >= 29975 && vnum <= 29991 ) return TRUE;  /* undead knight */
     return FALSE;
 }

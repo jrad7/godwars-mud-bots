@@ -27,7 +27,7 @@ static bool      bot_roster_dirty  = FALSE;
 int              global_bot_pvp_mode = BOT_PVP_MODE_NORMAL;
 
 /* Define the current bot test classes */
-const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_SHAPESHIFTER, BOT_CLASS_ANGEL, BOT_CLASS_TANARRI };
+const int bot_test_classes[] = { BOT_CLASS_SHAPESHIFTER, BOT_CLASS_UNDEAD_KNIGHT, BOT_CLASS_ANGEL, BOT_CLASS_TANARRI };
 
 /* Extensible name generation */
 typedef struct {
