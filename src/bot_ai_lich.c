@@ -116,12 +116,16 @@ static void bot_combat_action_lich( CHAR_DATA *ch )
 /* -----------------------------------------------------------------------
  * bot_between_fights_lich
  * ----------------------------------------------------------------------- */
+/* Toggle this to TRUE if you want to restrict the bot to 1 golem at a time */
+static bool bot_lich_single_golem = FALSE;
+
 static bool bot_between_fights_lich( CHAR_DATA *ch )
 {
     /* Only summon if we have enough Conjuring lore */
     if ( ch->pcdata->powers[CON_LORE] < 4 )
         return FALSE;
 
+    if ( bot_lich_single_golem )
     {
         bool has_golem = FALSE;
         CHAR_DATA *wch;
