@@ -682,6 +682,7 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_ANGEL:          return "angel";
     case BOT_CLASS_UNDEAD_KNIGHT:  return "undead_knight";
     case BOT_CLASS_SHAPESHIFTER:  return "shapeshifter";
+    case BOT_CLASS_DROID:  return "droid";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
@@ -702,7 +703,8 @@ static int bot_primal_target( CHAR_DATA *ch )
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
       || bot->roster->class_pref == BOT_CLASS_ANGEL
       || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT
-      || bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER )
+      || bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER
+      || bot->roster->class_pref == BOT_CLASS_DROID )
         return 150;
     return 60;
 }
