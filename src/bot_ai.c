@@ -688,7 +688,7 @@ static const char *bot_class_name( int class_pref )
 
 /*
  * bot_primal_target - how much primal this bot needs to afford one class gear piece.
- * Tanarri (taneq) and Angel (angelicarmor) gear costs 150 primal/piece.
+ * Special upgrade classes have their gear cost at 150 primal/piece.
  * All other classed bots cost 60 primal/piece.
  * Returns 0 if the bot has no class yet (unclassed bots don't need primal).
  */
@@ -699,7 +699,8 @@ static int bot_primal_target( CHAR_DATA *ch )
         return 0;
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
       || bot->roster->class_pref == BOT_CLASS_ANGEL
-      || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT )
+      || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT
+      || bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER )
         return 150;
     return 60;
 }
