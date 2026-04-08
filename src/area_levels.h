@@ -10,7 +10,7 @@ struct area_level_type
 static const struct area_level_type area_level_table[] =
 {
     { "hell.are",   125 },
-    { "heaven.are", 125 },
+    { "heaven.are",  10 },
     { "weed.are",    75 },
     { "plains.are",  75 },
     { "canyon.are",  45 },
@@ -48,7 +48,7 @@ static const struct grind_zone_type grind_zone_table[] =
     { 5200,  5280,  300, "Thalos"  },
     { 1100,  1157,  300, "Shire"   },
     {30100, 30200,  500, "Hell"    },
-    {99000, 99100,  600, "Heaven"  },
+    {99000, 99100,  100, "Heaven"  },
     {    0,     0,    0, NULL      }   /* end */
 };
 
