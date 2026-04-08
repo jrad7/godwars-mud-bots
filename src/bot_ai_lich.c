@@ -122,9 +122,20 @@ static bool bot_between_fights_lich( CHAR_DATA *ch )
     if ( ch->pcdata->powers[CON_LORE] < 4 )
         return FALSE;
 
-    /* Don't summon if we already have followers */
-    if ( ch->num_followers > 0 || ch->pet != NULL )
-        return FALSE;
+    {
+        bool has_golem = FALSE;
+        CHAR_DATA *wch;
+        for ( wch = char_list; wch != NULL; wch = wch->next )
+        {
+            if ( IS_NPC(wch) && wch->master == ch )
+            {
+                has_golem = TRUE;
+                break;
+            }
+        }
+        if ( has_golem )
+            return FALSE;
+    }
 
     /* Golems are heavily restricted by flags. We try them sequentially based on availability. */
     if ( !IS_SET(ch->pcdata->powers[GOLEMS_SUMMON], HAS_SUMMONED_IRON) )
