@@ -2180,37 +2180,54 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
- * bot_check_vision - detect and recover from blindness or total darkness
+ * bot_check_vision - detect and recover from blindness or darkness
  *
  * Called at the top of bot_update() before the nav queue is drained.
  * Returns TRUE if a recovery action was taken (caller should return).
  *
- * ROOM_TOTAL_DARKNESS: recall to safety (two-phase via blind_recovery flag).
- *   After recall the darkness check won't fire again in the safe room, so
- *   blind_recovery is only used to wait one tick before rechecking.
+ * Two distinct causes of blindness, handled differently:
  *
- * AFF_BLIND / BLINDFOLDED: cure in place each tick - no recall needed.
- *   If the bot doesn't know cure blindness yet it returns FALSE so normal
- *   AI keeps running; the blind will wear off on its own.
+ * Darkness (ROOM_TOTAL_DARKNESS or dark room without nightsight/infrared):
+ *   Cure blindness does nothing here - the bot must recall to a lit room.
+ *   Two-phase via blind_recovery flag; after recall the room will be lit.
+ *
+ * AFF_BLIND from gsn_blindness spell:
+ *   Cast cure blindness in place.  The bot checks is_affected(gsn_blindness)
+ *   first - other sources of AFF_BLIND (drowfire, daemon smoke, item effects)
+ *   use a different affect type that cure blindness cannot strip.  Those
+ *   expire on their own; the bot returns FALSE so normal AI keeps running.
+ *
+ * BLINDFOLDED: remove the blindfold in place.
  * ----------------------------------------------------------------------- */
 static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
 {
-    bool in_total_dark;
+    bool in_darkness;
     bool is_blind;
     bool is_blindfolded;
 
-    /* Drow and Droid see through total darkness natively - never trigger */
-    in_total_dark = ( ch->in_room != NULL
-                   && IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS)
-                   && !IS_CLASS(ch, CLASS_DROW)
-                   && !IS_CLASS(ch, CLASS_DROID) );
+    /* Drow and Droid have native darkvision - darkness never affects them */
+    if ( !IS_CLASS(ch, CLASS_DROW) && !IS_CLASS(ch, CLASS_DROID)
+      && ch->in_room != NULL )
+    {
+        if ( IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS) )
+            in_darkness = TRUE;
+        /* Regular dark room: bot can see with infrared or vampire nightsight */
+        else if ( room_is_dark( ch->in_room )
+               && !IS_AFFECTED(ch, AFF_INFRARED)
+               && !IS_VAMPAFF(ch, VAM_NIGHTSIGHT) )
+            in_darkness = TRUE;
+        else
+            in_darkness = FALSE;
+    }
+    else
+        in_darkness = FALSE;
 
     is_blindfolded = IS_EXTRA(ch, BLINDFOLDED);
     is_blind       = ( IS_AFFECTED(ch, AFF_BLIND)
                     && !IS_AFFECTED(ch, AFF_SHADOWSIGHT) );
 
     /* Phase 2: recalled from a dark room last tick - just clear the flag.
-     * If the bot is still somehow in darkness, in_total_dark will catch it
+     * If the bot is still somehow in darkness, in_darkness will catch it
      * below; if not, we're done. */
     if ( bot->blind_recovery )
     {
@@ -2218,17 +2235,17 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
         /* Fall through to handle any lingering conditions */
     }
 
-    /* Total darkness: must escape the room - recall to safety */
-    if ( in_total_dark )
+    /* Can't see due to darkness: cure blindness won't help - recall */
+    if ( in_darkness )
     {
         if ( ch->position == POS_FIGHTING )
             return FALSE;   /* Can't recall while fighting */
         if ( bot->nav_n > 0 )
         {
-            bot_watch_msg( ch, "[VISION] total darkness - aborting nav queue\n\r" );
+            bot_watch_msg( ch, "[VISION] darkness - aborting nav queue\n\r" );
             bot->nav_n = 0;
         }
-        bot_watch_msg( ch, "[VISION] total darkness - recalling\n\r" );
+        bot_watch_msg( ch, "[VISION] darkness - recalling\n\r" );
         if ( bot_do_recall(ch) )
             bot->blind_recovery = TRUE;
         return TRUE;
@@ -2244,12 +2261,20 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
         return TRUE;
     }
 
-    /* Blind spell: cure in place each tick until it clears.
-     * If the spell isn't learned yet, return FALSE so the bot keeps
-     * operating normally while the blind wears off on its own. */
+    /* Blind spell: only attempt cure blindness if the blindness was applied
+     * by gsn_blindness - the same check spell_cure_blindness itself uses.
+     * Other sources of AFF_BLIND (drowfire, daemon smoke, item effects) use
+     * a different affect type; cure blindness silently does nothing against
+     * them, so the bot would loop forever.  Those effects are timed and
+     * expire on their own - return FALSE so normal AI keeps running. */
     if ( is_blind )
     {
         int sn;
+        if ( !is_affected( ch, gsn_blindness ) )
+        {
+            bot_watch_msg( ch, "[VISION] blind (non-spell) - waiting to expire\n\r" );
+            return FALSE;
+        }
         if ( ch->position == POS_FIGHTING )
             return FALSE;
         /* Shapeshifters in animal form cannot cast spells */
@@ -2263,7 +2288,7 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
             bot_cmd( ch, "cast \"cure blindness\" self" );
             return TRUE;
         }
-        /* Don't know the spell yet - wait it out, don't block AI */
+        /* Blindness is curable but bot lacks the spell - wait it out */
         return FALSE;
     }
 
