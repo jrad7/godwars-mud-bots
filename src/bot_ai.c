@@ -169,6 +169,40 @@ static void bot_set_autostance( CHAR_DATA *ch )
     do_autostance( ch, (char *)stance_names[ pick ] );
 }
 
+static bool bot_generic_buff_check( CHAR_DATA *ch );
+
+/* -----------------------------------------------------------------------
+ * bot_do_recall
+ * Single entry point for any bot recall attempt.  If the bot is cursed
+ * and knows "remove curse", casts it this tick and returns FALSE so the
+ * caller skips post-recall work (e.g. state changes) until next tick.
+ * If not cursed (or unable to cure), issues the recall command.  After
+ * recalling, verifies the bot landed in its home room (3001); if not,
+ * logs a bug and retries once.  Returns TRUE when the recall was
+ * attempted (whether or not it succeeded), FALSE when decursing.
+ * ----------------------------------------------------------------------- */
+static bool bot_do_recall( CHAR_DATA *ch )
+{
+    if ( IS_AFFECTED(ch, AFF_CURSE) && bot_generic_buff_check(ch) )
+        return FALSE;   /* curing curse this tick; recall deferred */
+
+    bot_cmd( ch, "recall" );
+
+    if ( ch->in_room == NULL || ch->in_room->vnum != ch->home )
+    {
+        char logbuf[256];
+        snprintf( logbuf, sizeof(logbuf),
+            "[RECALL] failed to reach home (%d) -- still in room %d -- retrying",
+            ch->home, ch->in_room ? ch->in_room->vnum : -1 );
+        do_bug( ch, logbuf );
+        bot_watch_msg( ch, logbuf );
+        bot_watch_msg( ch, "\n\r" );
+        bot_cmd( ch, "recall" );
+    }
+
+    return TRUE;
+}
+
 /* -----------------------------------------------------------------------
  * bot_cmd - inject a command into a bot as if it typed it
  * ----------------------------------------------------------------------- */
@@ -210,31 +244,19 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                                         ? ch->in_room->area->name : "unknown area";
                 const char *room_name = ch->in_room ? ch->in_room->name : "unknown room";
                 int         vnum      = ch->in_room ? ch->in_room->vnum : -1;
-                FILE       *fp;
 
                 snprintf( logbuf, sizeof(logbuf),
-                    "[STUCK] bot %s stuck on '%s' -- room: %s (%d) in %s -- recalling",
-                    ch->name, buf, room_name, vnum, area_name );
-                log_string( logbuf );
-
-                /* Append to bugs.txt using the fpReserve pattern */
-                fclose( fpReserve );
-                if ( ( fp = fopen( BUG_FILE, "a" ) ) != NULL )
-                {
-                    fprintf( fp, "%s\n", logbuf );
-                    fclose( fp );
-                }
-                fpReserve = fopen( NULL_FILE, "r" );
-
-                /* Notify any watcher */
+                    "[STUCK] stuck on '%s' -- room: %s (%d) in %s -- recalling",
+                    buf, room_name, vnum, area_name );
+                do_bug( ch, logbuf );
                 strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
                 bot_watch_msg( ch, logbuf );
 
                 /* Clear history so we don't spam recalls */
                 bot->cmd_history_count = 0;
                 bot->cmd_history_head  = 0;
-                interpret( ch, "recall" );
-                bot_change_state( ch, bot, BOT_IDLE );
+                if ( bot_do_recall(ch) )
+                    bot_change_state( ch, bot, BOT_IDLE );
                 return;
             }
         }
@@ -592,7 +614,7 @@ static void bot_navigate_to_any_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
     if ( count == 0 )
     {
         /* Absolute fallback: just recall to the altar */
-        bot_nav_queue( bot, "recall" );
+        bot_do_recall( ch );
         bot_watch_msg( ch, "[PVP_FLEE] No alternate zone found -- recalling.\n\r" );
         return;
     }
@@ -1544,8 +1566,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         if ( !in_valid_zone )
         {
             bot_watch_msg( ch, "[GRIND] outside grind zone -- recalling to restart\n\r" );
-            bot_cmd( ch, "recall" );
-            bot_change_state( ch, bot, BOT_IDLE );
+            if ( bot_do_recall(ch) )
+                bot_change_state( ch, bot, BOT_IDLE );
             return;
         }
     }
@@ -1995,11 +2017,8 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     /* Remove curse before anything else -- AFF_CURSE blocks recall so a bot
      * stuck in a no-exit classhq zone (e.g. Hell) can never escape until it
      * is cleared.  bot_generic_buff_check handles the skill check. */
-    if ( IS_AFFECTED(ch, AFF_CURSE) )
-    {
-        if ( bot_generic_buff_check(ch) )
-            return;
-    }
+    if ( IS_AFFECTED(ch, AFF_CURSE) && bot_generic_buff_check(ch) )
+        return;
 
     /* Meditate while recovering if needed and gear is ready */
     if ( bot->needs_meditate && bot->ready_meditate
@@ -2210,8 +2229,8 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
             bot->nav_n = 0;
         }
         bot_watch_msg( ch, "[VISION] total darkness - recalling\n\r" );
-        bot_cmd( ch, "recall" );
-        bot->blind_recovery = TRUE;
+        if ( bot_do_recall(ch) )
+            bot->blind_recovery = TRUE;
         return TRUE;
     }
 
