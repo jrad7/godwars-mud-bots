@@ -33,8 +33,8 @@ struct descriptor_data;
 
 /* Population settings */
 #define MAX_BOT_ROSTER      128
-#define BOT_MIN_ONLINE      20
-#define BOT_MAX_ONLINE      40
+#define BOT_MIN_ONLINE      10
+#define BOT_MAX_ONLINE      10
 
 /* Session lengths in seconds */
 #define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
@@ -126,7 +126,7 @@ typedef enum {
  * #define BOT_TEST_CLASSES_COUNT 2
  * and define bot_test_classes in bot_mgr.c as: { BOT_CLASS_VAMPIRE, BOT_CLASS_MONK }
  */
-#define BOT_TEST_CLASSES_COUNT 5
+#define BOT_TEST_CLASSES_COUNT 3
 extern const int bot_test_classes[];
 
 /*
