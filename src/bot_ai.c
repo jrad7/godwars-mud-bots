@@ -16,6 +16,7 @@
 #include <time.h>
 #include "merc.h"
 #include "bot.h"
+#include "shapeshifter.h"
 
 /* Class AI vtables - defined in bot_ai_{class}.c, registered below */
 extern const BOT_CLASS_AI bot_vamp_ai;
@@ -677,8 +678,8 @@ static const char *bot_class_name( int class_pref )
     case BOT_CLASS_MAGE:      return "mage";
     case BOT_CLASS_TANARRI:        return "tanarri";
     case BOT_CLASS_ANGEL:          return "angel";
-    case BOT_CLASS_UNDEAD_KNIGHT:  return "undead knight";
-    case BOT_CLASS_SHAPESHIFTER:  return "shapeshifer";
+    case BOT_CLASS_UNDEAD_KNIGHT:  return "undead_knight";
+    case BOT_CLASS_SHAPESHIFTER:  return "shapeshifter";
     default:
         bug( "bot_class_name: unknown class_pref %d", class_pref );
         return NULL;
@@ -752,6 +753,12 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
 
     /* Out of combat generic spellcasting/buffing */
     if ( ch->position == POS_FIGHTING )
+        return FALSE;
+
+    /* Shapeshifters in animal form cannot cast spells */
+    if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
+      && ch->pcdata != NULL
+      && ch->pcdata->powers[SHAPE_FORM] != 0 )
         return FALSE;
 
     if ( IS_AFFECTED(ch, AFF_CURSE) )
@@ -2198,6 +2205,10 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
     {
         int sn;
         if ( ch->position == POS_FIGHTING )
+            return FALSE;
+        /* Shapeshifters in animal form cannot cast spells */
+        if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
+          && ch->pcdata->powers[SHAPE_FORM] != 0 )
             return FALSE;
         sn = skill_lookup("cure blindness");
         if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
