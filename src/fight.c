@@ -2173,7 +2173,12 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
       {
         if (IS_NPC(victim) && !IS_SET(victim->act, ACT_NOEXP))
         {
-          int cp_gain = victim->level * 8;
+          int cp_gain = victim->level * 4;
+          if ( IS_CLASS(ch,CLASS_DROID) || IS_CLASS(ch, CLASS_TANARRI) )
+          {
+              cp_gain = victim->level * 12;
+          }
+
           {
               int gmult = get_grind_mult(victim);
               if (gmult > 0) cp_gain = (cp_gain * gmult) / 100;
