@@ -2176,7 +2176,7 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
           int cp_gain = victim->level * 4;
           if ( IS_CLASS(ch,CLASS_DROID) || IS_CLASS(ch, CLASS_TANARRI) )
           {
-              cp_gain = victim->level * 20;
+              cp_gain = victim->level * 12;
           }
 
           {
