@@ -98,6 +98,53 @@ static const char *bot_shapeshifter_pick_train( CHAR_DATA *ch )
     return NULL;
 }
 
+/* -----------------------------------------------------------------------
+ * bot_ss_primal_needed
+ *
+ * Returns the primal cost of the next pending formlearn step, or 0 if gear
+ * is not yet complete (150 is sufficient while gearing) or all forms are
+ * maxed.  Used by bot_primal_target() to raise the accumulation goal above
+ * 150 once the bot starts training forms.
+ * ----------------------------------------------------------------------- */
+int bot_ss_primal_needed( CHAR_DATA *ch )
+{
+    int lvl;
+
+    if ( !IS_CLASS(ch, CLASS_SHAPESHIFTER) || ch->pcdata == NULL ) return 0;
+
+    /* While gearing, 150 primal per piece is enough — don't over-accumulate */
+    if ( !bot_shapeshifter_gear_complete(ch) ) return 0;
+
+    /* Return cost of the next pending step in priority order */
+    if ( ch->pcdata->powers[SHAPE_POWERS] < 5 )
+    {
+        lvl = ch->pcdata->powers[SHAPE_POWERS];
+        return 80 * lvl + 80;
+    }
+    if ( ch->pcdata->powers[TIGER_LEVEL] < 5 )
+    {
+        lvl = ch->pcdata->powers[TIGER_LEVEL];
+        return 80 * lvl + 80;
+    }
+    if ( ch->pcdata->powers[BULL_LEVEL] < 5 )
+    {
+        lvl = ch->pcdata->powers[BULL_LEVEL];
+        return 80 * lvl + 80;
+    }
+    if ( ch->pcdata->powers[HYDRA_LEVEL] < 5 )
+    {
+        lvl = ch->pcdata->powers[HYDRA_LEVEL];
+        return 80 * lvl + 80;
+    }
+    if ( ch->pcdata->powers[FAERIE_LEVEL] < 5 )
+    {
+        lvl = ch->pcdata->powers[FAERIE_LEVEL];
+        return 80 * lvl + 80;
+    }
+
+    return 0;  /* all forms fully trained */
+}
+
 static bool bot_shapeshifter_should_train( CHAR_DATA *ch )
 {
     if ( !IS_CLASS(ch, CLASS_SHAPESHIFTER) ) return FALSE;

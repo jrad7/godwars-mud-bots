@@ -731,10 +731,21 @@ int bot_primal_target( CHAR_DATA *ch )
     /* Katana costs 250 primal per piece */
     if ( bot->roster->class_pref == BOT_CLASS_SAMURAI )
         return 250;
+    /* UK trains its power tracks with primal; costs can reach 600 (level 9->10).
+     * Return the actual next step cost so the bot accumulates enough. */
+    if ( bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT )
+    {
+        int class_cost = bot_uk_primal_needed( ch );
+        return class_cost > 150 ? class_cost : 150;
+    }
+    /* Shapeshifter formlearn costs reach 400 (level 4->5); same treatment. */
+    if ( bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER )
+    {
+        int class_cost = bot_ss_primal_needed( ch );
+        return class_cost > 150 ? class_cost : 150;
+    }
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
       || bot->roster->class_pref == BOT_CLASS_ANGEL
-      || bot->roster->class_pref == BOT_CLASS_UNDEAD_KNIGHT
-      || bot->roster->class_pref == BOT_CLASS_SHAPESHIFTER
       || bot->roster->class_pref == BOT_CLASS_DROID
       || bot->roster->class_pref == BOT_CLASS_LICH )
         return 150;
@@ -1174,6 +1185,13 @@ static bool bot_do_train( CHAR_DATA *ch )
         {
             return FALSE; /* Pool */
         }
+    }
+
+    /* Tanarri: pool exp for rank promotions once HP base is established */
+    if ( IS_CLASS(ch, CLASS_TANARRI) && ch->max_hit >= 10000 )
+    {
+        long pool = bot_tan_pool_exp( ch );
+        if ( pool > 0 ) return FALSE;
     }
 
     /* Primary: dump all available exp into hp */

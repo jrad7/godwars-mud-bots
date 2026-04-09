@@ -75,6 +75,46 @@ static int bot_tan_tpoints_cost( int rank )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_tan_pool_exp
+ *
+ * Returns the EXP threshold the bot must reach before spending on stats,
+ * or 0 if no pooling is needed right now.
+ *
+ * Pooling is required when:
+ *   - The bot has unlocked all powers for the current rank (nothing left to
+ *     bloodsacrifice), AND
+ *   - The bot hasn't yet accumulated enough EXP for the next rank promotion.
+ *
+ * If the bot still needs TPOINTS for bloodsacrifice at the current rank we
+ * don't pool — it needs to grind freely to earn those TPOINTS first.
+ * ----------------------------------------------------------------------- */
+long bot_tan_pool_exp( CHAR_DATA *ch )
+{
+    int rank, counter, i;
+
+    if ( !IS_CLASS(ch, CLASS_TANARRI) ) return 0;
+
+    rank    = ch->pcdata->rank;
+    counter = ch->pcdata->powers[TANARRI_POWER_COUNTER];
+
+    for ( i = 0; promote_table[i].from_rank != -1; i++ )
+    {
+        if ( promote_table[i].from_rank != rank ) continue;
+
+        /* Still need bloodsacrifice at this rank — don't pool yet */
+        if ( counter < promote_table[i].powers_needed ) return 0;
+
+        /* All powers done; pool until we can promote */
+        if ( ch->exp < promote_table[i].exp_needed )
+            return promote_table[i].exp_needed;
+
+        return 0;  /* already have enough EXP — promote will fire in do_train */
+    }
+
+    return 0;  /* rank 6 (balor) or no matching entry */
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE if there is a Tanarri-specific training step available:

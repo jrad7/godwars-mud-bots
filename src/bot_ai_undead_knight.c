@@ -112,6 +112,29 @@ static int bot_uk_train_cost( int current_level )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_uk_primal_needed
+ *
+ * Returns the primal cost of the next pending training step, or 0 if all
+ * training is complete.  Used by bot_primal_target() to set a high enough
+ * accumulation goal so the bot can afford its next gain/weaponpractice.
+ * ----------------------------------------------------------------------- */
+int bot_uk_primal_needed( CHAR_DATA *ch )
+{
+    int i, cur;
+
+    if ( !IS_CLASS(ch, CLASS_UNDEAD_KNIGHT) ) return 0;
+
+    for ( i = 0; train_order[i].track != -1; i++ )
+    {
+        cur = ch->pcdata->powers[ train_order[i].track ];
+        if ( cur >= train_order[i].target_level ) continue;
+        return bot_uk_train_cost( cur );  /* cost of the very next pending step */
+    }
+
+    return 0;  /* all tracks fully trained */
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE if the bot has a pending training step it can afford.
