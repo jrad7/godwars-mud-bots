@@ -161,7 +161,7 @@ static bool bot_droid_buff_check( CHAR_DATA *ch )
     {
         if ( !IS_SET(ch->newbits, NEW_CUBEFORM) && ch->mana >= 2000 && ch->move >= 2000 )
         {
-            bot_cmd( ch, "cubeform" );
+            bot_cmd( ch, "avataroflloth" );
             return TRUE;
         }
     }
@@ -190,7 +190,7 @@ static void bot_droid_combat_action( CHAR_DATA *ch )
             /* Add some randomization to throttle it mechanically over rounds */
             if ( number_range(1, 3) == 1 )
             {
-                bot_cmd( ch, "stuntubes" );
+                bot_cmd( ch, "venomspit" );
                 return;
             }
         }
