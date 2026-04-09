@@ -5102,6 +5102,8 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
   }
   players_decap++;
   ch->pcdata->bounty += number_range(30,80);
+  ch->pcdata->quest += 300;
+  send_to_char( "You receive 300 quest points for the decapitation.\n\r", ch );
 
   /*
    * update kingdoms
