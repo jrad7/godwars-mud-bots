@@ -49,7 +49,7 @@ struct descriptor_data;
 #define PULSE_BOT_AI       ( 1 * PULSE_PER_SECOND)
 
 /* XP multiplier applied to all kill XP: final_xp = base * (1 + XP_KILL_BONUS) */
-#define XP_KILL_BONUS  5
+#define XP_KILL_BONUS  3
 
 /* State timer ranges in seconds (min/max for number_range) */
 #define BOT_TIMER_IDLE_MIN       1
