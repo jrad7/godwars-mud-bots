@@ -74,6 +74,19 @@ void improve_spl( CHAR_DATA *ch, int dtype, int sn )
     if ((dice1 > ch->spl[dtype] || dice2 > ch->spl[dtype]) || (dice1==100 || dice2==100)) ch->spl[dtype] += 1;
     else return;
 
+    /* Battlemages and liches gain spell colors 5x faster */
+    if (IS_CLASS(ch, CLASS_MAGE) || ch->class == CLASS_LICH) {
+        int extra;
+        for (extra = 0; extra < 4; extra++) {
+            if (ch->spl[dtype] >= 300) break;
+            if (ch->spl[dtype] >= 240 && ch->class != CLASS_LICH) break;
+            dice1 = number_percent();
+            dice2 = number_percent();
+            if ((dice1 > ch->spl[dtype] || dice2 > ch->spl[dtype]) || (dice1==100 || dice2==100))
+                ch->spl[dtype] += 1;
+        }
+    }
+
          if (ch->spl[dtype] == 1  ) sprintf(bufskill,"an apprentice of");
     else if (ch->spl[dtype] == 26 ) sprintf(bufskill,"a student at");
     else if (ch->spl[dtype] == 51 ) sprintf(bufskill,"a scholar at");
