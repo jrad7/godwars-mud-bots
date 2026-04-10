@@ -1134,7 +1134,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 30000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 20000 ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS3 - pool once max_hit >= 40k, buy at 140M */
@@ -1150,7 +1150,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 40000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 22000 ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS4 - pool once max_hit >= 50k, buy at 200M */
@@ -1166,7 +1166,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 50000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 25000 ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS5 - pool once max_hit >= 70k, buy at 380M */
@@ -1185,7 +1185,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 70000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 30000 ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             else
