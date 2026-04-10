@@ -25,6 +25,7 @@
 #include <string.h>
 #include <time.h>
 #include "merc.h"
+#include "bot.h"
 
 
 
@@ -71,20 +72,45 @@ void improve_spl( CHAR_DATA *ch, int dtype, int sn )
    && (dtype == 0 || dtype == 1)) && !(IS_CLASS(ch, CLASS_DROW) && IS_SET(ch->special, SPC_DROW_CLE)
    && (dtype == 2 || dtype == 3))) return;
     if (ch->spl[dtype] >= 300) return;
-    if ((dice1 > ch->spl[dtype] || dice2 > ch->spl[dtype]) || (dice1==100 || dice2==100)) ch->spl[dtype] += 1;
-    else return;
 
-    /* Battlemages and liches gain spell colors much faster */
-    if (IS_CLASS(ch, CLASS_MAGE) || ch->class == CLASS_LICH) {
+    /* Detect a pre-class bot grinding toward battlemage (class_pref == BOT_CLASS_MAGE,
+     * still at level 3 / class 0).  These get the same fast-track as post-class mages
+     * so the 0->100 grind is not glacially slow.                                      */
+    {
+    int is_mage_bot = ( ch->pcdata != NULL && ch->pcdata->botdata != NULL
+                     && ch->pcdata->botdata->class_pref == BOT_CLASS_MAGE
+                     && ch->level == 3 && ch->class == 0 );
+    int gained = 0;
+
+    if (IS_CLASS(ch, CLASS_MAGE) || ch->class == CLASS_LICH || is_mage_bot)
+    {
+        /* Above spl 100, dice > spl is impossible (number_percent caps at 100).
+         * Use spl%100 as the effective threshold so each roll stays meaningful
+         * throughout the 0->100 (pre-class) and 100->240 (post-class) ranges. */
+        int eff   = ch->spl[dtype] % 100;
         int extra;
-        for (extra = 0; extra < 10; extra++) {
+        for (extra = 0; extra < 10; extra++)
+        {
             if (ch->spl[dtype] >= 300) break;
-            if (ch->spl[dtype] >= 240 && ch->class != CLASS_LICH) break;
+            if (ch->spl[dtype] >= 240 && ch->class != CLASS_LICH && !is_mage_bot) break;
+            if (is_mage_bot && ch->spl[dtype] >= 100) break;
             dice1 = number_percent();
             dice2 = number_percent();
-            if ((dice1 > ch->spl[dtype] || dice2 > ch->spl[dtype]) || (dice1==100 || dice2==100))
-                ch->spl[dtype] += 1;
+            if ((dice1 > eff || dice2 > eff) || (dice1==100 || dice2==100))
+            {
+                ch->spl[dtype]++;
+                eff = ch->spl[dtype] % 100;
+                gained++;
+            }
         }
+    }
+    else
+    {
+        if ((dice1 > ch->spl[dtype] || dice2 > ch->spl[dtype]) || (dice1==100 || dice2==100))
+        { ch->spl[dtype] += 1; gained = 1; }
+    }
+
+    if (!gained) return;
     }
 
          if (ch->spl[dtype] == 1  ) sprintf(bufskill,"an apprentice of");
