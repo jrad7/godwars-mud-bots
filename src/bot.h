@@ -300,6 +300,7 @@ int     bot_uk_primal_needed        ( struct char_data *ch );
 int     bot_ss_primal_needed        ( struct char_data *ch );
 long    bot_tan_pool_exp            ( struct char_data *ch );
 long    bot_ang_pool_exp            ( struct char_data *ch );
+long    bot_lich_pool_exp           ( struct char_data *ch );
 
 void    bot_chat_init       ( void );
 const char *bot_get_response( const char *trigger, int chattiness );

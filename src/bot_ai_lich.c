@@ -19,6 +19,56 @@ static bool bot_buff_check_lich( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_lich_pool_exp
+ *
+ * Returns the exp threshold the bot must reach before spending on stats,
+ * or 0 if no pooling is needed right now.
+ *
+ * Without this, bot_train_stats drains exp into HP each tick and the bot
+ * never accumulates the 10M+ needed for the first lore step.
+ * ----------------------------------------------------------------------- */
+long bot_lich_pool_exp( CHAR_DATA *ch )
+{
+    long cost;
+
+    if ( !IS_CLASS(ch, CLASS_LICH) ) return 0;
+
+    /* Walk lores in the same order as do_train */
+    if ( ch->pcdata->powers[CON_LORE] < 5 )
+    {
+        cost = 10000000L * (ch->pcdata->powers[CON_LORE] + 1);
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
+    if ( ch->pcdata->powers[DEATH_LORE] < 5 )
+    {
+        cost = 10000000L * (ch->pcdata->powers[DEATH_LORE] + 1);
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
+    if ( ch->pcdata->powers[LIFE_LORE] < 5 )
+    {
+        cost = 10000000L * (ch->pcdata->powers[LIFE_LORE] + 1);
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
+    if ( ch->pcdata->powers[NECROMANTIC] < 5 )
+    {
+        cost = 10000000L * (ch->pcdata->powers[NECROMANTIC] + 1);
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
+    if ( ch->pcdata->powers[CHAOS_MAGIC] < 5 )
+    {
+        cost = 10000000L * (ch->pcdata->powers[CHAOS_MAGIC] + 1);
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
+
+    return 0;  /* all lores maxed */
+}
+
+/* -----------------------------------------------------------------------
  * bot_should_train_lich
  * ----------------------------------------------------------------------- */
 static bool bot_should_train_lich( CHAR_DATA *ch )

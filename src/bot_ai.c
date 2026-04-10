@@ -1204,9 +1204,16 @@ static bool bot_do_train( CHAR_DATA *ch )
     }
 
     /* Angel: pool exp for track training once HP base is established */
-    if ( IS_CLASS(ch, CLASS_ANGEL) && ch->max_hit >= 10000 )
+    if ( IS_CLASS(ch, CLASS_ANGEL) && ch->max_hit >= 5000 )
     {
         long pool = bot_ang_pool_exp( ch );
+        if ( pool > 0 ) return FALSE;
+    }
+
+    /* Lich: pool exp for lore training once HP base is established */
+    if ( IS_CLASS(ch, CLASS_LICH) && ch->max_hit >= 5000 )
+    {
+        long pool = bot_lich_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
     }
 
