@@ -90,7 +90,7 @@ void improve_spl( CHAR_DATA *ch, int dtype, int sn )
          * throughout the 0->100 (pre-class) and 100->240 (post-class) ranges. */
         int eff   = ( ch->spl[dtype] % 100 );
         int extra;
-        for (extra = 0; extra < 3; extra++)
+        for (extra = 0; extra < 10; extra++)
         {
             if (ch->spl[dtype] >= 300) break;
             if (ch->spl[dtype] >= 240 && ch->class != CLASS_LICH && !is_mage_bot) break;
