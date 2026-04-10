@@ -121,6 +121,11 @@ static bool bot_lich_single_golem = FALSE;
 
 static bool bot_between_fights_lich( CHAR_DATA *ch )
 {
+    /* chant heal: heals (sum of all 5 color levels) * 1.5 for 1500 mana.
+     * No lore requirement — works at any stage. Available at POS_MEDITATING+. */
+    if ( ch->hit < ch->max_hit * 80 / 100 && ch->mana >= 1500 )
+    { bot_cmd( ch, "chant heal" ); return TRUE; }
+
     /* Only summon if we have enough Conjuring lore */
     if ( ch->pcdata->powers[CON_LORE] < 4 )
         return FALSE;

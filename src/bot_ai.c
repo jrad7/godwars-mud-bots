@@ -2038,6 +2038,15 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     if ( IS_AFFECTED(ch, AFF_CURSE) && bot_generic_buff_check(ch) )
         return;
 
+    /* Liches have no natural HP regen. Use chant heal (color spell, no lore req)
+     * to recover while resting. between_fights handles the mana/HP guards. */
+    if ( IS_CLASS(ch, CLASS_LICH) && !bot_is_healthy(ch) && bot->roster )
+    {
+        const BOT_CLASS_AI *ai = bot_class_ai[bot->roster->class_pref];
+        if ( ai && ai->between_fights && ai->between_fights(ch) )
+            return;
+    }
+
     /* Meditate while recovering if needed and gear is ready */
     if ( bot->needs_meditate && bot->ready_meditate
       && ch->position != POS_MEDITATING )
