@@ -744,6 +744,18 @@ int bot_primal_target( CHAR_DATA *ch )
         int class_cost = bot_ss_primal_needed( ch );
         return class_cost > 150 ? class_cost : 150;
     }
+    /* Mage invoke costs reach 200 (level 9->10); accumulate enough. */
+    if ( bot->roster->class_pref == BOT_CLASS_MAGE )
+    {
+        int class_cost = bot_mage_primal_needed( ch );
+        return class_cost > 150 ? class_cost : 150;
+    }
+    /* Monk mantra costs reach 140 (level 13->14); accumulate enough. */
+    if ( bot->roster->class_pref == BOT_CLASS_MONK )
+    {
+        int class_cost = bot_monk_primal_needed( ch );
+        return class_cost > 60 ? class_cost : 60;
+    }
     if ( bot->roster->class_pref == BOT_CLASS_TANARRI
       || bot->roster->class_pref == BOT_CLASS_ANGEL
       || bot->roster->class_pref == BOT_CLASS_DROID
@@ -1214,6 +1226,20 @@ static bool bot_do_train( CHAR_DATA *ch )
     if ( IS_CLASS(ch, CLASS_LICH) && ch->max_hit >= 5000 )
     {
         long pool = bot_lich_pool_exp( ch );
+        if ( pool > 0 ) return FALSE;
+    }
+
+    /* Ninja: pool exp for belt ranks that cost > 10M */
+    if ( IS_CLASS(ch, CLASS_NINJA) && ch->max_hit >= 5000 )
+    {
+        long pool = bot_ninja_pool_exp( ch );
+        if ( pool > 0 ) return FALSE;
+    }
+
+    /* Vampire: pool exp for age milestones that cost > 10M */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) && ch->max_hit >= 5000 )
+    {
+        long pool = bot_vamp_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
     }
 

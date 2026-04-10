@@ -105,6 +105,32 @@ static int bot_ninja_pick_principle( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_ninja_pool_exp
+ *
+ * Returns the exp threshold the bot must reach before spending on stats,
+ * or 0 if no pooling is needed.
+ *
+ * Only pools for belt steps that cost > 10M (belt2 and above).
+ * Belt1 (5M) is cheap enough that HP training won't starve it.
+ * ----------------------------------------------------------------------- */
+long bot_ninja_pool_exp( CHAR_DATA *ch )
+{
+    int i;
+
+    if ( !IS_CLASS(ch, CLASS_NINJA) ) return 0;
+
+    for ( i = 0; belt_table[i].from_rank >= 0; i++ )
+    {
+        if ( ch->pcdata->rank != belt_table[i].from_rank ) continue;
+        if ( belt_table[i].cost <= 10000000L ) return 0;  /* belt1: no pooling */
+        if ( ch->exp < belt_table[i].cost ) return belt_table[i].cost;
+        return 0;  /* affordable — should_train will fire */
+    }
+
+    return 0;  /* all belts done */
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE when either:

@@ -203,6 +203,28 @@ static const char *bot_monk_pick_train( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_monk_primal_needed
+ *
+ * Returns the primal cost of the next pending mantra step, or 0 if all
+ * mantras are maxed or gear isn't complete yet.
+ * Used by bot_primal_target() to raise the accumulation goal so the bot
+ * can afford mantras 7-14 whose cost exceeds 60 primal.
+ * Mantra N->N+1 costs (N+1)*10 primal; max is level 13->14 = 140 primal.
+ * ----------------------------------------------------------------------- */
+int bot_monk_primal_needed( CHAR_DATA *ch )
+{
+    int pmonk;
+
+    if ( !IS_CLASS(ch, CLASS_MONK) || ch->pcdata == NULL ) return 0;
+    if ( !bot_monk_gear_complete(ch) ) return 0;
+
+    pmonk = ch->pcdata->powers[PMONK];
+    if ( pmonk >= 14 ) return 0;
+
+    return (pmonk + 1) * 10;
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE if there is a training step the bot can afford right now.

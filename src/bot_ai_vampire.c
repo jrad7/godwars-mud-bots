@@ -105,6 +105,26 @@ static int bot_vamp_pick_research( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_vamp_pool_exp
+ *
+ * Returns the exp threshold the bot must reach before spending on stats,
+ * or 0 if no pooling is needed.
+ *
+ * Only pools for age milestones that cost > 10M (Elder, Methuselah, Trueblood).
+ * Neonate (1.5M) and Ancilla (7.5M) are cheap enough that HP training won't starve them.
+ * ----------------------------------------------------------------------- */
+long bot_vamp_pool_exp( CHAR_DATA *ch )
+{
+    if ( !IS_CLASS(ch, CLASS_VAMPIRE) ) return 0;
+
+    if ( ch->pcdata->rank == AGE_ELDER      && ch->exp < 15000000 ) return 15000000L;
+    if ( ch->pcdata->rank == AGE_METHUSELAH && ch->exp < 30000000 ) return 30000000L;
+    if ( ch->pcdata->rank == AGE_LA_MAGRA   && ch->exp < 60000000 ) return 60000000L;
+
+    return 0;
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE if the vampire has class-specific exp worth spending:

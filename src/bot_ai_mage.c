@@ -203,6 +203,21 @@ static bool bot_mage_do_train( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_mage_primal_needed
+ *
+ * Returns the primal cost of the next pending invoke step, or 0 if all
+ * invokes are maxed.  Used by bot_primal_target() to raise the accumulation
+ * goal so the bot can afford invoke levels whose cost exceeds 60 primal.
+ * Invoke N->N+1 costs (N+1)*20 primal; max is level 9->10 = 200 primal.
+ * ----------------------------------------------------------------------- */
+int bot_mage_primal_needed( CHAR_DATA *ch )
+{
+    if ( !IS_CLASS(ch, CLASS_MAGE) || ch->pcdata == NULL ) return 0;
+    if ( ch->pcdata->powers[PINVOKE] >= 10 ) return 0;
+    return (ch->pcdata->powers[PINVOKE] + 1) * 20;
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: buff_check
  *
  * Activates invoke buffs that are missing.  Issues at most one command per
