@@ -78,7 +78,8 @@ void improve_spl( CHAR_DATA *ch, int dtype, int sn )
      * so the 0->100 grind is not glacially slow.                                      */
     {
     int is_mage_bot = ( ch->pcdata != NULL && ch->pcdata->botdata != NULL
-                     && ch->pcdata->botdata->class_pref == BOT_CLASS_MAGE
+                     && ch->pcdata->botdata->roster != NULL
+                     && ch->pcdata->botdata->roster->class_pref == BOT_CLASS_MAGE
                      && ch->level == 3 && ch->class == 0 );
     int gained = 0;
 
