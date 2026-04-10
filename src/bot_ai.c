@@ -803,11 +803,20 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
     if ( ch->position == POS_FIGHTING )
         return FALSE;
 
-    /* Shapeshifters in animal form cannot cast spells */
+    /* Shapeshifters in animal form cannot cast spells.
+     * Exception: if cursed, revert to human form first so remove curse can
+     * be cast next tick (otherwise recall is permanently blocked). */
     if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
       && ch->pcdata != NULL
       && ch->pcdata->powers[SHAPE_FORM] != 0 )
+    {
+        if ( IS_AFFECTED(ch, AFF_CURSE) )
+        {
+            bot_cmd( ch, "shift human" );
+            return TRUE;    /* caller defers; next tick we cast remove curse */
+        }
         return FALSE;
+    }
 
     if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
