@@ -88,9 +88,9 @@ void improve_spl( CHAR_DATA *ch, int dtype, int sn )
         /* Above spl 100, dice > spl is impossible (number_percent caps at 100).
          * Use spl%100 as the effective threshold so each roll stays meaningful
          * throughout the 0->100 (pre-class) and 100->240 (post-class) ranges. */
-        int eff   = ch->spl[dtype] % 100;
+        int eff   = ( ch->spl[dtype] % 100 ) + 50;
         int extra;
-        for (extra = 0; extra < 10; extra++)
+        for (extra = 0; extra < 3; extra++)
         {
             if (ch->spl[dtype] >= 300) break;
             if (ch->spl[dtype] >= 240 && ch->class != CLASS_LICH && !is_mage_bot) break;
