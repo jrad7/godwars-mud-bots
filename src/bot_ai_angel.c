@@ -110,6 +110,34 @@ static const char *bot_ang_track_name( int track )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_ang_pool_exp
+ *
+ * Returns the exp threshold the bot must reach before spending on stats,
+ * or 0 if no pooling is needed right now.
+ *
+ * Without this, bot_train_stats drains exp into HP each tick and the bot
+ * never accumulates the 10M+ needed for the first training step.
+ * ----------------------------------------------------------------------- */
+long bot_ang_pool_exp( CHAR_DATA *ch )
+{
+    int i, cur;
+    long cost;
+
+    if ( !IS_CLASS(ch, CLASS_ANGEL) ) return 0;
+
+    for ( i = 0; train_order[i].track != -1; i++ )
+    {
+        cur = ch->pcdata->powers[ train_order[i].track ];
+        if ( cur >= train_order[i].target_level ) continue;
+        cost = (long)(cur + 1) * 10000000L;
+        if ( ch->exp < cost ) return cost;  /* pool until affordable */
+        return 0;                            /* do_train will fire    */
+    }
+
+    return 0;  /* all steps complete */
+}
+
+/* -----------------------------------------------------------------------
  * Vtable: should_train
  *
  * Returns TRUE if the bot has an affordable training step pending.

@@ -1203,6 +1203,13 @@ static bool bot_do_train( CHAR_DATA *ch )
         if ( pool > 0 ) return FALSE;
     }
 
+    /* Angel: pool exp for track training once HP base is established */
+    if ( IS_CLASS(ch, CLASS_ANGEL) && ch->max_hit >= 10000 )
+    {
+        long pool = bot_ang_pool_exp( ch );
+        if ( pool > 0 ) return FALSE;
+    }
+
     /* Primary: dump all available exp into hp */
     if ( ch->max_hit < hp_cap && ch->exp >= ch->max_hit + 1 )
         { bot_cmd( ch, "train hp all" );   return TRUE; }
