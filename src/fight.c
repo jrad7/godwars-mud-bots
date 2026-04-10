@@ -3368,8 +3368,6 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
       send_to_char("YOU CANNOT GAIN ANY MORE EXP!\n\r",gch);
       xp = 0;
     }
-    if (xp > 1000000 && get_age(gch) - 17 < 2 ) xp = 1000000 + number_range(-100,100) * number_range(-100,100);
-    else if (xp > 6000000) xp = 6000000 + number_range(-100,100) * number_range(-100,100);
     sprintf( buf, "You receive %d experience points.\n\r", xp );
     send_to_char( buf, gch );
     if ((mount = gch->mount) != NULL) send_to_char( buf, mount );
