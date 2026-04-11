@@ -44,8 +44,10 @@ IMPORTANT RULES:
 11. the command "help <topic>" can be very useful to gather information.
 12. the command "power" will list avaliable class related commands.
 13. the command "commands" will list all commands.
+14. you must 'train avatar' to pick a class.
+15. you must get experience points to pick a class by killing npc's.
 
-You're goal is to kill npc's to get experience points. Train up to 2000 max health points with 'train hp'. Then 'train avatar'. The pick a class from 'help class' and 'selfclass' to that class."""
+You're goal is to kill npc's to get experience points and pick a class. """
 
 
 def strip_ansi(text):
