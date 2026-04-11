@@ -332,14 +332,7 @@ void get_obj( CHAR_DATA *ch, OBJ_DATA *obj, OBJ_DATA *container )
 
 void do_newbiepack( CHAR_DATA *ch, char *argument )
 {
-  if (ch->level >= 2 && !(ch->pcdata && ch->pcdata->is_bot))
-  {
-    send_to_char("You must be a mortal or avatar to create a newbie pack!\n\r",ch);
-    return;
-  }
-
-  /* Bots get gear at any level; regular players only at level 1 */
-  if (ch->level == 1 || (ch->pcdata && ch->pcdata->is_bot))
+  if (!IS_NPC(ch))
   {
         int saved_level = ch->level;
         int saved_trust = ch->trust;

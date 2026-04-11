@@ -932,6 +932,7 @@ LOG_NORMAL, 8, DISC_VAMP_THAN, 3 }, */
     /*start drow section */
 
     { "newbie",		do_newbie,	POS_DEAD,	1, LOG_NORMAL,0,0,0},
+    { "newbiepack",	do_newbiepack,	POS_STANDING,	0, LOG_NORMAL,0,0,0},
     { "sign",		do_sign,	POS_DEAD,	 1,  LOG_NORMAL, 32,0,0 },
     { "relevel",		do_relevel,	POS_DEAD,   	 0,  LOG_ALWAYS, 0,0,0 },
     { "grant",		do_grant,	POS_STANDING,	 3,  LOG_NORMAL, 32,0,0 },
