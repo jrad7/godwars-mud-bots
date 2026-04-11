@@ -765,15 +765,15 @@ void multi_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt )
       if ((sn = skill_lookup( "imp faerie fire" ) ) > 0)
         (*skill_table[sn].spell_fun) (sn,50,ch,victim);
     }
-    if (ch->pIndexData->vnum == MOB_VNUM_STONE)
+    if (ch->pIndexData->vnum == MOB_VNUM_STONE && IS_NPC(victim))
     {
-      af.type      = skill_lookup("reserved");  
+      af.type      = skill_lookup("reserved");
       af.duration  = 20;
       af.location  = APPLY_DAMROLL;
       af.modifier  = -50;
       af.bitvector = 0;
       affect_to_char(victim, &af );
-    
+
       af.type      = skill_lookup("reserved");
       af.duration  = 20;
       af.location  = APPLY_HITROLL;
