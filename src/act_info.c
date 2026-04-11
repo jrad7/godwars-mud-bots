@@ -1065,7 +1065,7 @@ void do_look( CHAR_DATA *ch, char *argument )
 		if (rch == ch || !IS_NPC(rch) || !can_see(ch, rch)) continue;
 		if (!lfirst) strcat(llm_buf, ",");
 		strcat(llm_buf, " ");
-		strcat(llm_buf, rch->short_descr);
+		strcat(llm_buf, rch->name);
 		if (rch->fighting == ch)        strcat(llm_buf, " (fighting you)");
 		else if (rch->fighting != NULL) strcat(llm_buf, " (fighting)");
 		lfirst = FALSE;
