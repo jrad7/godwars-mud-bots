@@ -434,6 +434,9 @@ IS_SET(ch->pcdata->powers[1], DPOWER_LEVITATION)))
 	if ( d->connected != CON_PLAYING || !can_see( ch, victim ) )
 	    continue;
 
+	if ( !IS_NPC(victim) && IS_SET(victim->act, PLR_LLM) )
+	    continue;
+
 	if ( !IS_NPC(ch) && !IS_AFFECTED(ch, AFF_SNEAK) && IS_AFFECTED(ch,AFF_POLYMORPH)
 	&& ( IS_NPC(ch) || !IS_SET(ch->act, PLR_WIZINVIS) )
 	&& can_see(victim,ch))
@@ -484,6 +487,9 @@ IS_SET(ch->pcdata->powers[1], DPOWER_LEVITATION)))
         if ( ch == victim || ch->in_room != victim->in_room) continue;
 
 	if ( d->connected != CON_PLAYING || !can_see( ch, victim ) )
+	    continue;
+
+	if ( !IS_NPC(victim) && IS_SET(victim->act, PLR_LLM) )
 	    continue;
 
 	if ( !IS_NPC(ch) && !IS_AFFECTED(ch, AFF_SNEAK) && IS_AFFECTED(ch,AFF_POLYMORPH)
