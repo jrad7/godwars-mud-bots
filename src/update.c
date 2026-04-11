@@ -1994,7 +1994,8 @@ void werewolf_regen( CHAR_DATA *ch, int multiplier )
   ch->mana = UMIN (ch->mana+(mana_gain*multiplier), ch->max_mana);
   ch->move = UMIN (ch->move+(move_gain*multiplier), ch->max_move);
   update_pos(ch);
-  if ( ch->hit >= ch->max_hit && ch->mana >= ch->max_mana && ch->move >= ch->max_move )
+  if ( ch->hit >= ch->max_hit && ch->mana >= ch->max_mana && ch->move >= ch->max_move
+  &&  (IS_NPC(ch) || !IS_SET(ch->act, PLR_LLM)) )
     send_to_char("Your body has completely regenerated itself.\n\r",ch);
   return;
 }

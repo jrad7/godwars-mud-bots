@@ -17,7 +17,7 @@ MUD_PORT = 8000
 LLM_HOST = "localhost"
 LLM_PORT = 8002
 CHAR_NAME = "Qwenchat"
-CHAR_PASSWORD = "Qwenchat"
+CHAR_PASSWORD = "qwenchat"
 
 # How long to wait for more MUD output before sending to LLM (seconds)
 READ_TIMEOUT = 2.0
@@ -25,16 +25,16 @@ READ_TIMEOUT = 2.0
 COMMAND_DELAY = 0.5
 # Max conversation history entries to keep (pairs of user/assistant messages)
 # Keep low for small context models like glm-4-9b-chat (4096 tokens)
-MAX_HISTORY = 8
+MAX_HISTORY = 10
 # Max characters of MUD output to include per message
-MAX_MUD_OUTPUT = 800
+MAX_MUD_OUTPUT = 1000
 
 SYSTEM_PROMPT = """You are playing a text-based MUD (Multi-User Dungeon) called Dystopia. You are a player character interacting with the game world.
 
 IMPORTANT RULES:
 1. Respond ONLY with the MUD command you want to execute, one per line.
 2. Do NOT include any explanation, reasoning, or commentary - ONLY commands.
-3. Common commands: look, north, south, east, west, up, down, kill <target>, flee, score, inventory, wear <item>, recall, equipment
+3. Common commands: look, north, south, east, west, up, down, kill <target>, score, recall, equipment, train, help
 4. Fight monsters, you want to slay all enemies!
 5. If you're stuck or confused, try: look or recall
 6. NEVER send more than 1 command at once!

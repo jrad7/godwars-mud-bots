@@ -3872,20 +3872,6 @@ void bust_a_prompt( DESCRIPTOR_DATA *d )
       send_to_char( "\n\r\n\r", ch );
       return;
    }
-   if ( ch->position == POS_FIGHTING && ch->cprompt[0] == '\0' )
-   {
-      if ( ch->prompt[0] == '\0' )
-      {
-         send_to_char( "\n\r\n\r", ch );
-         return;
-      }
-      is_fighting = FALSE;
-   }
-   else if ( ch->position != POS_FIGHTING && ch->prompt[0] == '\0' )
-   {
-      send_to_char( "\n\r\n\r", ch );
-      return;
-   }
 
    /* LLM structured prompt: replaces normal prompt for AI clients */
    if (!IS_NPC(ch) && IS_SET(ch->act, PLR_LLM))
@@ -3921,6 +3907,21 @@ void bust_a_prompt( DESCRIPTOR_DATA *d )
          llm_res, llm_tgt);
      send_to_char(llm_pbuf, ch);
      return;
+   }
+
+   if ( ch->position == POS_FIGHTING && ch->cprompt[0] == '\0' )
+   {
+      if ( ch->prompt[0] == '\0' )
+      {
+         send_to_char( "\n\r\n\r", ch );
+         return;
+      }
+      is_fighting = FALSE;
+   }
+   else if ( ch->position != POS_FIGHTING && ch->prompt[0] == '\0' )
+   {
+      send_to_char( "\n\r\n\r", ch );
+      return;
    }
 
    point = buf;
