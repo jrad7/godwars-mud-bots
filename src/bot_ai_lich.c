@@ -34,6 +34,13 @@ long bot_lich_pool_exp( CHAR_DATA *ch )
     if ( !IS_CLASS(ch, CLASS_LICH) ) return 0;
 
     /* Walk lores in the same order as do_train */
+    /* Get Life lore to 1 first for powertransfer access */
+    if ( ch->pcdata->powers[LIFE_LORE] < 1 )
+    {
+        cost = 10000000L;
+        if ( ch->exp < cost ) return cost;
+        return 0;
+    }
     if ( ch->pcdata->powers[CON_LORE] < 5 )
     {
         cost = 10000000L * (ch->pcdata->powers[CON_LORE] + 1);
@@ -74,6 +81,8 @@ long bot_lich_pool_exp( CHAR_DATA *ch )
 static bool bot_should_train_lich( CHAR_DATA *ch )
 {
     /* Lores max out at 5. Cost is 10,000,000 * (current_lore + 1) */
+    /* Get Life lore to 1 first for powertransfer access */
+    if ( ch->pcdata->powers[LIFE_LORE] < 1 && ch->exp >= 10000000 ) return TRUE;
     if ( ch->pcdata->powers[CON_LORE] < 5 && ch->exp >= 10000000 * (ch->pcdata->powers[CON_LORE] + 1) ) return TRUE;
     if ( ch->pcdata->powers[DEATH_LORE] < 5 && ch->exp >= 10000000 * (ch->pcdata->powers[DEATH_LORE] + 1) ) return TRUE;
     if ( ch->pcdata->powers[LIFE_LORE] < 5 && ch->exp >= 10000000 * (ch->pcdata->powers[LIFE_LORE] + 1) ) return TRUE;
@@ -90,6 +99,12 @@ static bool bot_should_train_lich( CHAR_DATA *ch )
  * ----------------------------------------------------------------------- */
 static bool bot_do_train_lich( CHAR_DATA *ch )
 {
+    /* Get Life lore to 1 first for powertransfer access */
+    if ( ch->pcdata->powers[LIFE_LORE] < 1 && ch->exp >= 10000000 )
+    {
+        bot_cmd( ch, "studylore Life" );
+        return TRUE;
+    }
     if ( ch->pcdata->powers[CON_LORE] < 5 && ch->exp >= 10000000 * (ch->pcdata->powers[CON_LORE] + 1) )
     {
         bot_cmd( ch, "studylore Conjuring" );
