@@ -3329,12 +3329,13 @@ void act( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2,
 	if ( type == TO_VICT && ( to != vch || to == ch ) ) continue;
 	if ( type == TO_ROOM && to == ch ) continue;
 	if ( type == TO_NOTVICT && (to == ch || to == vch) ) continue;
+	if ( type == TO_NOTVICT && !IS_NPC(to) && IS_SET(to->act, PLR_LLM) ) continue;
 	if ( to->desc == NULL && IS_NPC(to) && (wizard = to->wizard) != NULL )
 	{
 	    if (!IS_NPC(wizard) && ((familiar=wizard->pcdata->familiar) != NULL)
 		&& familiar == to)
 	    {
-		if (to->in_room == ch->in_room && 
+		if (to->in_room == ch->in_room &&
 		    wizard->in_room != to->in_room)
 		{
 		    to = wizard;
@@ -3533,6 +3534,7 @@ void act2( const char *format, CHAR_DATA *ch, const void *arg1, const void *arg2
 	if ( type == TO_VICT && ( to != vch || to == ch ) ) continue;
 	if ( type == TO_ROOM && to == ch ) continue;
 	if ( type == TO_NOTVICT && (to == ch || to == vch) ) continue;
+	if ( type == TO_NOTVICT && !IS_NPC(to) && IS_SET(to->act, PLR_LLM) ) continue;
 
 	if ( to->desc == NULL && IS_NPC(to) && (wizard = to->wizard) != NULL )
 	{
@@ -3763,6 +3765,8 @@ void kavitem( const char *format, CHAR_DATA *ch, const void *arg1, const void *a
 	if ( type == TO_ROOM && to == ch )
 	    continue;
 	if ( type == TO_NOTVICT && (to == ch || to == vch) )
+	    continue;
+	if ( type == TO_NOTVICT && !IS_NPC(to) && IS_SET(to->act, PLR_LLM) )
 	    continue;
 
 	point	= buf;

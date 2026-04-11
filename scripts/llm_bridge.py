@@ -16,8 +16,8 @@ MUD_HOST = "localhost"
 MUD_PORT = 8000
 LLM_HOST = "localhost"
 LLM_PORT = 8002
-CHAR_NAME = "Glmchat"
-CHAR_PASSWORD = "glmchat"
+CHAR_NAME = "Qwenchat"
+CHAR_PASSWORD = "Qwenchat"
 
 # How long to wait for more MUD output before sending to LLM (seconds)
 READ_TIMEOUT = 2.0
@@ -35,15 +35,24 @@ IMPORTANT RULES:
 1. Respond ONLY with the MUD command you want to execute, one per line.
 2. Do NOT include any explanation, reasoning, or commentary - ONLY commands.
 3. Common commands: look, north, south, east, west, up, down, kill <target>, flee, score, inventory, wear <item>, recall, equipment
-4. Fight monsters, you are a ninja looking to slay all enemies!
+4. Fight monsters, you want to slay all enemies!
 5. If you're stuck or confused, try: look or recall
 6. NEVER send more than 1 command at once!
-7. You are a ninja! type 'help ninja' to get more information.
 8. The command 'train' can be used to spend experience points, for example, 'train hp all'.
 9. DO NOT fight the Executioner.
 10. If lost, recall, then go down, to kill enemies in heaven for experience.
 
-You're goal to get experience points and train your class abilities! """
+
+Your goal to get experience points and pick a class!
+
+To pick a class do the following:
+1. Kill monsters to gain XP.
+2. Spend XP on health points, 'train hp all'.
+3. When over 2000 health points, 'train avatar'.
+4. once an avatar, type 'selfclass', read the output, and pick a class you want to play.
+5. To become the class, once avatar, type 'selfclass <class_name>'.
+
+"""
 
 
 def strip_ansi(text):
