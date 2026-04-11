@@ -4636,8 +4636,8 @@ bool jope_load_char             args (( CHAR_DATA *ch, char *arg ));
 void jope_free_char             args (( CHAR_DATA *ch ));
 void jope_interp                args (( CHAR_DATA *ch, char *argument ));
 
-int    thread_status;
-char * last_command;
+extern int    thread_status;
+extern char * last_command;
 
 /* daemon.c */
 
@@ -4929,9 +4929,9 @@ extern  ROOM_INDEX_DATA *       room_index_hash [MAX_KEY_HASH];
 void	reset_area      args( ( AREA_DATA * pArea ) );
 void	reset_room	args( ( ROOM_INDEX_DATA *pRoom ) );
 
-LEADER_BOARD leader_board;
-TOP_BOARD top_board[MAX_TOP_PLAYERS+1];
-KINGDOM_DATA kingdom_table[MAX_KINGDOM+1];
+extern LEADER_BOARD leader_board;
+extern TOP_BOARD top_board[MAX_TOP_PLAYERS+1];
+extern KINGDOM_DATA kingdom_table[MAX_KINGDOM+1];
 
 /* string.c */
 void	string_edit	args( ( CHAR_DATA *ch, char **pString ) );

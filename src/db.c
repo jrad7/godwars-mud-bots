@@ -39,14 +39,11 @@ extern	int	_filbuf		args( (FILE *) );
  * Globals.
  */
 HELP_DATA *		help_first;
-HELP_DATA *		help_last;
-
 SHOP_DATA *		shop_first;
 SHOP_DATA *		shop_last;
 DUMMY_ARG *             dummy_free;
 DUMMY_ARG *             dummy_list;
 CHAR_DATA *		char_free;
-EXTRA_DESCR_DATA *	extra_descr_free;
 NOTE_DATA *		note_free;
 OBJ_DATA *		obj_free;
 PC_DATA *		pcdata_free;
