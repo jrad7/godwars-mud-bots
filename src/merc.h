@@ -1895,6 +1895,7 @@ extern char *scale[SCALE_COLS];
 #define PLR_BRIEF4            134217728
 #define PLR_AMBI              268435456   // Can use both hands well.
 #define PLR_BOT_OVERSEER      536870912   // Can use bot management commands and wizinvis.
+#define PLR_LLM              1073741824   // LLM brief mode: structured output for AI clients.
 
 /*New bits for playrs (Infidel)*/
 #define NEW_SLAM       1
@@ -3576,6 +3577,7 @@ DECLARE_DO_FUN(	do_brief	);
 DECLARE_DO_FUN( do_brief2	);
 DECLARE_DO_FUN( do_brief3       );
 DECLARE_DO_FUN( do_brief4       );
+DECLARE_DO_FUN( do_llmbrief     );
 DECLARE_DO_FUN(	do_bug		);
 DECLARE_DO_FUN(	do_call		);
 DECLARE_DO_FUN(	do_calm		);

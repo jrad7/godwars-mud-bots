@@ -3883,6 +3883,42 @@ void bust_a_prompt( DESCRIPTOR_DATA *d )
       return;
    }
 
+   /* LLM structured prompt: replaces normal prompt for AI clients */
+   if (!IS_NPC(ch) && IS_SET(ch->act, PLR_LLM))
+   {
+     char llm_pbuf[256];
+     char llm_res[80]  = "";
+     char llm_tgt[128] = "";
+     CHAR_DATA *fvict = ch->fighting;
+
+     /* Class-specific resource */
+     if (IS_CLASS(ch, CLASS_VAMPIRE))
+       sprintf(llm_res, " Blood:%d", ch->pcdata->condition[COND_THIRST]);
+     else if (IS_CLASS(ch, CLASS_MONK))
+       sprintf(llm_res, " Chi:%d/%d", ch->chi[0], ch->chi[1]);
+     else if (IS_CLASS(ch, CLASS_DEMON))
+       sprintf(llm_res, " CP:%d/%d",
+           ch->pcdata->stats[DEMON_CURRENT], ch->pcdata->stats[DEMON_TOTAL]);
+     else if (ch->class != 0)
+       sprintf(llm_res, " CP:%d", ch->pcdata->stats[DROW_POWER]);
+
+     /* Target hp% */
+     if (fvict != NULL && fvict->max_hit > 0)
+     {
+       int tpct = fvict->hit * 100 / fvict->max_hit;
+       const char *tname = IS_NPC(fvict) ? fvict->short_descr : fvict->name;
+       sprintf(llm_tgt, " Target:%s(%d%%)", tname, tpct < 0 ? 0 : tpct);
+     }
+
+     sprintf(llm_pbuf, "[STAT] HP:%d/%d MN:%d/%d MV:%d/%d%s%s\n\r",
+         ch->hit, ch->max_hit,
+         ch->mana, ch->max_mana,
+         ch->move, ch->max_move,
+         llm_res, llm_tgt);
+     send_to_char(llm_pbuf, ch);
+     return;
+   }
+
    point = buf;
    if ( ch->position == POS_FIGHTING && is_fighting )
       str = d->original ? d->original->cprompt : d->character->cprompt;

@@ -362,6 +362,7 @@ const	struct	cmd_type	cmd_table	[] =
     { "brief2",          do_brief2,       POS_DEAD,                0,  LOG_NORMAL, 0,0,0  },
     { "brief3",          do_brief3,       POS_DEAD,                0,  LOG_NORMAL, 0,0,0  },
     { "brief4",          do_brief4,       POS_DEAD,                0,  LOG_NORMAL, 0,0,0  },
+    { "llmbrief",        do_llmbrief,     POS_DEAD,                0,  LOG_NORMAL, 0,0,0  },
     { "cprompt",		do_cprompt,	POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0	},
     { "prompt",		do_prompt,	POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0	},
 

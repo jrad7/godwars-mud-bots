@@ -72,6 +72,12 @@ void  decap_message   args((CHAR_DATA *ch, CHAR_DATA *victim));
 void  angel_eye       args((CHAR_DATA *ch, CHAR_DATA *victim, int dam));
 void  ragnarokdecap   args((CHAR_DATA *ch, CHAR_DATA *victim));
 
+/* LLM round tracking: set up by violence_update, read by dam_message */
+static int        g_llm_dealt;     /* damage PLR_LLM attacker dealt this turn */
+static int        g_llm_taken;     /* damage PLR_LLM defender took this turn  */
+static CHAR_DATA *g_llm_attacker;  /* PLR_LLM char who is attacking           */
+static CHAR_DATA *g_llm_defender;  /* PLR_LLM char who is defending           */
+
 /*
  * Control the fights going on.
  * Called periodically by update_handler.
@@ -222,8 +228,45 @@ void violence_update( void )
       if (ch->fight_timer < 10) ch->fight_timer = 10;
       else if (ch->fight_timer < 25) ch->fight_timer += 3;
     }
+    /* Set up LLM round tracking before this combatant's attack turn */
+    g_llm_dealt   = 0;
+    g_llm_taken   = 0;
+    g_llm_attacker = (!IS_NPC(ch)     && IS_SET(ch->act,     PLR_LLM)) ? ch     : NULL;
+    g_llm_defender = (!IS_NPC(victim) && IS_SET(victim->act, PLR_LLM)) ? victim : NULL;
+
     if (IS_AWAKE(ch) && IS_AWAKE(victim) && ch->in_room == victim->in_room) multi_hit( ch, victim, TYPE_UNDEFINED );
     else stop_fighting(ch, FALSE);
+
+    /* Flush LLM round summary */
+    if (g_llm_attacker != NULL && g_llm_attacker->in_room != NULL
+        && (g_llm_dealt > 0 || g_llm_taken > 0))
+    {
+        char llm_rbuf[256];
+        int tpct = (victim->max_hit > 0) ? (victim->hit * 100 / victim->max_hit) : 0;
+        const char *tname = IS_NPC(victim) ? victim->short_descr : victim->name;
+        if (ch->fighting == NULL)
+            sprintf(llm_rbuf, "[ROUND] You->%s: dealt:%d KILLED\n\r",
+                tname, g_llm_dealt);
+        else
+            sprintf(llm_rbuf, "[ROUND] You->%s(%d%%): dealt:%d taken:%d HP:%d/%d\n\r",
+                tname, tpct < 0 ? 0 : tpct,
+                g_llm_dealt, g_llm_taken,
+                g_llm_attacker->hit, g_llm_attacker->max_hit);
+        send_to_char(llm_rbuf, g_llm_attacker);
+    }
+    else if (g_llm_defender != NULL && g_llm_defender->in_room != NULL
+             && g_llm_taken > 0)
+    {
+        char llm_rbuf[256];
+        const char *aname = IS_NPC(ch) ? ch->short_descr : ch->name;
+        sprintf(llm_rbuf, "[ROUND] %s->You: took:%d HP:%d/%d\n\r",
+            aname, g_llm_taken,
+            g_llm_defender->hit, g_llm_defender->max_hit);
+        send_to_char(llm_rbuf, g_llm_defender);
+    }
+    /* Clear tracking so secondary multi_hit calls don't corrupt state */
+    g_llm_attacker = NULL;
+    g_llm_defender = NULL;
     if ((victim = ch->fighting ) == NULL) continue;
     /*   
      * Fun for the whole family!
@@ -2133,7 +2176,15 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
     break;
     case POS_DEAD:
     act( "$n is DEAD!!", victim, 0, 0, TO_ROOM );
-    send_to_char( "You have been KILLED!!\n\r\n\r", victim );
+    if (!IS_NPC(victim) && IS_SET(victim->act, PLR_LLM))
+    {
+      char llm_dbuf[128];
+      sprintf(llm_dbuf, "[DEATH] Killed by %s\n\r",
+          IS_NPC(ch) ? ch->short_descr : ch->name);
+      send_to_char(llm_dbuf, victim);
+    }
+    else
+      send_to_char( "You have been KILLED!!\n\r\n\r", victim );
     break;
     default:
     if ( dam > victim->max_hit / 4 )
@@ -2191,7 +2242,14 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
           else
             ch->pcdata->stats[DROW_POWER] += cp_gain;
           sprintf(buf,"You gain #y(#C%d#y)#n class points.\n\r", cp_gain);
-          if (!IS_SET(ch->act, PLR_BRIEF4)) send_to_char(buf,ch);
+          if (IS_SET(ch->act, PLR_LLM))
+          {
+            char llm_cpbuf[64];
+            sprintf(llm_cpbuf, "[CP] +%d\n\r", cp_gain);
+            send_to_char(llm_cpbuf, ch);
+          }
+          else if (!IS_SET(ch->act, PLR_BRIEF4))
+            send_to_char(buf,ch);
         }
       }
       if (ch->level == 1 && ch->mkill > 4)
@@ -3360,17 +3418,27 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
     }
     strcat(buf2,"\n\r");
     xp = xp * xp_modifier / 100;
-    if (!IS_SET(gch->act, PLR_BRIEF4)) send_to_char(buf2,gch);
+    if (!IS_SET(gch->act, PLR_BRIEF4) && !IS_SET(gch->act, PLR_LLM)) send_to_char(buf2,gch);
     sprintf(buf2,"#RTotal modifier #G:#n %d percent bonus\n\r",xp_modifier - 100);
-    if (!IS_SET(gch->act, PLR_BRIEF4)) send_to_char(buf2,gch);
+    if (!IS_SET(gch->act, PLR_BRIEF4) && !IS_SET(gch->act, PLR_LLM)) send_to_char(buf2,gch);
     if (gch->exp > 2000000000)
     {
       send_to_char("YOU CANNOT GAIN ANY MORE EXP!\n\r",gch);
       xp = 0;
     }
-    sprintf( buf, "You receive %d experience points.\n\r", xp );
-    send_to_char( buf, gch );
-    if ((mount = gch->mount) != NULL) send_to_char( buf, mount );
+    if (!IS_NPC(gch) && IS_SET(gch->act, PLR_LLM))
+    {
+      char llm_xpbuf[128];
+      const char *kname = IS_NPC(victim) ? victim->short_descr : victim->name;
+      sprintf(llm_xpbuf, "[XP] +%d (%s)\n\r", xp, kname);
+      send_to_char(llm_xpbuf, gch);
+    }
+    else
+    {
+      sprintf( buf, "You receive %d experience points.\n\r", xp );
+      send_to_char( buf, gch );
+      if ((mount = gch->mount) != NULL) send_to_char( buf, mount );
+    }
     gain_exp( gch, xp );
   }
   return;
@@ -3618,7 +3686,34 @@ void dam_message( CHAR_DATA *ch, CHAR_DATA *victim, int dam, int dt )
         }
       }
     }
+    /* Accumulate damage for LLM round summary */
+    if (g_llm_attacker != NULL && ch == g_llm_attacker)     g_llm_dealt += dam;
+    if (g_llm_defender != NULL && victim == g_llm_defender)  g_llm_taken += dam;
+
     act( buf1, ch, NULL, victim, TO_NOTVICT );
+
+    /* PLR_LLM: suppress individual hit lines -- round summary sent by violence_update */
+    if (!IS_NPC(ch) && IS_SET(ch->act, PLR_LLM))
+    {
+      if (!IS_NPC(victim) && IS_SET(victim->act, PLR_LLM))
+      {
+        if (critical) critical_hit(ch,victim,dt,dam);
+        return;
+      }
+      if (!(IS_SET(victim->act, PLR_BRIEF2) && (dam == 0 || dt == skill_lookup("lightning bolt") ||
+          dt == skill_lookup("acid blast") || dt == skill_lookup("chill touch") || dt == skill_lookup("fireball"))))
+        act( buf3, ch, NULL, victim, TO_VICT );
+      if (critical) critical_hit(ch,victim,dt,dam);
+      return;
+    }
+    if (!IS_NPC(victim) && IS_SET(victim->act, PLR_LLM))
+    {
+      if (!(IS_SET(ch->act, PLR_BRIEF2) && (dam == 0 || dt == skill_lookup("lightning bolt") ||
+          dt == skill_lookup("acid blast") || dt == skill_lookup("chill touch") || dt == skill_lookup("fireball"))))
+        act( buf2, ch, NULL, victim, TO_CHAR );
+      if (critical) critical_hit(ch,victim,dt,dam);
+      return;
+    }
 
     if (!(IS_SET(ch->act, PLR_BRIEF2) && (dam == 0 || dt == skill_lookup("lightning bolt") ||
         dt == skill_lookup("acid blast") || dt == skill_lookup("chill touch") || dt == skill_lookup("fireball"))))

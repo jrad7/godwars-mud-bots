@@ -1012,6 +1012,108 @@ void do_look( CHAR_DATA *ch, char *argument )
 
     if ( arg1[0] == '\0' || !str_cmp( arg1, "auto" ) || !str_cmp( arg1, "scry"))
     {
+	/* LLM structured room output -- replaces all normal look output */
+	if (!IS_NPC(ch) && IS_SET(ch->act, PLR_LLM) && str_cmp(arg1, "scry"))
+	{
+	    static const char * const llm_dir[6] = {"north","east","south","west","up","down"};
+	    char llm_buf[MAX_STRING_LENGTH];
+	    char tmp[256];
+	    OBJ_DATA *lobj;
+	    CHAR_DATA *rch;
+	    int door;
+	    bool lfirst;
+
+	    /* [ROOM] */
+	    sprintf(llm_buf, "[ROOM] %s [%d]\n\r", ch->in_room->name, ch->in_room->vnum);
+	    send_to_char(llm_buf, ch);
+
+	    /* [EXIT] -- only open exits */
+	    sprintf(llm_buf, "[EXIT]");
+	    lfirst = TRUE;
+	    for (door = 0; door < 6; door++)
+	    {
+		if (ch->in_room->exit[door] == NULL) continue;
+		if (IS_SET(ch->in_room->exit[door]->exit_info, EX_CLOSED)) continue;
+		sprintf(tmp, " %s", llm_dir[door]);
+		strcat(llm_buf, tmp);
+		lfirst = FALSE;
+	    }
+	    if (lfirst) strcat(llm_buf, " none");
+	    strcat(llm_buf, "\n\r");
+	    send_to_char(llm_buf, ch);
+
+	    /* [ITEM] */
+	    sprintf(llm_buf, "[ITEM]");
+	    lfirst = TRUE;
+	    for (lobj = ch->in_room->contents; lobj != NULL; lobj = lobj->next_content)
+	    {
+		if (!can_see_obj(ch, lobj)) continue;
+		if (!lfirst) strcat(llm_buf, ",");
+		strcat(llm_buf, " ");
+		strcat(llm_buf, lobj->short_descr);
+		lfirst = FALSE;
+	    }
+	    if (lfirst) strcat(llm_buf, " none");
+	    strcat(llm_buf, "\n\r");
+	    send_to_char(llm_buf, ch);
+
+	    /* [NPC] */
+	    sprintf(llm_buf, "[NPC]");
+	    lfirst = TRUE;
+	    for (rch = ch->in_room->people; rch != NULL; rch = rch->next_in_room)
+	    {
+		if (rch == ch || !IS_NPC(rch) || !can_see(ch, rch)) continue;
+		if (!lfirst) strcat(llm_buf, ",");
+		strcat(llm_buf, " ");
+		strcat(llm_buf, rch->short_descr);
+		if (rch->fighting == ch)        strcat(llm_buf, " (fighting you)");
+		else if (rch->fighting != NULL) strcat(llm_buf, " (fighting)");
+		lfirst = FALSE;
+	    }
+	    if (lfirst) strcat(llm_buf, " none");
+	    strcat(llm_buf, "\n\r");
+	    send_to_char(llm_buf, ch);
+
+	    /* [PC] */
+	    sprintf(llm_buf, "[PC]");
+	    lfirst = TRUE;
+	    for (rch = ch->in_room->people; rch != NULL; rch = rch->next_in_room)
+	    {
+		const char *cname;
+		bool pvp;
+		if (rch == ch || IS_NPC(rch) || !can_see(ch, rch)) continue;
+		if (IS_SET(rch->class, CLASS_TANARRI))        cname = "Tanarri";
+		else if (IS_SET(rch->class, CLASS_ANGEL))     cname = "Angel";
+		else if (IS_SET(rch->class, CLASS_UNDEAD_KNIGHT)) cname = "Undead Knight";
+		else if (IS_SET(rch->class, CLASS_DROID))     cname = "Droid";
+		else if (IS_SET(rch->class, CLASS_LICH))      cname = "Lich";
+		else if (IS_SET(rch->class, CLASS_SHAPESHIFTER)) cname = "Shapeshifter";
+		else if (IS_SET(rch->class, CLASS_DEMON))     cname = "Demon";
+		else if (IS_SET(rch->class, CLASS_VAMPIRE))   cname = "Vampire";
+		else if (IS_SET(rch->class, CLASS_MONK))      cname = "Monk";
+		else if (IS_SET(rch->class, CLASS_NINJA))     cname = "Ninja";
+		else if (IS_SET(rch->class, CLASS_DROW))      cname = "Drow";
+		else if (IS_SET(rch->class, CLASS_SAMURAI))   cname = "Samurai";
+		else if (IS_SET(rch->class, CLASS_MAGE))      cname = "Mage";
+		else if (IS_SET(rch->class, CLASS_WEREWOLF))  cname = "Werewolf";
+		else                                          cname = "mortal";
+		pvp = (rch->fighting == ch || ch->fighting == rch);
+		if (!lfirst) strcat(llm_buf, ",");
+		if (pvp)
+		    sprintf(tmp, " %s (%s, pvp)", rch->name, cname);
+		else
+		    sprintf(tmp, " %s (%s)", rch->name, cname);
+		strcat(llm_buf, tmp);
+		lfirst = FALSE;
+	    }
+	    if (lfirst) strcat(llm_buf, " none");
+	    strcat(llm_buf, "\n\r");
+	    send_to_char(llm_buf, ch);
+
+	    aggr_test(ch);
+	    return;
+	}
+
 	/* 'look' or 'look auto' */
 	if (ch->in_room != NULL && ch->in_room->vnum == ROOM_VNUM_IN_OBJECT
 	&& !IS_NPC(ch) && ch->pcdata->chobj != NULL && ch->pcdata->chobj->in_obj != NULL)
@@ -4006,6 +4108,7 @@ void do_config( CHAR_DATA *ch, char *argument )
         else if ( !str_cmp( arg+1, "brief2"    ) ) bit = PLR_BRIEF2;
         else if ( !str_cmp( arg+1, "brief3"    ) ) bit = PLR_BRIEF3;
         else if ( !str_cmp( arg+1, "brief4"    ) ) bit = PLR_BRIEF4;
+        else if ( !str_cmp( arg+1, "llm"       ) ) bit = PLR_LLM;
         else if ( !str_cmp( arg+1, "prompt"   ) ) bit = PLR_PROMPT;
 	else if ( !str_cmp( arg+1, "telnetga" ) ) bit = PLR_TELNET_GA;
 	else
@@ -4101,6 +4204,16 @@ void do_brief4( CHAR_DATA *ch, char *argument )
     if ( IS_NPC(ch) ) return;
     if (IS_SET(ch->act, PLR_BRIEF4)) do_config(ch,"-brief4");
     else do_config(ch,"+brief4");
+    return;
+}
+
+void do_llmbrief( CHAR_DATA *ch, char *argument )
+{
+    if ( IS_NPC(ch) ) return;
+    /* Always set, never toggle -- LLM mode is persistent once enabled.
+     * Sets all brief sub-flags so existing suppression checks work. */
+    SET_BIT(ch->act, PLR_LLM | PLR_BRIEF | PLR_BRIEF2 | PLR_BRIEF3 | PLR_BRIEF4);
+    send_to_char("LLM brief mode enabled.\n\r", ch);
     return;
 }
 
