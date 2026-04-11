@@ -15,7 +15,7 @@ import urllib.request
 MUD_HOST = "localhost"
 MUD_PORT = 8000
 LLM_HOST = "localhost"
-LLM_PORT = 8001
+LLM_PORT = 8002
 CHAR_NAME = "Glmchat"
 CHAR_PASSWORD = "glmchat"
 
@@ -25,24 +25,25 @@ READ_TIMEOUT = 2.0
 COMMAND_DELAY = 0.5
 # Max conversation history entries to keep (pairs of user/assistant messages)
 # Keep low for small context models like glm-4-9b-chat (4096 tokens)
-MAX_HISTORY = 6
+MAX_HISTORY = 8
 # Max characters of MUD output to include per message
 MAX_MUD_OUTPUT = 800
 
 SYSTEM_PROMPT = """You are playing a text-based MUD (Multi-User Dungeon) called Dystopia. You are a player character interacting with the game world.
 
 IMPORTANT RULES:
-1. Respond ONLY with the MUD command(s) you want to execute, one per line.
+1. Respond ONLY with the MUD command you want to execute, one per line.
 2. Do NOT include any explanation, reasoning, or commentary - ONLY commands.
-3. Common commands: look, north, south, east, west, up, down, kill <target>, flee, ooc <message>,score, inventory, wear <item>, recall
-4. Fight monsters, you are a warrior looking to slay all enemies!
+3. Common commands: look, north, south, east, west, up, down, kill <target>, flee, score, inventory, wear <item>, recall, equipment
+4. Fight monsters, you are a ninja looking to slay all enemies!
 5. If you're stuck or confused, try: look or recall
 6. NEVER send more than 1 command at once!
-7. the command "help <topic>" can be very useful to gather information.
-8. you must get experience points to pick a class by killing npc's.
-9. The command 'train' can be used to spend experience points, for example, 'train hp all'.
+7. You are a ninja! type 'help ninja' to get more information.
+8. The command 'train' can be used to spend experience points, for example, 'train hp all'.
+9. DO NOT fight the Executioner.
+10. If lost, recall, then go down, to kill enemies in heaven for experience.
 
-You're goal is to kill npc's to get experience points and pick a class. """
+You're goal to get experience points and train your class abilities! """
 
 
 def strip_ansi(text):
