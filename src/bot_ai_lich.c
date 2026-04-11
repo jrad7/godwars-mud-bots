@@ -199,22 +199,22 @@ static bool bot_between_fights_lich( CHAR_DATA *ch )
     /* Golems are heavily restricted by flags. We try them sequentially based on availability. */
     if ( !IS_SET(ch->pcdata->powers[GOLEMS_SUMMON], HAS_SUMMONED_IRON) )
     {
-        bot_cmd( ch, "summongolem iron" );
+        bot_cmd( ch, "golemsummon iron" );
         return TRUE;
     }
     if ( !IS_SET(ch->pcdata->powers[GOLEMS_SUMMON], HAS_SUMMONED_STONE) )
     {
-        bot_cmd( ch, "summongolem stone" );
+        bot_cmd( ch, "golemsummon stone" );
         return TRUE;
     }
     if ( !IS_SET(ch->pcdata->powers[GOLEMS_SUMMON], HAS_SUMMONED_CLAY) )
     {
-        bot_cmd( ch, "summongolem clay" );
+        bot_cmd( ch, "golemsummon clay" );
         return TRUE;
     }
     if ( !IS_SET(ch->pcdata->powers[GOLEMS_SUMMON], HAS_SUMMONED_FIRE) )
     {
-        bot_cmd( ch, "summongolem fire" );
+        bot_cmd( ch, "golemsummon fire" );
         return TRUE;
     }
 
