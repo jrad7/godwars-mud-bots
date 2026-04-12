@@ -17,8 +17,8 @@ MUD_HOST = "localhost"
 MUD_PORT = 8000
 LLM_HOST = "localhost"
 LLM_PORT = 8003
-CHAR_NAME = "Qwenchat"
-CHAR_PASSWORD = "qwenchat"
+CHAR_NAME = "Gemma"
+CHAR_PASSWORD = "gemma"
 
 # How long to wait for more MUD output before sending to LLM (seconds)
 READ_TIMEOUT = 2.0
