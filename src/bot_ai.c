@@ -1335,7 +1335,7 @@ static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
             for ( p = pexit->to_room->people; p != NULL; p = p->next_in_room )
             {
                 if ( IS_NPC(p) && !p->fighting && !IS_AFFECTED(p, AFF_ETHEREAL)
-                     && IS_SET(p->act, ACT_IS_NPC) )
+                     && IS_SET(p->act, ACT_IS_NPC) && p->master == NULL )
                     has_mob = TRUE;
                 else if ( !IS_NPC(p) && p != ch )
                     has_player = TRUE;
@@ -1367,7 +1367,7 @@ static void bot_scatter_move( CHAR_DATA *ch, BOT_DATA *bot )
             for ( p = pexit->to_room->people; p != NULL; p = p->next_in_room )
             {
                 if ( IS_NPC(p) && !p->fighting && !IS_AFFECTED(p, AFF_ETHEREAL)
-                     && IS_SET(p->act, ACT_IS_NPC) )
+                     && IS_SET(p->act, ACT_IS_NPC) && p->master == NULL )
                     has_mob = TRUE;
                 else if ( !IS_NPC(p) && p != ch )
                     has_player = TRUE;
@@ -1401,6 +1401,7 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
         if ( !IS_NPC(victim) )                      continue;   /* Don't attack players */
         if ( victim->fighting )                     continue;   /* Skip mobs already in combat */
         if ( IS_AFFECTED(victim, AFF_ETHEREAL) )    continue;   /* Can't fight ethereal mobs */
+        if ( victim->master != NULL )               continue;   /* Don't attack summoned pets (golems, charmed mobs, etc.) */
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;
