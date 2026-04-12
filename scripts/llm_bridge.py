@@ -6,6 +6,7 @@ The LLM receives MUD output and decides what commands to send.
 
 import argparse
 import json
+import os
 import re
 import socket
 import time
@@ -15,7 +16,7 @@ import urllib.request
 MUD_HOST = "localhost"
 MUD_PORT = 8000
 LLM_HOST = "localhost"
-LLM_PORT = 8002
+LLM_PORT = 8003
 CHAR_NAME = "Qwenchat"
 CHAR_PASSWORD = "qwenchat"
 
@@ -25,34 +26,18 @@ READ_TIMEOUT = 2.0
 COMMAND_DELAY = 0.5
 # Max conversation history entries to keep (pairs of user/assistant messages)
 # Keep low for small context models like glm-4-9b-chat (4096 tokens)
-MAX_HISTORY = 10
+MAX_HISTORY = 20
 # Max characters of MUD output to include per message
-MAX_MUD_OUTPUT = 1000
+MAX_MUD_OUTPUT = 2000
 
-SYSTEM_PROMPT = """You are playing a text-based MUD (Multi-User Dungeon) called Dystopia. You are a player character interacting with the game world.
+DEFAULT_PROMPT_FILE = os.path.join(os.path.dirname(__file__), "prompts", "demon.txt")
 
-IMPORTANT RULES:
-1. Respond ONLY with the MUD command you want to execute, one per line.
-2. Do NOT include any explanation, reasoning, or commentary - ONLY commands.
-3. Common commands: look, north, south, east, west, up, down, kill <target>, score, recall, equipment, train, help
-4. Fight monsters, you want to slay all enemies!
-5. If you're stuck or confused, try: look or recall
-6. NEVER send more than 1 command at once!
-8. The command 'train' can be used to spend experience points, for example, 'train hp all'.
-9. DO NOT fight the Executioner.
-10. If lost, recall, then go down, to kill enemies in heaven for experience.
+def load_prompt(path):
+    """Load a system prompt from a text file."""
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
 
-
-Your goal to get experience points and pick a class!
-
-To pick a class do the following:
-1. Kill monsters to gain XP.
-2. Spend XP on health points, 'train hp all'.
-3. When over 2000 health points, 'train avatar'.
-4. once an avatar, type 'selfclass', read the output, and pick a class you want to play.
-5. To become the class, once avatar, type 'selfclass <class_name>'.
-
-"""
+SYSTEM_PROMPT = load_prompt(DEFAULT_PROMPT_FILE)
 
 
 def strip_ansi(text):
@@ -120,7 +105,7 @@ def query_llm(history, llm_host=LLM_HOST, llm_port=LLM_PORT, model="default"):
     payload = {
         "model": model,
         "messages": messages,
-        "max_tokens": 100,
+        "max_tokens": 1000,
         "temperature": 0.7,
     }
 
@@ -211,7 +196,13 @@ def main():
     parser.add_argument("--model", default="glm-4-9b-chat", help="LLM model name to request")
     parser.add_argument("--name", default=CHAR_NAME, help="Character name")
     parser.add_argument("--password", default=CHAR_PASSWORD, help="Character password")
+    parser.add_argument("--prompt", default=DEFAULT_PROMPT_FILE,
+                        help="Path to system prompt file (default: prompts/demon.txt)")
     args = parser.parse_args()
+
+    global SYSTEM_PROMPT
+    SYSTEM_PROMPT = load_prompt(args.prompt)
+    print(f"[Bridge] Loaded prompt: {args.prompt}")
 
     sock = connect_to_mud_with(args.mud_host, args.mud_port)
     conversation_history = []
