@@ -1718,7 +1718,9 @@ bool process_output( DESCRIPTOR_DATA *d, bool fPrompt )
 	if ( IS_SET(ch->act, PLR_BLANK) )
 	    write_to_buffer( d, "\n\r", 2 );
 
-	if (IS_SET(ch->act, PLR_PROMPT) && IS_EXTRA(ch, EXTRA_PROMPT))
+	if (!IS_NPC(ch) && IS_SET(ch->act, PLR_LLM))
+	    bust_a_prompt( d );
+	else if (IS_SET(ch->act, PLR_PROMPT) && IS_EXTRA(ch, EXTRA_PROMPT))
 	    bust_a_prompt( d );
 	else if ( IS_SET(ch->act, PLR_PROMPT) )
 	{
