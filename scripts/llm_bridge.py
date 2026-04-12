@@ -26,7 +26,7 @@ READ_TIMEOUT = 2.0
 COMMAND_DELAY = 0.5
 # Max conversation history entries to keep (pairs of user/assistant messages)
 # Keep low for small context models like glm-4-9b-chat (4096 tokens)
-MAX_HISTORY = 20
+MAX_HISTORY = 15
 # Max characters of MUD output to include per message
 MAX_MUD_OUTPUT = 2000
 
@@ -105,7 +105,7 @@ def query_llm(history, llm_host=LLM_HOST, llm_port=LLM_PORT, model="default"):
     payload = {
         "model": model,
         "messages": messages,
-        "max_tokens": 1000,
+        "max_tokens": 100,
         "temperature": 0.7,
     }
 

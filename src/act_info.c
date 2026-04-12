@@ -1042,20 +1042,7 @@ void do_look( CHAR_DATA *ch, char *argument )
 	    strcat(llm_buf, "\n\r");
 	    send_to_char(llm_buf, ch);
 
-	    /* [ITEM] */
-	    sprintf(llm_buf, "[ITEM]");
-	    lfirst = TRUE;
-	    for (lobj = ch->in_room->contents; lobj != NULL; lobj = lobj->next_content)
-	    {
-		if (!can_see_obj(ch, lobj)) continue;
-		if (!lfirst) strcat(llm_buf, ",");
-		strcat(llm_buf, " ");
-		strcat(llm_buf, lobj->short_descr);
-		lfirst = FALSE;
-	    }
-	    if (lfirst) strcat(llm_buf, " none");
-	    strcat(llm_buf, "\n\r");
-	    send_to_char(llm_buf, ch);
+	    /* [ITEM] suppressed in llmbrief mode */
 
 	    /* [NPC] */
 	    sprintf(llm_buf, "[NPC]");
