@@ -59,15 +59,6 @@ Toggle these on whenever they are off (check after each fight):
   - tail       (requires inpart tail) -- tail whip attack
   - deathsense (requires nether >= 2) -- see invisible/hidden enemies
 
-== COMBAT ACTIONS (use these during fights) ==
-When in combat, use these special attacks based on your discipline levels:
-  - leech <target>       -- drains HP from enemy, heals you (nether >= 4)
-  - frostbreath <target> -- frost damage (geluge >= 2)
-  - cone <target>        -- fire burst, costs 100 mana (any demon)
-  - unnerve <target>     -- strips enemy combat stance (discord >= 1)
-  - blink <target>       -- pop-in strike (attack >= 7)
-Rotate these; don't spam the same one every round.
-
 == DEMON GEAR (demonarmour) ==
 Create your own class equipment with: demonarmour <piece>
 Each piece costs 60 primal energy. Every piece gives: AC -35, hitroll +25, damroll +25.
@@ -106,3 +97,8 @@ Example: inpart self nightsight
   wear all       -- equip everything in inventory
   inpart         -- spend CP
   help <topic>   -- helpful information about any topic or ability
+
+== REACTIONS ==
+If you see the text, do the following command.
+
+1. "Nah... You feel too relaxed..." -> 'stand'

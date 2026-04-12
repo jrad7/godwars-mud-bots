@@ -387,7 +387,7 @@ monk ring~
 A piece of monk eq lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 0 0
 A
 17 -35
@@ -1387,7 +1387,7 @@ ninja ninjitsu ring~
 A piece of ninjitsu eq lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 0 0
 A
 19 35
@@ -1679,7 +1679,7 @@ moon werewolf ring~
 A piece of moon eq lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 0 0
 A
 19 25
@@ -2033,7 +2033,7 @@ demon ring~
 A piece of demonic eq lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 0 0
 A
 17 -35
@@ -2737,7 +2737,7 @@ a ring made from glass~
 A plain glass ring lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 10000 0
 A
 19 40
@@ -3689,7 +3689,7 @@ lich ring~
 A piece of lich eq lies here.~
 ~
 9 0 3
-25 0 0 0
+25 0 0 16
 1 0 0
 A
 17 -50
