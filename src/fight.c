@@ -3355,7 +3355,7 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
   members = 0;
   for ( gch = ch->in_room->people; gch != NULL; gch = gch->next_in_room )
   {
-    if ( is_same_group( gch, ch ) )
+    if ( is_same_group( gch, ch ) && !(IS_NPC(gch) && gch->master != NULL) )
       members++;
   }
   if ( members == 0 )
