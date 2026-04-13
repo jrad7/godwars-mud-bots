@@ -878,6 +878,63 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
     return FALSE;
 }
 
+/* -----------------------------------------------------------------------
+ * Upgrade-path helpers
+ * ----------------------------------------------------------------------- */
+
+/* TRUE if bot has a base class that has not yet upgraded.
+ * All seven base classes are candidates: Vampire/Monk/Ninja/Demon/Drow/WW/Mage. */
+static bool bot_is_pre_upgrade( CHAR_DATA *ch )
+{
+    if ( IS_NPC(ch) || ch->pcdata == NULL ) return FALSE;
+    if ( is_upgrade(ch) ) return FALSE;   /* already an upgrade class */
+    if ( ch->class == 0 ) return FALSE;   /* no class chosen yet */
+    return ( IS_CLASS(ch, CLASS_VAMPIRE)
+          || IS_CLASS(ch, CLASS_MONK)
+          || IS_CLASS(ch, CLASS_NINJA)
+          || IS_CLASS(ch, CLASS_DEMON)
+          || IS_CLASS(ch, CLASS_DROW)
+          || IS_CLASS(ch, CLASS_WEREWOLF)
+          || IS_CLASS(ch, CLASS_MAGE) );
+}
+
+/* TRUE once stat targets are met — bot is actively seeking upgrade requirements
+ * (pkscore 1000, gen 1, 40k QP) through PvP. */
+static bool bot_in_upgrade_hunt( CHAR_DATA *ch )
+{
+    return ( bot_is_pre_upgrade(ch)
+          && ch->max_hit  >= 50000
+          && ch->max_mana >= 35000
+          && ch->max_move >= 35000 );
+}
+
+/* TRUE when every upgrade requirement is satisfied. */
+static bool bot_upgrade_ready( CHAR_DATA *ch )
+{
+    if ( !bot_in_upgrade_hunt(ch) )         return FALSE;
+    if ( ch->pcdata->quest      < 40000 )   return FALSE;
+    if ( ch->pcdata->questtotal < 40000 )   return FALSE;
+    if ( ch->generation != 1 )              return FALSE;
+    if ( get_ratio(ch) < 1000 )             return FALSE;
+    return TRUE;
+}
+
+/* Map old base class -> BOT_CLASS_* for the post-upgrade class. */
+static int bot_upgrade_class_pref( int old_class )
+{
+    switch ( old_class )
+    {
+    case CLASS_VAMPIRE:   return BOT_CLASS_UNDEAD_KNIGHT;
+    case CLASS_MONK:      return BOT_CLASS_ANGEL;
+    case CLASS_NINJA:     return BOT_CLASS_SAMURAI;
+    case CLASS_DEMON:     return BOT_CLASS_TANARRI;
+    case CLASS_DROW:      return BOT_CLASS_DROID;
+    case CLASS_WEREWOLF:  return BOT_CLASS_SHAPESHIFTER;
+    case CLASS_MAGE:      return BOT_CLASS_LICH;
+    default:              return -1;
+    }
+}
+
 /*
  * Returns TRUE if the bot has exp worth spending on stats or class rank.
  */
@@ -888,8 +945,13 @@ static bool bot_should_train( CHAR_DATA *ch )
     if ( ch->level == 2 && ch->max_hit >= 2000 )               return TRUE;
     if ( ch->level == 3 && ch->class == 0 )                     return TRUE;
 
-    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher */
-    if ( ch->generation >= 6 && ch->exp >= 10000000 )           return TRUE;
+    /* Upgrade ready: enter training state to navigate to the altar */
+    if ( bot_upgrade_ready(ch) ) return TRUE;
+
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher.
+     * Pre-upgrade bots skip this until stat targets are met (handled in terminal block). */
+    if ( !bot_is_pre_upgrade(ch) && ch->generation >= 6 && ch->exp >= 10000000 )
+        return TRUE;
 
     /* Primal for class gear takes priority over hp/mana/move spending */
     if ( bot_should_train_primal(ch) )                           return TRUE;
@@ -919,7 +981,8 @@ static bool bot_should_train( CHAR_DATA *ch )
         }
     }
 
-    /* Check for Superstances pooling before training stats */
+    /* Check for Superstances pooling before training stats (skipped for pre-upgrade bots) */
+    if ( !bot_is_pre_upgrade(ch) )
     {
         bool basic_maxed = TRUE;
         int i;
@@ -966,6 +1029,26 @@ static bool bot_should_train( CHAR_DATA *ch )
                 return FALSE;
             }
         }
+    }
+
+    /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation. */
+    if ( bot_is_pre_upgrade(ch) )
+    {
+        if ( ch->max_hit  < 50000 && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+        if ( ch->max_mana < 35000 && ch->exp >= ch->max_mana + 1 ) return TRUE;
+        if ( ch->max_move < 35000 && ch->exp >= ch->max_move + 1 ) return TRUE;
+        /* After targets met: pool for the next generation training step (gen 5->4->3->2).
+         * Gen 1 comes from PvP gensteal only. */
+        if ( ch->generation >= 3 )
+        {
+            int gencost;
+            if      ( ch->generation == 3 ) gencost = 400000000;
+            else if ( ch->generation == 4 ) gencost = 200000000;
+            else if ( ch->generation == 5 ) gencost =  50000000;
+            else                            gencost =  10000000;
+            if ( ch->exp >= gencost ) return TRUE;
+        }
+        return FALSE;  /* pool — grind/PvP for more exp or gen 1 via gensteal */
     }
 
     /* Primary: dump all available exp into hp */
@@ -1037,6 +1120,37 @@ static bool bot_do_train( CHAR_DATA *ch )
         }
     }
 
+    /* Step 2.9: execute upgrade when all requirements are met.
+     * Altar (3054) is one step north of the recall room (3001). */
+    if ( bot_upgrade_ready(ch) )
+    {
+        if ( ch->in_room == NULL || ch->in_room->vnum != 3054 )
+        {
+            /* Navigate: recall to 3001, then north to 3054 */
+            if ( bot_do_recall(ch) && ch->in_room && ch->in_room->vnum == ch->home )
+                bot_cmd( ch, "north" );
+        }
+        else
+        {
+            /* At the altar — upgrade! */
+            int old_class = ch->class;
+            bot_cmd( ch, "upgrade" );
+            if ( is_upgrade(ch) )
+            {
+                int new_pref = bot_upgrade_class_pref( old_class );
+                BOT_DATA *bot = ch->pcdata->botdata;
+                if ( new_pref >= 0 && bot && bot->roster )
+                {
+                    bot->roster->class_pref = new_pref;
+                    save_bot_roster();
+                }
+                bot_watch_msg( ch, "[UPGRADE] Class upgraded! Roster updated.\n\r" );
+                bot_do_recall( ch );  /* return home so new class can start training */
+            }
+        }
+        return TRUE;
+    }
+
     /* Class-specific rank/skill progression (age, belts, disciplines, etc.) */
     {
         BOT_DATA *bot = ch->pcdata->botdata;
@@ -1048,8 +1162,9 @@ static bool bot_do_train( CHAR_DATA *ch )
         }
     }
 
-    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher */
-    if ( ch->generation >= 6 && ch->exp >= 10000000 )
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher.
+     * Pre-upgrade bots skip this until stat targets are met — handled in terminal block. */
+    if ( !bot_is_pre_upgrade(ch) && ch->generation >= 6 && ch->exp >= 10000000 )
     {
         bot_cmd( ch, "train generation" );
         return TRUE;
@@ -1088,7 +1203,8 @@ static bool bot_do_train( CHAR_DATA *ch )
         }
     }
 
-    /* Prioritize Superstances ahead of HP/Mana/Move */
+    /* Prioritize Superstances ahead of HP/Mana/Move (skipped for pre-upgrade bots) */
+    if ( !bot_is_pre_upgrade(ch) )
     {
         bool basic_maxed = TRUE;
         int i;
@@ -1229,18 +1345,42 @@ static bool bot_do_train( CHAR_DATA *ch )
         if ( pool > 0 ) return FALSE;
     }
 
-    /* Ninja: pool exp for belt ranks that cost > 10M */
-    if ( IS_CLASS(ch, CLASS_NINJA) && ch->max_hit >= 5000 )
+    /* Ninja: pool exp for belt ranks that cost > 10M (skipped for pre-upgrade bots) */
+    if ( !bot_is_pre_upgrade(ch) && IS_CLASS(ch, CLASS_NINJA) && ch->max_hit >= 5000 )
     {
         long pool = bot_ninja_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
     }
 
-    /* Vampire: pool exp for age milestones that cost > 10M */
-    if ( IS_CLASS(ch, CLASS_VAMPIRE) && ch->max_hit >= 5000 )
+    /* Vampire: pool exp for age milestones that cost > 10M (skipped for pre-upgrade bots) */
+    if ( !bot_is_pre_upgrade(ch) && IS_CLASS(ch, CLASS_VAMPIRE) && ch->max_hit >= 5000 )
     {
         long pool = bot_vamp_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
+    }
+
+    /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation.
+     * Generation 5->4->3->2 via "train generation"; gen 1 only through PvP gensteal. */
+    if ( bot_is_pre_upgrade(ch) )
+    {
+        if ( ch->max_hit  < 50000 && ch->exp >= ch->max_hit  + 1 )
+            { bot_cmd( ch, "train hp all" );   return TRUE; }
+        if ( ch->max_mana < 35000 && ch->exp >= ch->max_mana + 1 )
+            { bot_cmd( ch, "train mana all" ); return TRUE; }
+        if ( ch->max_move < 35000 && ch->exp >= ch->max_move + 1 )
+            { bot_cmd( ch, "train move all" ); return TRUE; }
+        /* Targets met: train generation down toward 2, then PvP for gen 1 */
+        if ( ch->generation >= 3 )
+        {
+            int gencost;
+            if      ( ch->generation == 3 ) gencost = 400000000;
+            else if ( ch->generation == 4 ) gencost = 200000000;
+            else if ( ch->generation == 5 ) gencost =  50000000;
+            else                            gencost =  10000000;
+            if ( ch->exp >= gencost )
+                { bot_cmd( ch, "train generation" ); return TRUE; }
+        }
+        return FALSE;  /* pool — keep grinding/PvPing for more exp or gen 1 via gensteal */
     }
 
     /* Primary: dump all available exp into hp */
@@ -1465,7 +1605,9 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
 
         /* Check for PVP */
         bool do_pvp = FALSE;
-        if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR )
+        if ( bot_in_upgrade_hunt(ch) )
+            do_pvp = TRUE;  /* always seek PvP when hunting pkscore/gen/QP for upgrade */
+        else if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR )
             do_pvp = TRUE;
         else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression )
             do_pvp = TRUE;
@@ -1691,7 +1833,9 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         else
         {
             bool do_pvp = FALSE;
-            if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
+            if ( bot_in_upgrade_hunt(ch) )
+                do_pvp = TRUE;
+            else if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
             else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression ) do_pvp = TRUE;
 
             if ( do_pvp )
@@ -1762,7 +1906,9 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         else
         {
             bool do_pvp = FALSE;
-            if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
+            if ( bot_in_upgrade_hunt(ch) )
+                do_pvp = TRUE;
+            else if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR ) do_pvp = TRUE;
             else if ( global_bot_pvp_mode == BOT_PVP_MODE_NORMAL && bot->roster && bot->roster->aggression > 0 && number_percent() < bot->roster->aggression ) do_pvp = TRUE;
 
             if ( do_pvp )
