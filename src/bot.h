@@ -31,6 +31,29 @@ struct descriptor_data;
 /* Sentinel value for bot descriptors - means no real socket */
 #define BOT_DESCRIPTOR_SENTINEL  (-2)
 
+/* -----------------------------------------------------------------------
+ * Upgrade pursuit settings
+ *
+ * BOT_UPGRADES_ENABLED: set to 0 to completely disable upgrade pursuit and
+ *   execution for all bots (they will train stats/abilities indefinitely).
+ *
+ * BOT_UPGRADE_HP/MANA/MOVE: stat targets a base-class bot trains toward.
+ *   Once all three are met the bot stops HP/mana/move spending and switches
+ *   to generation training + aggressive PvP to earn pkscore/QP/gensteal.
+ *
+ * BOT_UPGRADE_QP: quest points required (current balance AND total earned).
+ *
+ * BOT_UPGRADE_PKSCORE: get_ratio() minimum.  Below this the do_upgrade
+ *   command imposes a stat penalty, so bots PvP until this is reached.
+ * ----------------------------------------------------------------------- */
+#define BOT_UPGRADES_ENABLED    1
+
+#define BOT_UPGRADE_HP          50000
+#define BOT_UPGRADE_MANA        35000
+#define BOT_UPGRADE_MOVE        35000
+#define BOT_UPGRADE_QP          40000
+#define BOT_UPGRADE_PKSCORE     1000
+
 /* Population settings */
 #define MAX_BOT_ROSTER      128
 #define BOT_MIN_ONLINE      15

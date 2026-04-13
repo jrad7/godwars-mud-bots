@@ -886,6 +886,7 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
  * All seven base classes are candidates: Vampire/Monk/Ninja/Demon/Drow/WW/Mage. */
 static bool bot_is_pre_upgrade( CHAR_DATA *ch )
 {
+    if ( !BOT_UPGRADES_ENABLED ) return FALSE;
     if ( IS_NPC(ch) || ch->pcdata == NULL ) return FALSE;
     if ( is_upgrade(ch) ) return FALSE;   /* already an upgrade class */
     if ( ch->class == 0 ) return FALSE;   /* no class chosen yet */
@@ -903,19 +904,19 @@ static bool bot_is_pre_upgrade( CHAR_DATA *ch )
 static bool bot_in_upgrade_hunt( CHAR_DATA *ch )
 {
     return ( bot_is_pre_upgrade(ch)
-          && ch->max_hit  >= 50000
-          && ch->max_mana >= 35000
-          && ch->max_move >= 35000 );
+          && ch->max_hit  >= BOT_UPGRADE_HP
+          && ch->max_mana >= BOT_UPGRADE_MANA
+          && ch->max_move >= BOT_UPGRADE_MOVE );
 }
 
 /* TRUE when every upgrade requirement is satisfied. */
 static bool bot_upgrade_ready( CHAR_DATA *ch )
 {
-    if ( !bot_in_upgrade_hunt(ch) )         return FALSE;
-    if ( ch->pcdata->quest      < 40000 )   return FALSE;
-    if ( ch->pcdata->questtotal < 40000 )   return FALSE;
-    if ( ch->generation != 1 )              return FALSE;
-    if ( get_ratio(ch) < 1000 )             return FALSE;
+    if ( !bot_in_upgrade_hunt(ch) )                     return FALSE;
+    if ( ch->pcdata->quest      < BOT_UPGRADE_QP )      return FALSE;
+    if ( ch->pcdata->questtotal < BOT_UPGRADE_QP )      return FALSE;
+    if ( ch->generation != 1 )                          return FALSE;
+    if ( get_ratio(ch) < BOT_UPGRADE_PKSCORE )          return FALSE;
     return TRUE;
 }
 
@@ -1034,9 +1035,9 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation. */
     if ( bot_is_pre_upgrade(ch) )
     {
-        if ( ch->max_hit  < 50000 && ch->exp >= ch->max_hit  + 1 ) return TRUE;
-        if ( ch->max_mana < 35000 && ch->exp >= ch->max_mana + 1 ) return TRUE;
-        if ( ch->max_move < 35000 && ch->exp >= ch->max_move + 1 ) return TRUE;
+        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->exp >= ch->max_mana + 1 ) return TRUE;
+        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->exp >= ch->max_move + 1 ) return TRUE;
         /* After targets met: pool for the next generation training step (gen 5->4->3->2).
          * Gen 1 comes from PvP gensteal only. */
         if ( ch->generation >= 3 )
@@ -1363,11 +1364,11 @@ static bool bot_do_train( CHAR_DATA *ch )
      * Generation 5->4->3->2 via "train generation"; gen 1 only through PvP gensteal. */
     if ( bot_is_pre_upgrade(ch) )
     {
-        if ( ch->max_hit  < 50000 && ch->exp >= ch->max_hit  + 1 )
+        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->exp >= ch->max_hit  + 1 )
             { bot_cmd( ch, "train hp all" );   return TRUE; }
-        if ( ch->max_mana < 35000 && ch->exp >= ch->max_mana + 1 )
+        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->exp >= ch->max_mana + 1 )
             { bot_cmd( ch, "train mana all" ); return TRUE; }
-        if ( ch->max_move < 35000 && ch->exp >= ch->max_move + 1 )
+        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->exp >= ch->max_move + 1 )
             { bot_cmd( ch, "train move all" ); return TRUE; }
         /* Targets met: train generation down toward 2, then PvP for gen 1 */
         if ( ch->generation >= 3 )
