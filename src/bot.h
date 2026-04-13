@@ -46,7 +46,7 @@ struct descriptor_data;
  * BOT_UPGRADE_PKSCORE: get_ratio() minimum.  Below this the do_upgrade
  *   command imposes a stat penalty, so bots PvP until this is reached.
  * ----------------------------------------------------------------------- */
-#define BOT_UPGRADES_ENABLED    1
+#define BOT_UPGRADES_ENABLED    0
 
 #define BOT_UPGRADE_HP          50000
 #define BOT_UPGRADE_MANA        35000
