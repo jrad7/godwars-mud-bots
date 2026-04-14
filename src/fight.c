@@ -30,6 +30,7 @@
 
 #define MAX_SLAY_TYPES 3
 #define MONK_AUTODROP 12
+#define WPN_TRAIN_TICKS 3
 
 
 static int get_grind_mult(CHAR_DATA *victim)
@@ -1336,7 +1337,7 @@ void one_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt, int handtype)
     tail_chain( );
     if (!is_safe(ch,victim))
     {
-      improve_wpn(ch,dt,right_hand);
+      for (int _i = 0; _i < WPN_TRAIN_TICKS; _i++) improve_wpn(ch,dt,right_hand);
       improve_stance(ch);
     }
     return;
@@ -1644,7 +1645,7 @@ void one_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt, int handtype)
   tail_chain( );
   if (!is_safe(ch,victim))
   {
-    improve_wpn(ch,dt,right_hand);
+    for (int _i = 0; _i < WPN_TRAIN_TICKS; _i++) improve_wpn(ch,dt,right_hand);
     improve_stance(ch);
   }
 }
