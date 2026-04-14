@@ -6931,12 +6931,24 @@ void do_copyover (CHAR_DATA *ch, char * argument)
     }
   }
 
+   /* Save online bots and mark them for instant re-login after copyover */
+   for (gch = char_list; gch != NULL; gch = gch->next)
+   {
+     if (IS_NPC(gch) || !gch->pcdata || !gch->pcdata->is_bot) continue;
+     if (gch->pcdata->botdata == NULL || gch->pcdata->botdata->roster == NULL) continue;
+     save_char_obj(gch);
+     gch->pcdata->botdata->roster->online = FALSE;
+     gch->pcdata->botdata->roster->offline_until = 0; /* Signal: re-login on copyover */
+   }
+   save_bot_roster();
+
    /* Have to disable compression when doing a copyover */
 
    for (d = descriptor_list; d ; d = d->next)
    {
      if (d->lookup_status != STATUS_DONE) continue;
-     if (d->character != NULL) gch = d->character;  
+     if (d->descriptor == BOT_DESCRIPTOR_SENTINEL) continue;
+     if (d->character != NULL) gch = d->character;
      else continue;
      if (gch->desc->out_compress)
      {
@@ -6944,14 +6956,18 @@ void do_copyover (CHAR_DATA *ch, char * argument)
      }
    }
 
-        sprintf (buf, "\n\r <*>         It is a time of changes         <*>\n\r");	
+        sprintf (buf, "\n\r <*>         It is a time of changes         <*>\n\r");
 
 	/* For each playing descriptor, save its state */
 	for (d = descriptor_list; d ; d = d_next)
 	{
 		CHAR_DATA * och = CH (d);
 		d_next = d->next; /* We delete from the list , so need to save this */
-		
+
+		/* Skip bot descriptors - no real socket to preserve */
+		if (d->descriptor == BOT_DESCRIPTOR_SENTINEL)
+			continue;
+
 		if (!d->character || d->connected != 0) /* drop those logging on */
 		{
 			write_to_descriptor_2(d->descriptor, "\n\rSorry, we are rebooting. Come back in 30 seconds.\n\r", 0);

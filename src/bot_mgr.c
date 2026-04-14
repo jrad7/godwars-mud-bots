@@ -305,6 +305,30 @@ void save_bot_roster( void )
 }
 
 /* -----------------------------------------------------------------------
+ * Copyover bot recovery
+ *
+ * During do_copyover, online bots have their offline_until set to 0.
+ * After copyover_recover() restores players, this function logs in
+ * every bot that was online before the copyover.
+ * ----------------------------------------------------------------------- */
+void copyover_recover_bots( void )
+{
+    int i, count = 0;
+
+    for ( i = 0; i < bot_roster_count; i++ )
+    {
+        BOT_ROSTER_ENTRY *r = &bot_roster[i];
+        if ( r->retired )      continue;
+        if ( r->offline_until != 0 ) continue; /* only bots marked for instant re-login */
+
+        if ( bot_login(r) )
+            count++;
+    }
+
+    logf( "Bot Mgr: Copyover recovery - %d bots restored.", count );
+}
+
+/* -----------------------------------------------------------------------
  * Internal helpers
  * ----------------------------------------------------------------------- */
 

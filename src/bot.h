@@ -328,6 +328,7 @@ bool    bot_login           ( BOT_ROSTER_ENTRY *roster );
 void    bot_logout          ( struct char_data *ch );
 void    load_bot_roster     ( void );
 void    save_bot_roster     ( void );
+void    copyover_recover_bots ( void );
 
 void    bot_ai_update       ( struct char_data *ch, BOT_DATA *bot );
 void    bot_change_state    ( struct char_data *ch, BOT_DATA *bot, bot_state_t new_state );

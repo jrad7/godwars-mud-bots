@@ -429,7 +429,10 @@ void boot_db(bool fCopyOver)
     }
  	
  	if (fCopyOver)
+	{
  		copyover_recover();
+		copyover_recover_bots();
+	}
 
     return;
 }
