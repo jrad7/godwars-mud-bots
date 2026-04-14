@@ -30,7 +30,7 @@
 
 #define MAX_SLAY_TYPES 3
 #define MONK_AUTODROP 12
-#define WPN_TRAIN_TICKS 3
+#define WPN_TRAIN_TICKS 1
 
 
 static int get_grind_mult(CHAR_DATA *victim)
