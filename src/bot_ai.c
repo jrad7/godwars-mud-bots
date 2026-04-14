@@ -641,6 +641,101 @@ static void bot_navigate_to_any_grind_zone( BOT_DATA *bot, CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * PvP grudge / nemesis / blacklist helpers
+ * ----------------------------------------------------------------------- */
+
+/* Recalculate bot->nemesis from the current grudge list (highest attack_count). */
+static void bot_pvp_update_nemesis( BOT_DATA *bot )
+{
+    int i, best;
+    if ( bot->grudge_count == 0 )
+    {
+        bot->nemesis[0] = '\0';
+        return;
+    }
+    best = 0;
+    for ( i = 1; i < bot->grudge_count; i++ )
+        if ( bot->grudge_list[i].attack_count > bot->grudge_list[best].attack_count )
+            best = i;
+    strncpy( bot->nemesis, bot->grudge_list[best].name, sizeof(bot->nemesis)-1 );
+    bot->nemesis[sizeof(bot->nemesis)-1] = '\0';
+}
+
+/* Add attacker to grudge list (or increment their count) and refresh nemesis. */
+static void bot_pvp_add_grudge( BOT_DATA *bot, const char *name )
+{
+    int i;
+    char msg[128];
+    for ( i = 0; i < bot->grudge_count; i++ )
+    {
+        if ( !str_cmp( bot->grudge_list[i].name, name ) )
+        {
+            bot->grudge_list[i].attack_count++;
+            bot_pvp_update_nemesis( bot );
+            snprintf( msg, sizeof(msg), "[GRUDGE] %s attack count now %d\n\r",
+                      name, bot->grudge_list[i].attack_count );
+            /* bot_watch_msg needs a char*, set later via the calling function */
+            return;
+        }
+    }
+    if ( bot->grudge_count >= BOT_PVP_GRUDGE_MAX ) return;
+    strncpy( bot->grudge_list[bot->grudge_count].name, name,
+             sizeof(bot->grudge_list[0].name)-1 );
+    bot->grudge_list[bot->grudge_count].name[sizeof(bot->grudge_list[0].name)-1] = '\0';
+    bot->grudge_list[bot->grudge_count].attack_count = 1;
+    bot->grudge_count++;
+    bot_pvp_update_nemesis( bot );
+}
+
+/* Remove a name from the grudge list (revenge achieved) and refresh nemesis. */
+static void bot_pvp_remove_grudge( BOT_DATA *bot, const char *name )
+{
+    int i, j;
+    for ( i = 0; i < bot->grudge_count; i++ )
+    {
+        if ( !str_cmp( bot->grudge_list[i].name, name ) )
+        {
+            for ( j = i; j < bot->grudge_count - 1; j++ )
+                bot->grudge_list[j] = bot->grudge_list[j+1];
+            bot->grudge_count--;
+            bot_pvp_update_nemesis( bot );
+            return;
+        }
+    }
+}
+
+/* Add a name to the blacklist (no duplicates). */
+static void bot_pvp_add_blacklist( BOT_DATA *bot, const char *name )
+{
+    int i;
+    if ( name[0] == '\0' ) return;
+    for ( i = 0; i < bot->blacklist_count; i++ )
+        if ( !str_cmp( bot->blacklist[i], name ) ) return;
+    if ( bot->blacklist_count >= BOT_PVP_BLACKLIST_MAX ) return;
+    strncpy( bot->blacklist[bot->blacklist_count], name, sizeof(bot->blacklist[0])-1 );
+    bot->blacklist[bot->blacklist_count][sizeof(bot->blacklist[0])-1] = '\0';
+    bot->blacklist_count++;
+}
+
+/* Return TRUE if name is on the blacklist. */
+static bool bot_pvp_is_blacklisted( BOT_DATA *bot, const char *name )
+{
+    int i;
+    for ( i = 0; i < bot->blacklist_count; i++ )
+        if ( !str_cmp( bot->blacklist[i], name ) ) return TRUE;
+    return FALSE;
+}
+
+/* Return TRUE if name is on the grudge list. */
+static bool bot_pvp_is_grudge( BOT_DATA *bot, const char *name )
+{
+    int i;
+    for ( i = 0; i < bot->grudge_count; i++ )
+        if ( !str_cmp( bot->grudge_list[i].name, name ) ) return TRUE;
+    return FALSE;
+}
+
+/* -----------------------------------------------------------------------
  * bot_handle_pvp_attack
  *
  * Called the first time we detect a player/bot attacking us.  Decides
@@ -661,6 +756,14 @@ static void bot_handle_pvp_attack( CHAR_DATA *ch, BOT_DATA *bot, CHAR_DATA *atta
     snprintf( msg, sizeof(msg), "[PVP] Attacked by %s!\n\r", attacker->name );
     bot_watch_msg( ch, msg );
 
+    /* Track this attacker in the grudge list; update nemesis */
+    bot_pvp_add_grudge( bot, attacker->name );
+    if ( bot->nemesis[0] != '\0' )
+    {
+        snprintf( msg, sizeof(msg), "[GRUDGE] Nemesis is now: %s\n\r", bot->nemesis );
+        bot_watch_msg( ch, msg );
+    }
+
     /* Fight-back decision: aggression rating ± 20% chaos */
     int chance = bot->roster ? bot->roster->aggression : 30;
     chance += number_range( -20, 20 );
@@ -668,9 +771,11 @@ static void bot_handle_pvp_attack( CHAR_DATA *ch, BOT_DATA *bot, CHAR_DATA *atta
 
     if ( number_percent() < chance && fair_fight( ch, attacker ) )
     {
-        /* Fight back -- treat attacker as the PvP target */
+        /* Fight back -- treat attacker as the PvP target.
+         * NOT bot-initiated: don't blacklist on loss. */
         strncpy( bot->pvp_target, attacker->name, sizeof(bot->pvp_target) - 1 );
         bot->pvp_target[sizeof(bot->pvp_target)-1] = '\0';
+        bot->pvp_bot_initiated = FALSE;
         snprintf( msg, sizeof(msg), "[PVP] Fighting back vs %s! (chance=%d)\n\r",
                   bot->pvp_target, chance );
         bot_watch_msg( ch, msg );
@@ -1621,6 +1726,7 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
                 char msg[256];
                 strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                 bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
+                bot->pvp_bot_initiated = TRUE;
                 snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                 bot_watch_msg( ch, msg );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
@@ -1683,24 +1789,51 @@ static bool bot_is_valid_pvp( CHAR_DATA *ch, CHAR_DATA *victim, char *dbg, size_
 
 static CHAR_DATA *bot_find_pvp_target( CHAR_DATA *ch )
 {
+    BOT_DATA  *bot = ch->pcdata ? ch->pcdata->botdata : NULL;
     CHAR_DATA *victim;
     CHAR_DATA *best_victim = NULL;
-    int count = 0;
-    char dbg[256];
+    int        count = 0;
+    char       dbg[256];
 
+    /* First pass: prefer grudge targets (players who have attacked us).
+     * If at least one valid grudge target exists, pick only among those. */
+    if ( bot && bot->grudge_count > 0 )
+    {
+        for ( victim = char_list; victim != NULL; victim = victim->next )
+        {
+            if ( IS_NPC(victim) ) continue;
+            if ( victim == ch ) continue;
+            if ( victim->in_room == NULL ) continue;
+            if ( !bot_pvp_is_grudge(bot, victim->name) ) continue;
+            if ( bot_pvp_is_blacklisted(bot, victim->name) ) continue;
+            if ( !bot_is_valid_pvp(ch, victim, dbg, sizeof(dbg)) )
+            {
+                bot_watch_msg(ch, dbg);
+                continue;
+            }
+            if ( number_range(0, count) == 0 )
+                best_victim = victim;
+            count++;
+        }
+        if ( best_victim != NULL )
+            return best_victim;
+    }
+
+    /* Second pass: any valid target not on the blacklist */
+    count = 0;
     for ( victim = char_list; victim != NULL; victim = victim->next )
     {
         if ( IS_NPC(victim) ) continue;
         if ( victim == ch ) continue;
         if ( victim->in_room == NULL ) continue;
+        if ( bot && bot_pvp_is_blacklisted(bot, victim->name) ) continue;
 
         if ( !bot_is_valid_pvp(ch, victim, dbg, sizeof(dbg)) )
         {
             bot_watch_msg(ch, dbg);
             continue;
         }
-        
-        /* Select randomly among valid victims */
+
         if ( number_range(0, count) == 0 )
             best_victim = victim;
         count++;
@@ -1847,6 +1980,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                     char msg[256];
                     strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                     bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
+                    bot->pvp_bot_initiated = TRUE;
                     snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                     bot_watch_msg( ch, msg );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
@@ -1920,6 +2054,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                     char msg[256];
                     strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                     bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
+                    bot->pvp_bot_initiated = TRUE;
                     snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                     bot_watch_msg( ch, msg );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
@@ -2058,6 +2193,13 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         char msg[256];
         snprintf(msg, sizeof(msg), "[PVP] Target %s lost or no longer valid.\n\r", bot->pvp_target);
         bot_watch_msg( ch, msg );
+        /* Hunt failed without a kill -- blacklist if we initiated this hunt */
+        if ( bot->pvp_bot_initiated )
+        {
+            bot_pvp_add_blacklist( bot, bot->pvp_target );
+            snprintf( msg, sizeof(msg), "[GRUDGE] Blacklisting %s (hunt failed, no kill).\n\r", bot->pvp_target );
+            bot_watch_msg( ch, msg );
+        }
         bot->pvp_target[0] = '\0';
         bot->pvp_chasing = FALSE;
         bot_change_state( ch, bot, BOT_GRINDING );
@@ -2123,6 +2265,13 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
     if ( ch->position <= POS_STUNNED )
     {
         bot_watch_msg( ch, "[PVP] Incapacitated -- clearing PVP target and recovering.\n\r" );
+        if ( bot->pvp_bot_initiated && bot->pvp_target[0] != '\0' )
+        {
+            char msg[256];
+            bot_pvp_add_blacklist( bot, bot->pvp_target );
+            snprintf( msg, sizeof(msg), "[GRUDGE] Blacklisting %s (incapacitated).\n\r", bot->pvp_target );
+            bot_watch_msg( ch, msg );
+        }
         bot->pvp_target[0] = '\0';
         bot_change_state( ch, bot, BOT_RESTING );
         return;
@@ -2147,6 +2296,12 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
             char msg[256];
             snprintf( msg, sizeof(msg), "[PVP] Lost fight vs %s -- clearing target and resting.\n\r", bot->pvp_target );
             bot_watch_msg( ch, msg );
+            if ( bot->pvp_bot_initiated )
+            {
+                bot_pvp_add_blacklist( bot, bot->pvp_target );
+                snprintf( msg, sizeof(msg), "[GRUDGE] Blacklisting %s (fled at low HP).\n\r", bot->pvp_target );
+                bot_watch_msg( ch, msg );
+            }
             bot->pvp_target[0] = '\0';
             bot_change_state( ch, bot, BOT_RESTING );
             return;
@@ -2158,8 +2313,15 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
 
     if ( victim->position <= POS_STUNNED )
     {
-        /* Time to finish them */
+        /* Time to finish them -- count this as a win regardless of who initiated */
         char cmd[256];
+        char killmsg[128];
+        /* Revenge satisfied: remove from grudge list and clear nemesis if applicable */
+        bot_pvp_remove_grudge( bot, victim->name );
+        if ( bot->nemesis[0] != '\0' && !str_cmp( bot->nemesis, victim->name ) )
+            bot->nemesis[0] = '\0';
+        snprintf( killmsg, sizeof(killmsg), "[GRUDGE] Finishing %s -- removed from grudge list.\n\r", victim->name );
+        bot_watch_msg( ch, killmsg );
         if ( ch->class == victim->class && ch->generation >= victim->generation && victim->generation < 7 && victim->generation > 1 )
         {
             sprintf( cmd, "gensteal %s", victim->name );
@@ -2721,6 +2883,31 @@ void bot_update( CHAR_DATA *ch )
         }
     }
 
+    /* Nemesis interrupt: if our nemesis walks into our room, attack on sight.
+     * Fires from any state except active combat, fleeing, or logging out. */
+    if ( bot->nemesis[0] != '\0'
+      && bot->state != BOT_PVP_FIGHT
+      && bot->state != BOT_PVP_FLEE
+      && bot->state != BOT_LOGGING_OUT
+      && ch->position != POS_FIGHTING )
+    {
+        CHAR_DATA *nem = get_char_room( ch, bot->nemesis );
+        if ( nem != NULL && bot_is_valid_pvp(ch, nem, NULL, 0) )
+        {
+            char msg[128];
+            snprintf( msg, sizeof(msg), "[GRUDGE] Nemesis %s is here -- attacking!\n\r", bot->nemesis );
+            bot_watch_msg( ch, msg );
+            strncpy( bot->pvp_target, bot->nemesis, sizeof(bot->pvp_target)-1 );
+            bot->pvp_target[sizeof(bot->pvp_target)-1] = '\0';
+            bot->pvp_bot_initiated = TRUE;
+            bot_change_state( ch, bot, BOT_PVP_FIGHT );
+            char cmd[64];
+            snprintf( cmd, sizeof(cmd), "kill %s", bot->nemesis );
+            bot_cmd( ch, cmd );
+            return;
+        }
+    }
+
     /* Continuous WAR MODE check (skip if we're already fleeing/being hunted) */
     if ( global_bot_pvp_mode == BOT_PVP_MODE_WAR
       && bot->pvp_attacker[0] == '\0'
@@ -2740,6 +2927,7 @@ void bot_update( CHAR_DATA *ch )
                 char msg[256];
                 strncpy(bot->pvp_target, target->name, sizeof(bot->pvp_target) - 1);
                 bot->pvp_target[sizeof(bot->pvp_target) - 1] = '\0';
+                bot->pvp_bot_initiated = TRUE;
                 snprintf(msg, sizeof(msg), "[PVP] WAR MODE ongoing override -> hunting %s\n\r", bot->pvp_target);
                 bot_watch_msg( ch, msg );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );

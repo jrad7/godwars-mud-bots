@@ -54,6 +54,19 @@ struct descriptor_data;
 #define BOT_UPGRADE_QP          40000
 #define BOT_UPGRADE_PKSCORE     1000
 
+/* PvP memory limits */
+#define BOT_PVP_GRUDGE_MAX    16   /* max players tracked in grudge list     */
+#define BOT_PVP_BLACKLIST_MAX 16   /* max players bot has given up attacking  */
+
+/*
+ * One entry in the per-session grudge list.
+ * The player with the highest attack_count is the bot's nemesis.
+ */
+typedef struct {
+    char name[32];
+    int  attack_count;
+} BOT_GRUDGE_ENTRY;
+
 /* Population settings */
 #define MAX_BOT_ROSTER      128
 #define BOT_MIN_ONLINE      15
@@ -199,8 +212,15 @@ struct bot_data {
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */
     bool                pvp_chasing;       /* TRUE = chasing fleeing target, skip health gate */
+    bool                pvp_bot_initiated; /* TRUE = bot chose this hunt unprovoked (not fight-back) */
     char                pvp_attacker[32];  /* Who attacked us (flee mode) -- cleared when fight_timer==0 */
     char                pvp_flee_zone[64]; /* Area filename we fled from -- skip when picking hide zone */
+    /* Per-session PvP personality */
+    char                nemesis[32];                            /* player with most attacks on us this session */
+    BOT_GRUDGE_ENTRY    grudge_list[BOT_PVP_GRUDGE_MAX];       /* all who attacked us: name + count */
+    int                 grudge_count;
+    char                blacklist[BOT_PVP_BLACKLIST_MAX][32];  /* bot-initiated hunts that failed */
+    int                 blacklist_count;
     /* Stuck detection: ring buffer of last 10 commands issued */
     char                cmd_history[10][64];
     int                 cmd_history_head;  /* Next write slot (0-9)       */
