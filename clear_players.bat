@@ -10,6 +10,10 @@ for %%F in ("%PLAYER_DIR%\*") do (
     )
 )
 
+del /q "%PLAYER_DIR%\retired\*" >nul 2>&1
+del /q "%PLAYER_DIR%\backup\*" >nul 2>&1
+del /q "%PLAYER_DIR%\store\*" >nul 2>&1
+
 if exist "%~dp0txt\bots.txt" (
     del "%~dp0txt\bots.txt"
     echo Deleted txt\bots.txt.
