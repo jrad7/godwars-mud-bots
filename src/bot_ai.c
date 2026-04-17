@@ -2483,7 +2483,7 @@ static void bot_state_pvp_flee( CHAR_DATA *ch, BOT_DATA *bot )
     /* If in combat: try to flee, with occasional chaos freeze */
     if ( ch->position == POS_FIGHTING )
     {
-        if ( number_percent() < 15 )
+        if ( number_percent() < 40 )
         {
             bot_watch_msg( ch, "[PVP_FLEE] Panic -- forgot to flee this tick!\n\r" );
             return;
