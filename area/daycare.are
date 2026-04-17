@@ -260,7 +260,7 @@ D2
 You see a large room full of noisy brats.
 ~
 ~
-1 -1 6602
+0 -1 6602
 S
 #6602
 Day Care Center~
@@ -587,7 +587,6 @@ M 6602 spec_thief
 M 6603 spec_thief
 M 6604 spec_thief
 M 6605 spec_thief
-M 6606 spec_cast_cleric
 M 6608 spec_thief
 S
 

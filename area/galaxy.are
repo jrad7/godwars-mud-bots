@@ -996,6 +996,11 @@ The shadows cloud your vision.
 ~
 ~
 0 -1 1306
+D4
+A vortex of starlight spirals upward.
+~
+~
+0 0 3004
 D5
 ~
 ~
@@ -1550,7 +1555,7 @@ D4
 You see the forcefield of Spring.
 ~
 forcefield~
-39 9324 9354
+0 0 9354
 D5
 ~
 ~
@@ -1733,12 +1738,12 @@ D4
 You see the forcefield of Summer.
 ~
 forcefield~
-39 9325 9355
+0 0 9355
 D5
 You see the forcefield of Spring.
 ~
 ~
-33 9324 9339
+0 0 9339
 S
 #9355
 On the Draco~
@@ -1753,7 +1758,7 @@ D0
 D5
 ~
 ~
-33 9325 9354
+0 0 9354
 S
 #9356
 Tail of the Draco~
@@ -1812,7 +1817,7 @@ D1
 You see the forcefield of Autumn.
 ~
 forcefield~
-39 9326 9360
+0 0 9360
 D2
 ~
 ~
@@ -1831,7 +1836,7 @@ D1
 D3
 ~
 ~
-33 9326 9359
+0 0 9359
 S
 #9361
 Near the Arms of Draco~
@@ -1877,7 +1882,7 @@ D1
 D2
 You see the forcefield of Winter.~
 forcefield~
-39 9327 9364
+0 0 9364
 S
 #9364
 At the Entrance of the Great Dipper~
@@ -1889,7 +1894,7 @@ seven rooms in this zone, representing the seven stars of the Dipper.
 D0
 You see the forcefield of Winter.~
 forcefield~
-33 9327 9363
+0 0 9363
 D2
 ~
 ~
@@ -2010,26 +2015,6 @@ S
 
 #SPECIALS
 M 9301 spec_thief
-M 9313 spec_breath_fire
-M 9314 spec_breath_fire
-M 9315 spec_cast_cleric
-M 9316 spec_cast_cleric
-M 9317 spec_cast_cleric
-M 9318 spec_cast_cleric
-M 9319 spec_cast_cleric
-M 9320 spec_cast_cleric
-M 9321 spec_cast_cleric
-M 9322 spec_cast_cleric
-M 9323 spec_cast_cleric
-M 9324 spec_cast_cleric
-M 9325 spec_cast_cleric
-M 9326 spec_cast_cleric
-M 9327 spec_cast_cleric
-M 9328 spec_cast_cleric
-M 9329 spec_cast_cleric
-M 9330 spec_cast_mage
-M 9331 spec_cast_mage
-M 9332 spec_breath_acid
 S
 
 

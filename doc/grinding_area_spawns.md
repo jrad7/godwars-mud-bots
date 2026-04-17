@@ -16,7 +16,8 @@ When an area resets, `reset_room()` in `db.c` checks whether `pRoom->area->mob_l
 **Reset logic per room:**
 1. Pick 5 random mobile VNUMs from within the area's `lvnum`–`uvnum` range.
 2. Create each mob and set `ACT_STAY_AREA` so it doesn't wander out of the zone.
-3. Place it in the room.
+3. Remove `AFF_SANCTUARY`, `ACT_AGGRESSIVE`, and `spec_fun` (no spell-casting).
+4. Place it in the room.
 
 **Shopkeeper preservation:** Mobs with `pMobIndex->pShop != NULL` are never overridden — merchants and their inventory still spawn normally even inside grinding areas.
 
@@ -26,82 +27,19 @@ When an area resets, `reset_room()` in `db.c` checks whether `pRoom->area->mob_l
 
 Two tables in `area_levels.h` control dynamic spawns and XP for each grind zone:
 
-**`area_level_table`** — enables dynamic spawning and sets mob level for that area:
+**`area_level_table`** — enables dynamic spawning and sets mob level for that area. Each entry maps an area filename to a mob level.
 
-| Area File | Mob Level |
-|-----------|-----------|
-| `school.are` | 10 |
-| `sewer.are` | 20 |
-| `smurf.are` | 30 |
-| `moria.are` | 40 |
-| `canyon.are` | 50 |
-| `plains.are` | 60 |
-| `weed.are` | 75 |
-| `thalos.are` | 100 |
-| `shire.are` | 125 |
-| `heaven.are` | 200 |
-| `hell.are` | 300 |
+**`grind_zone_table`** — sets the XP/CP multiplier for kills in each zone. Each entry has `vnum_lo`, `vnum_hi`, `mult` (percentage: 100 = 1x, 200 = 2x), and `name`.
 
-**`grind_zone_table`** — sets the XP/CP multiplier for kills in each zone (100 = 1×):
-
-| Zone | VNUM Range | XP Mult |
-|------|-----------|---------|
-| School | 3700–3760 | 100% |
-| Sewer | 7000–7445 | 110% |
-| Smurf | 100–129 | 125% |
-| Moria | 3900–4172 | 135% |
-| Canyon | 9201–9260 | 150% |
-| Plains | 300–350 | 175% |
-| Weed | 30232–30261 | 200% |
-| Thalos | 5200–5280 | 250% |
-| Shire | 1100–1157 | 300% |
-| Hell | 30100–30200 | 400% |
-| Heaven | 99000–99100 | 500% |
+Both tables are NULL-terminated arrays. Check these files for current values.
 
 ### Fast Resets (`db.c` — `area_update()`)
 
-Bot grind zones reset every ~1 minute (rather than the default ~15) so mobs repopulate before bots deplete them. Each zone is identified by a characteristic room VNUM:
-
-| Zone | Room VNUM used |
-|------|---------------|
-| Mud School | `ROOM_VNUM_SCHOOL` |
-| Smurf | 104 |
-| Canyon | 9201 |
-| Hell | 30100 |
-| Heaven | 99000 |
-| Shire | 1100 |
-| Sewer | 7030 |
-| Moria | 3900 |
-| Plains | 300 |
-| Thalos | 5200 |
+Bot grind zones reset every ~1 minute (rather than the default ~15) so mobs repopulate before bots deplete them. Each zone is identified by a characteristic room VNUM in `area_update()` — when that room's area resets, the age is set to `15 - 1` to trigger the next reset quickly.
 
 ### Loot Tiers (`db.c` — `give_grind_loot()`)
 
-When a bot kills a dynamically-spawned mob, `give_grind_loot()` has a 15% chance to drop a random item from the zone's object VNUM range. The tier is selected by mob level:
-
-| Mob Level ≤ | Loot VNUM Range | Zone |
-|-------------|-----------------|------|
-| 5 | 3700–3760 | School |
-| 20 | 7000–7445 | Sewer |
-| 30 | 100–129 | Smurf |
-| 40 | 3900–4172 | Moria |
-| 50 | 9201–9260 | Canyon |
-| 60 | 300–350 | Plains |
-| 75 | 30232–30261 | Weed |
-| 100 | 5200–5280 | Thalos |
-| 125 | 1100–1157 | Shire |
-| 150 | 99000–99100 | Heaven |
-| 200 | 30100–30200 | Hell |
-
-### Registering a New Grinding Area
-
-1. Build the area (OLC or manually). It needs at least a few `#MOBILES` entries.
-2. Add it to **`area_level_table`** in `src/area_levels.h` with the target mob level.
-3. Add it to **`grind_zone_table`** in `src/area_levels.h` with VNUM range and XP multiplier.
-4. Add a fast-reset block in **`area_update()`** in `src/db.c` using a characteristic room VNUM.
-5. Add a loot tier row in **`give_grind_loot()`** in `src/db.c` (keep ordered by mob level).
-
-No changes to the `.are` file are required.
+When a dynamically-spawned mob is created, `give_grind_loot()` has a 15% chance (`GRIND_DROP_CHANCE`) to give it a random item from the zone's object VNUM range. The tier is selected by mob level from the `loot_tiers[]` array, which must be ordered by ascending level.
 
 ---
 
@@ -109,7 +47,7 @@ No changes to the `.are` file are required.
 
 ### How Tier Selection Works
 
-Each bot picks a grind zone based on its current `max_hit`. The `grind_tiers[]` table in `src/bot.h` maps `max_hit` thresholds to one or more zone route arrays. The bot selects the highest tier whose `max_hit` is still greater than its own (i.e. it uses the first tier where it fits), then picks a random route from that tier's list.
+Each bot picks a grind zone based on its current `max_hit`. The `grind_tiers[]` table in `src/bot.h` maps `max_hit` thresholds to one or more zone route arrays. The bot selects the highest tier whose `max_hit` is still greater than its own, then picks a random route from that tier's list.
 
 ```c
 for (i = 0; i < GRIND_TIER_COUNT; i++) {
@@ -132,93 +70,113 @@ static const char *zone_sewer[] = {
 
 Routes ignore locked doors — if a gate blocks the path in the `.are` file but has no lock flags set (`exit_flags == 0`), movement succeeds. Doors that are actually locked (non-zero `exit_flags` with a key requirement) will block the bot; avoid routing through them.
 
-### Current Grind Tiers
+### Boundary Rules (`src/bot_ai.c`)
 
-| Tier (max_hit < N) | Zone | Area File | Entry Room | Route from Recall |
-|--------------------|------|-----------|------------|-------------------|
-| 5,000 | Mud School | `school.are` | 3700 | `up, open door, south` |
-| 8,000 | Sewer | `sewer.are` | 7030 | `S, S, S, S, down` |
-| 10,000 | Smurf Village | `smurf.are` | 101 | `S, S, W, W, W, N` |
-| 15,000 | Moria | `moria.are` | 3900 | `S, S, W, W, W, W, N` |
-| 20,000 | Canyon | `canyon.are` | 9201 | `S, S, E×6, S×4, E×2, S, E×2, D, S` |
-| 30,000 | Plains | `plains.are` | 300 | `S, S, E×4, N×3, W×2, N` |
-| 40,000 | Weed | `weed.are` | — | `S, S, E×6, N×3, E×2, U×5, E×2, D, E, N, E, N` |
-| 50,000 | Thalos | `thalos.are` | 5200 | `S, S, E×6, S×4, W×3` |
-| 60,000 | Shire | `shire.are` | 1100 | `S, S, W×5, N` |
-| 80,000 | Jobo's Hell | `hell.are` | 30100 | `S, S, W×7, D, D, D` |
-| 999,999 | Jobo's Heaven | `heaven.are` | 99000 | `down` |
+The `bot_area_rules[]` array blocks specific exit directions at zone entry rooms so bots don't wander back out. Each entry has `vnum_lo`, `vnum_hi`, and a `forbidden_dirs` bitmask using `DIRMASK(DIR_*)`.
 
-Tiers are approximate — adjust thresholds in `grind_tiers[]` in `src/bot.h` to tune which zones bots graduate into.
+---
 
-### Adding a New Grind Zone to the Bot System
+## Part 3 — Adding a New Grind Zone (Full Checklist)
 
-1. **Find the route** using `scripts/find_route.py` (see Part 3 below).
-2. **Add the route array** in `src/bot.h`:
+### Prerequisites for a Grind Zone
+
+Before making an area a grind zone, ensure:
+- **No flying required:** All rooms must NOT be `SECT_AIR` (sector_type 9). Change to an appropriate type (0=inside, 1=city, 2=field, 4=hills).
+- **No locked doors:** All door exit_flags must be 0 so bots can traverse freely.
+- **No spell-casting mobs:** Remove `spec_cast_*` and `spec_breath_*` entries from the area's `#SPECIALS` section. The spawn code also NULLs `spec_fun` on dynamically spawned mobs as a safety net.
+- **No sanctuary on mobs:** The spawn code strips `AFF_SANCTUARY` automatically, but clean prototypes are preferred.
+- **At least a few `#MOBILES` entries** in the area file for random spawning.
+
+### Step-by-Step Registration
+
+1. **Build or prepare the area** (OLC or manually). Verify the prerequisites above.
+
+2. **Find the route** using `scripts/find_route.py`:
+   - Add the zone name and entry room VNUM to the `zone_rooms` dict in the script
+   - Run: `wsl python3 scripts/find_route.py`
+   - If the route is too long (>20 steps), consider adding a shortcut exit from a room near recall (e.g. room 3004 or 3005 in midgaard.are)
+
+3. **Add the route array** in `src/bot.h`:
    ```c
    /* recall(3001)->path comment */
    static const char *zone_myzone[] = { "recall", "south", ..., NULL };
    ```
-3. **Add it to `grind_tiers[]`** in `src/bot.h` at the appropriate `max_hit` threshold:
-   ```c
-   { 25000, { zone_myzone }, 1 },
-   ```
-4. **Add a boundary rule** in `bot_area_rules[]` in `src/bot_ai.c` to block the exit direction that leads back out of the zone:
-   ```c
-   { entry_room_vnum, entry_room_vnum, DIRMASK(DIR_SOUTH) },
-   ```
-5. **Add an entry to `route_names[]`** in `src/bot_ai.c` so the watchbot logs show the zone name.
-6. **Register the zone** in `src/area_levels.h` — both `area_level_table` (mob level) and `grind_zone_table` (VNUM range + XP mult).
-7. **Add a fast-reset block** in `area_update()` in `src/db.c`.
-8. **Add a loot tier row** in `give_grind_loot()` in `src/db.c` (keep ordered by mob level).
 
-See Part 1 for the full tables of current values to use as reference.
+4. **Add it to `grind_tiers[]`** in `src/bot.h` at the appropriate `max_hit` threshold:
+   ```c
+   { 25000, { zone_myzone, zone_other }, 2 },
+   ```
+
+5. **Add to `area_level_table`** in `src/area_levels.h` with the target mob level:
+   ```c
+   { "myzone.are", 50 },
+   ```
+
+6. **Add to `grind_zone_table`** in `src/area_levels.h` with VNUM range and XP multiplier:
+   ```c
+   { 12345, 12400, 200, "MyZone" },
+   ```
+
+7. **Add a fast-reset block** in `area_update()` in `src/db.c` using a characteristic room VNUM:
+   ```c
+   pRoomIndex = get_room_index( 12345 );  /* MyZone entrance */
+   if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+       pArea->age = 15 - 1;
+   ```
+
+8. **Add a loot tier row** in `give_grind_loot()` in `src/db.c` (keep ordered by ascending mob level):
+   ```c
+   { 50, 12345, 12400 },   /* myzone */
+   ```
+
+9. **Add a boundary rule** in `bot_area_rules[]` in `src/bot_ai.c` to block the exit direction leading back out of the zone:
+   ```c
+   { 12345, 12345, DIRMASK(DIR_SOUTH) },
+   ```
+
+10. **Add an entry to `route_names[]`** in `src/bot_ai.c` so the watchbot logs show the zone name:
+    ```c
+    { zone_myzone, "myzone", "myzone.are" },
+    ```
+
+No changes to the `.are` file's `#RESETS` section are required — dynamic spawning overrides it.
+
+### Adding a New Tier
+
+To add a new tier above the current highest:
+
+1. Change the current catch-all tier's `max_hit` from `999999` to the new threshold
+2. Add a new entry at the end of `grind_tiers[]` with `999999` as the catch-all
+3. Assign zones to the new tier
+4. Update `GRIND_TIER_COUNT` if it's hardcoded (currently it's computed via `sizeof`)
 
 ---
 
-## Part 3 — Route Pathfinding Script
+## Part 4 — Route Pathfinding Script
 
-`scripts/find_route.py` parses all `.are` files, builds a room graph, and runs BFS from room 3001 to find the shortest walkable path to any target room. Doors and locks are ignored (as the bot system currently does).
+`scripts/find_route.py` parses all `.are` files, builds a room graph, and runs BFS from room 3001 to find the shortest walkable path to any target room. Doors and locks are ignored.
 
 ### Usage
 
 ```bash
-python scripts/find_route.py
+wsl python3 scripts/find_route.py
 ```
 
-Output includes both the step list and a ready-to-paste C array for `bot.h`:
-
-```
-SEWER (room 7030):
-  Steps: ['south', 'south', 'south', 'south', 'down']
-  C array: { "recall", "south", "south", "south", "south", "down", NULL }
-```
+Output includes both the step list and a ready-to-paste C array for `bot.h`.
 
 ### Adding a New Target Zone
 
-Edit the `zone_rooms` dict near the bottom of the script to add the zone name and its entry room VNUM:
+Edit the `zone_rooms` dict near the bottom of the script:
 
 ```python
 zone_rooms = {
     'MORIA':    3900,
-    'SEWER':    7030,
     'MY_ZONE':  12345,   # <- add here
     ...
 }
 ```
 
-Re-run the script. If the zone is not reachable from 3001, a `WARNING` line is printed — check that the entry room has a path back to Midgaard in the `.are` files.
-
-### How the Parser Works
-
-The `.are` exit format is:
-```
-D[0-5]
-description~
-keyword~
-exit_flags  key_vnum  to_room
-```
-
-The parser reads field index 2 (`to_room`) as the destination. Fields 0 and 1 are the door flags and key VNUM respectively — the BFS ignores them entirely.
+Re-run the script. If the zone is not reachable from 3001, a `WARNING` line is printed — check that the entry room has a path back to Midgaard in the `.are` files, or add a new connection from a Midgaard room.
 
 ---
 

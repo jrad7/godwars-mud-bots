@@ -370,6 +370,18 @@ static const struct {
     { 300, 300, DIRMASK(DIR_SOUTH) },
     /* Thalos entrance (5200): east exits back toward Midennir (5256) */
     { 5200, 5200, DIRMASK(DIR_EAST) },
+    /* Daycare entrance (6601): north exits back toward Midgaard */
+    { 6601, 6601, DIRMASK(DIR_NORTH) },
+    /* Mega City entrance (8001): north exits back toward Midgaard */
+    { 8001, 8001, DIRMASK(DIR_NORTH) },
+    /* Galaxy entrance (9301): up exits to Midgaard, west to Hitower */
+    { 9301, 9301, DIRMASK(DIR_UP) | DIRMASK(DIR_WEST) },
+    /* Air entrance (1017): down exits back to Midgaard (3057) */
+    { 1017, 1017, DIRMASK(DIR_DOWN) },
+    /* Drow entrance (5100): up exits back toward Thalos */
+    { 5100, 5100, DIRMASK(DIR_UP) },
+    /* Disney entrance (50000): down exits back to Midgaard (3005) */
+    { 50000, 50000, DIRMASK(DIR_DOWN) },
 
     { 0, 0, 0 }   /* terminator */
 };
@@ -501,6 +513,12 @@ static const struct { const char **route; const char *name; const char *filename
     { zone_moria,       "moria",       "moria.are"  },
     { zone_plains,      "plains",      "plains.are" },
     { zone_thalos,      "thalos",      "thalos.are" },
+    { zone_daycare,     "daycare",     "daycare.are" },
+    { zone_mega,        "mega",        "mega1.are"  },
+    { zone_galaxy,      "galaxy",      "galaxy.are" },
+    { zone_air,         "air",         "air.are"    },
+    { zone_drow,        "drow",        "drow.are"   },
+    { zone_disney,      "disney",      "disney.are" },
     { NULL, NULL, NULL }
 };
 

@@ -2318,6 +2318,11 @@ You see the Temple Square.
 ~
 ~
 0 -1 3005
+D5
+A swirling vortex of stars pulls you downward.
+~
+~
+0 0 9301
 S
 #3005
 #y/#n- #RT#remple #RS#rquare#n -#y\#n~
@@ -2352,6 +2357,11 @@ You see the air.
 ~
 ~
 0 -1 3057
+D5
+A magical portal shimmers beneath the cobblestones.
+~
+~
+0 0 50000
 S
 #3006
 Entrance to the Grunting Boar Inn~
@@ -3471,6 +3481,11 @@ In the air...~
 WOW you can fly!  You are floating in the air above Temple Square of Midgaard.
 ~
 0 4 9
+D0
+A shimmering path leads north into the sky.
+~
+~
+0 0 1017
 D4
 ~
 ~

@@ -1708,6 +1708,24 @@ void area_update( void )
 	    pRoomIndex = get_room_index( 5200 );  /* Thalos entrance */
 	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
 		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 6601 );  /* Daycare entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 8001 );  /* Mega City entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 9301 );  /* Galaxy entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 1017 );  /* Air entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 5100 );  /* Drow entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
+	    pRoomIndex = get_room_index( 50000 );  /* Disney entrance */
+	    if ( pRoomIndex != NULL && pArea == pRoomIndex->area )
+		pArea->age = 15 - 1;   /* Reset every ~1 minute */
 	}
     }
 
@@ -1721,16 +1739,22 @@ static void give_grind_loot( CHAR_DATA *mob, int mob_level )
 {
     static const struct { int level; int lo; int hi; } loot_tiers[] = {
         {   5,  3700,  3760 },   /* school  */
+        {  10,  6600,  6647 },   /* daycare */
         {  20,  7000,  7445 },   /* sewer   */
+        {  25,  8000,  8028 },   /* mega    */
         {  30,   100,   129 },   /* smurf   */
         {  40,  3900,  4172 },   /* moria   */
+        {  45,  9301,  9371 },   /* galaxy  */
         {  50,  9201,  9260 },   /* canyon  */
         {  60,   300,   350 },   /* plains  */
         {  75, 30232, 30261 },   /* weed    */
+        {  75,  1000,  1040 },   /* air     */
         { 100,  5200,  5280 },   /* thalos  */
         { 125,  1100,  1157 },   /* shire   */
+        { 125,  5100,  5150 },   /* drow    */
         { 150, 99000, 99100 },   /* heaven  */
         { 200, 30100, 30200 },   /* hell    */
+        { 200, 50000, 50100 },   /* disney  */
     };
     static const int TIER_COUNT =
         (int)( sizeof(loot_tiers) / sizeof(loot_tiers[0]) );
@@ -1837,6 +1861,7 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
                 REMOVE_BIT(rand_mob->affected_by, AFF_SANCTUARY);
                 REMOVE_BIT(rand_mob->act, ACT_AGGRESSIVE);
                 SET_BIT(rand_mob->act, ACT_STAY_AREA);
+                rand_mob->spec_fun = NULL;
                 char_to_room( rand_mob, pRoom );
                 give_grind_loot( rand_mob, pRoom->area->mob_level );
             }

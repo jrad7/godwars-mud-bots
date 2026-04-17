@@ -259,6 +259,18 @@ static const char *zone_moria[]       = { "recall", "south", "south", "west", "w
 static const char *zone_plains[]      = { "recall", "south", "south", "east", "east", "east", "east", "north", "north", "north", "west", "west", "north", NULL };
 /* recall(3001)->2S->6E->4S->3W: via Midennir to Thalos (5200) */
 static const char *zone_thalos[]      = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "west", "west", "west", NULL };
+/* recall(3001)->2S->6E->D->S: via Midennir to Daycare (6601) */
+static const char *zone_daycare[]     = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "down", "south", NULL };
+/* recall(3001)->3S->2E->2S->11E->S: via east road to Mega City (8001) */
+static const char *zone_mega[]        = { "recall", "south", "south", "south", "east", "east", "south", "south", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "east", "south", NULL };
+/* recall(3001)->S->W->D: via Cleric's Guild to Galaxy (9301) */
+static const char *zone_galaxy[]      = { "recall", "south", "west", "down", NULL };
+/* recall(3001)->S->U->N: via air above Temple Square to Air (1017) */
+static const char *zone_air[]         = { "recall", "south", "up", "north", NULL };
+/* recall(3001)->2S->6E->4S->2E->S->2E->D->W->S->2D: via Canyon path to Drow (5100) */
+static const char *zone_drow[]        = { "recall", "south", "south", "east", "east", "east", "east", "east", "east", "south", "south", "south", "south", "east", "east", "south", "east", "east", "down", "west", "south", "down", "down", NULL };
+/* recall(3001)->S->D: via Temple Square to Disney (50000) */
+static const char *zone_disney[]      = { "recall", "south", "down", NULL };
 
 typedef struct {
     int           max_hit;      /* use this tier when ch->max_hit < max_hit */
@@ -267,11 +279,12 @@ typedef struct {
 } GRIND_TIER;
 
 static const GRIND_TIER grind_tiers[] = {
-    { 3500,  { zone_mud_school, zone_smurf }, 2 },
-    { 20000, { zone_sewer, zone_shire }, 2 },
-    { 30000, { zone_moria, zone_thalos }, 2 },
-    { 40000, { zone_canyon, zone_plains }, 2 },
-    { 999999, { zone_jobo_hell, zone_jobo_heaven, zone_weed }, 3 }
+    { 3500,   { zone_mud_school, zone_smurf, zone_daycare }, 3 },
+    { 20000,  { zone_sewer, zone_shire, zone_mega }, 3 },
+    { 30000,  { zone_moria, zone_thalos, zone_galaxy }, 3 },
+    { 50000,  { zone_canyon, zone_plains, zone_air }, 3 },
+    { 100000, { zone_disney, zone_weed, zone_drow }, 3 },
+    { 999999, { zone_jobo_hell, zone_jobo_heaven, }, 2 }
 };
 #define GRIND_TIER_COUNT ( (int)( sizeof(grind_tiers) / sizeof(grind_tiers[0]) ) )
 

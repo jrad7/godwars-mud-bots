@@ -8,7 +8,7 @@ import os
 import re
 from collections import deque
 
-AREA_DIR = os.path.join(os.path.dirname(__file__), '..', 'dystopia-mud', 'area')
+AREA_DIR = os.path.join(os.path.dirname(__file__), '..', 'area')
 
 DIRS = ['north', 'east', 'south', 'west', 'up', 'down']
 
@@ -143,6 +143,12 @@ if __name__ == '__main__':
         'JUARGAN':  4700,   # Via MORIA east
         'MARSH':    8301,   # Via HAON
         'HITOWER':  1300,   # Via HAON
+        'AIR':      1001,   # Via Astral chain
+        'MEGA1':    8001,   # Mega city
+        'GALAXY':   9301,   # Via Hitower
+        'DAYCARE':  6601,   # Dwarven daycare
+        'DISNEY':   50000,  # Disney World
+        'DROW':     5100,   # Via Hitower
     }
     for name, vnum in zone_rooms.items():
         if vnum in graph:

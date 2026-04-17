@@ -814,7 +814,7 @@ D1
 A door to the east bodes ill.
 ~
 door~
-3 0 8026
+0 0 8026
 D2
 Threep Lane continues south.
 ~
@@ -973,11 +973,11 @@ To open insert card.
 D0
 ~
 door~
-39 8013 8027
+0 0 8027
 D3
 ~
 door~
-3 0 8016
+0 0 8016
 S
 #8027
 Stockroom of Throt & Gleep's Megger Store~
@@ -993,11 +993,11 @@ however.
 D0
 ~
 vault door~
-39 8012 8028
+0 0 8028
 D2
 ~
 door~
-39 8013 8026
+0 0 8026
 S
 #8028
 Throt & Gleep's Vault~
@@ -1007,18 +1007,14 @@ The vault is musty with a slight smell of ozone in the air.
 D2
 ~
 vault door~
-39 8012 8027
+0 0 8027
 S
 #0
 
 
 
 #SPECIALS
-M 8003 spec_cast_judge
 M 8004 spec_thief
-M 8006 spec_cast_judge
-M 8010 spec_cast_judge
-M 8011 spec_cast_judge
 S
 
 
