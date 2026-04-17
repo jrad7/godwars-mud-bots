@@ -6,14 +6,16 @@
  *
  * Progression overview:
  *   - Gear creation via 'shapearmor' (costs 150 primal each piece).
- *   - 'formlearn shiftpowers' to 4 (requires primal)
- *   - 'formlearn tiger' to 4 for grinding
- *   - 'formlearn bull' to 4 for PvP
- *   - 'formlearn hydra' and 'formlearn faerie' to 4 
+ *   - 'formlearn shiftpowers' to 5
+ *   - 'formlearn hydra' to 5 for grinding (best passive DPS form)
+ *   - 'formlearn tiger' to 5 for dodge/phase utility
+ *   - 'formlearn bull' to 5 for PvP stun/stomp
+ *   - 'formlearn faerie' to 5 for evasion/magic PvP
  *
  * Combat loop:
- *   - Grind: Shift into Tiger form, use normal attacks + 'shaperoar' to cause fleeing if desired.
- *   - PvP: Shift into Bull form, use 'charge' (stun) and 'stomp'.
+ *   - Grind: Shift into Hydra form, use 'breath' + massive passive fang hits.
+ *   - PvP:  Shift into Bull form, use 'charge' (stun) and 'stomp'.
+ *           Switch to Faerie if low HP for evasion + faerieblink burst.
  */
 
 #if defined(macintosh)
@@ -55,7 +57,7 @@ static const char *bot_shapeshifter_pick_train( CHAR_DATA *ch )
     /* Must complete gear first */
     if ( !bot_shapeshifter_gear_complete(ch) ) return NULL;
 
-    /* 1. Shiftpowers */
+    /* 1. Shiftpowers — utility passives needed across all forms */
     if ( ch->pcdata->powers[SHAPE_POWERS] < 5 )
     {
         cost = 80 * ch->pcdata->powers[SHAPE_POWERS] + 80;
@@ -63,23 +65,7 @@ static const char *bot_shapeshifter_pick_train( CHAR_DATA *ch )
         else return NULL; /* wait for primal */
     }
 
-    /* 2. Tiger Form (for Grinding) */
-    if ( ch->pcdata->powers[TIGER_LEVEL] < 5 )
-    {
-        cost = 80 * ch->pcdata->powers[TIGER_LEVEL] + 80;
-        if ( ch->practice >= cost ) return "formlearn tiger";
-        else return NULL;
-    }
-
-    /* 3. Bull Form (for PvP) */
-    if ( ch->pcdata->powers[BULL_LEVEL] < 5 )
-    {
-        cost = 80 * ch->pcdata->powers[BULL_LEVEL] + 80;
-        if ( ch->practice >= cost ) return "formlearn bull";
-        else return NULL;
-    }
-
-    /* 4. Hydra Form */
+    /* 2. Hydra Form — best grinding form: +450 dam/hit, 1.6x mult, 5x fang hits */
     if ( ch->pcdata->powers[HYDRA_LEVEL] < 5 )
     {
         cost = 80 * ch->pcdata->powers[HYDRA_LEVEL] + 80;
@@ -87,7 +73,23 @@ static const char *bot_shapeshifter_pick_train( CHAR_DATA *ch )
         else return NULL;
     }
 
-    /* 5. Faerie Form */
+    /* 3. Tiger Form — dodge/phase utility, good secondary form */
+    if ( ch->pcdata->powers[TIGER_LEVEL] < 5 )
+    {
+        cost = 80 * ch->pcdata->powers[TIGER_LEVEL] + 80;
+        if ( ch->practice >= cost ) return "formlearn tiger";
+        else return NULL;
+    }
+
+    /* 4. Bull Form — PvP stun/stomp */
+    if ( ch->pcdata->powers[BULL_LEVEL] < 5 )
+    {
+        cost = 80 * ch->pcdata->powers[BULL_LEVEL] + 80;
+        if ( ch->practice >= cost ) return "formlearn bull";
+        else return NULL;
+    }
+
+    /* 5. Faerie Form — evasion/magic PvP */
     if ( ch->pcdata->powers[FAERIE_LEVEL] < 5 )
     {
         cost = 80 * ch->pcdata->powers[FAERIE_LEVEL] + 80;
@@ -121,6 +123,11 @@ int bot_ss_primal_needed( CHAR_DATA *ch )
         lvl = ch->pcdata->powers[SHAPE_POWERS];
         return 80 * lvl + 80;
     }
+    if ( ch->pcdata->powers[HYDRA_LEVEL] < 5 )
+    {
+        lvl = ch->pcdata->powers[HYDRA_LEVEL];
+        return 80 * lvl + 80;
+    }
     if ( ch->pcdata->powers[TIGER_LEVEL] < 5 )
     {
         lvl = ch->pcdata->powers[TIGER_LEVEL];
@@ -129,11 +136,6 @@ int bot_ss_primal_needed( CHAR_DATA *ch )
     if ( ch->pcdata->powers[BULL_LEVEL] < 5 )
     {
         lvl = ch->pcdata->powers[BULL_LEVEL];
-        return 80 * lvl + 80;
-    }
-    if ( ch->pcdata->powers[HYDRA_LEVEL] < 5 )
-    {
-        lvl = ch->pcdata->powers[HYDRA_LEVEL];
         return 80 * lvl + 80;
     }
     if ( ch->pcdata->powers[FAERIE_LEVEL] < 5 )
@@ -170,22 +172,62 @@ static bool bot_shapeshifter_buff_check( CHAR_DATA *ch )
     return FALSE; /* Currently no active buffs for Shapeshifter out of forms */
 }
 
-/* 
+/*
+ * bot_shapeshifter_pick_form
+ *
+ * Selects the best form for the current bot state:
+ *   - Grinding:  Hydra (best passive DPS: +450 dam/hit, 5x fang hits, 1.6x mult)
+ *   - PvP hunt:  Bull  (charge stun + stomp for burst/disable)
+ *   - PvP fight: Bull normally, but switch to Faerie if low HP for evasion
+ *   - PvP flee:  Faerie (best evasion to survive disengagement)
+ */
+static int bot_shapeshifter_pick_form( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    if ( bot->state == BOT_PVP_FIGHT )
+    {
+        /* Switch to Faerie for evasion if we're losing the fight */
+        if ( ch->hit < (ch->max_hit * 4 / 10)
+          && ch->pcdata->powers[FAERIE_LEVEL] >= 3 )
+            return FAERIE_FORM;
+        return BULL_FORM;
+    }
+
+    if ( bot->state == BOT_PVP_HUNT )
+        return BULL_FORM;
+
+    if ( bot->state == BOT_PVP_FLEE )
+    {
+        /* Faerie evasion helps survive while fleeing */
+        if ( ch->pcdata->powers[FAERIE_LEVEL] >= 1 )
+            return FAERIE_FORM;
+        return BULL_FORM;
+    }
+
+    /* Grinding / exploring / idle: Hydra for maximum sustained DPS */
+    if ( ch->pcdata->powers[HYDRA_LEVEL] >= 1 )
+        return HYDRA_FORM;
+
+    /* Fallback if Hydra isn't trained yet */
+    if ( ch->pcdata->powers[TIGER_LEVEL] >= 1 )
+        return TIGER_FORM;
+
+    return BULL_FORM;
+}
+
+/*
  * Out of combat, shape into the right form depending on bot state.
  */
 static bool bot_shapeshifter_between_fights( CHAR_DATA *ch )
 {
     BOT_DATA *bot;
-    int desired_form = TIGER_FORM;
+    int desired_form;
 
     if ( !IS_CLASS(ch, CLASS_SHAPESHIFTER) ) return FALSE;
 
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return FALSE;
 
-    /* Determine desired form based on state: Bull for PvP, Tiger for Grind */
-    if ( bot->state == BOT_PVP_HUNT || bot->state == BOT_PVP_FIGHT || bot->state == BOT_PVP_FLEE )
-        desired_form = BULL_FORM;
+    desired_form = bot_shapeshifter_pick_form( ch, bot );
 
     /* Wait out fatigue if we're stressed from shape shifting */
     if ( ch->pcdata->powers[SHAPE_COUNTER] > 35 )
@@ -195,8 +237,8 @@ static bool bot_shapeshifter_between_fights( CHAR_DATA *ch )
     {
         if ( IS_SET(ch->affected_by, AFF_POLYMORPH) )
         {
-            /* Check if we are physically the right form first (we could be polymorphed via hatform/etc) */
-            if ( ch->pcdata->powers[SHAPE_FORM] != 0 ) 
+            /* Must shift to human first before changing forms */
+            if ( ch->pcdata->powers[SHAPE_FORM] != 0 )
             {
                 bot_cmd( ch, "shift human" );
                 return TRUE;
@@ -204,36 +246,75 @@ static bool bot_shapeshifter_between_fights( CHAR_DATA *ch )
         }
         else
         {
-            if ( desired_form == TIGER_FORM )
-                bot_cmd( ch, "shift tiger" );
+            if ( desired_form == HYDRA_FORM )
+                bot_cmd( ch, "shift hydra" );
             else if ( desired_form == BULL_FORM )
                 bot_cmd( ch, "shift bull" );
+            else if ( desired_form == TIGER_FORM )
+                bot_cmd( ch, "shift tiger" );
+            else if ( desired_form == FAERIE_FORM )
+                bot_cmd( ch, "shift faerie" );
             return TRUE;
         }
     }
 
-    return FALSE; 
+    return FALSE;
 }
 
 static void bot_shapeshifter_combat_action( CHAR_DATA *ch )
 {
     CHAR_DATA *target = ch->fighting;
+    BOT_DATA  *bot;
     int        roll;
+    bool       is_pvp;
+    char       buf[MAX_INPUT_LENGTH];
 
     if ( target == NULL || ch->pcdata == NULL ) return;
 
-    roll = number_range( 1, 100 );
+    bot    = ch->pcdata->botdata;
+    roll   = number_range( 1, 100 );
+    is_pvp = ( bot != NULL && ( bot->state == BOT_PVP_HUNT
+            || bot->state == BOT_PVP_FIGHT || bot->state == BOT_PVP_FLEE ) );
 
-    if ( ch->pcdata->powers[SHAPE_FORM] == BULL_FORM )
+    /* ------------------------------------------------------------------
+     * Mid-combat form switching (PvP only):
+     * If we're in Bull and getting low, switch to Faerie for evasion.
+     * Cost: one combat tick for the shift, but survival is worth it.
+     * Only attempt if shift fatigue allows it.
+     * ------------------------------------------------------------------ */
+    if ( is_pvp
+      && ch->pcdata->powers[SHAPE_FORM] == BULL_FORM
+      && ch->hit < (ch->max_hit * 3 / 10)
+      && ch->pcdata->powers[FAERIE_LEVEL] >= 3
+      && ch->pcdata->powers[SHAPE_COUNTER] <= 25 )
     {
-        /* Stomp removes limbs and deals massive damage but wait states the user. 25% chance if max level. */
-        if ( ch->pcdata->powers[BULL_LEVEL] >= 5 && roll <= 25 )
+        bot_cmd( ch, "shift faerie" );
+        return;
+    }
+
+    if ( ch->pcdata->powers[SHAPE_FORM] == HYDRA_FORM )
+    {
+        /* Breath: 5x fire breath at max level, strong burst damage.
+         * High usage rate (70%) — this is the primary grinding ability. */
+        if ( ch->pcdata->powers[HYDRA_LEVEL] >= 1 && roll <= 70 )
+        {
+            bot_cmd( ch, "breath" );
+            return;
+        }
+        /* Remaining 30%: let passive fang hits carry the damage */
+    }
+    else if ( ch->pcdata->powers[SHAPE_FORM] == BULL_FORM )
+    {
+        /* Stomp: 500 damage + limb removal, but heavy wait state (24).
+         * Use aggressively in PvP (40%), conservatively in grind (20%). */
+        if ( ch->pcdata->powers[BULL_LEVEL] >= 5 && roll <= (is_pvp ? 40 : 20) )
         {
             bot_cmd( ch, "stomp" );
             return;
         }
-        /* Charge does stuns but uses 2000 move. */
-        if ( ch->pcdata->powers[BULL_LEVEL] >= 4 && ch->move >= 2000 && roll <= 50 )
+        /* Charge: stun + headbutt/hooves hits, costs 2000 move.
+         * Prioritize in PvP for the stun lockdown. */
+        if ( ch->pcdata->powers[BULL_LEVEL] >= 4 && ch->move >= 2000 && roll <= (is_pvp ? 70 : 40) )
         {
             bot_cmd( ch, "charge" );
             return;
@@ -241,43 +322,39 @@ static void bot_shapeshifter_combat_action( CHAR_DATA *ch )
     }
     else if ( ch->pcdata->powers[SHAPE_FORM] == TIGER_FORM )
     {
-        /* Phase costs fatigue, wait state, and avoids damage. */
-        if ( ch->pcdata->powers[TIGER_LEVEL] >= 5 && ch->pcdata->powers[PHASE_COUNTER] <= 0 && roll <= 15 )
+        /* Phase: damage avoidance, useful when taking heavy hits */
+        if ( ch->pcdata->powers[TIGER_LEVEL] >= 5
+          && ch->pcdata->powers[PHASE_COUNTER] <= 0
+          && ch->hit < (ch->max_hit * 6 / 10)
+          && roll <= 40 )
         {
             bot_cmd( ch, "phase" );
             return;
         }
-        /* Shaperoar might make opponent flee (good for panic/PVP_FLEE or just occasionally) */
-        if ( ch->pcdata->powers[TIGER_LEVEL] >= 3 && ch->hit < (ch->max_hit * 0.4) && roll <= 20 )
+        /* Shaperoar: only use in PvP to force opponent flee when desperate */
+        if ( is_pvp
+          && ch->pcdata->powers[TIGER_LEVEL] >= 3
+          && ch->hit < (ch->max_hit * 3 / 10)
+          && roll <= 50 )
         {
             bot_cmd( ch, "shaperoar" );
             return;
         }
     }
-    else if ( ch->pcdata->powers[SHAPE_FORM] == HYDRA_FORM )
-    {
-        /* Breath does good damage based on hydra level */
-        if ( ch->pcdata->powers[HYDRA_LEVEL] >= 1 && roll <= 50 )
-        {
-            bot_cmd( ch, "breath" );
-            return;
-        }
-    }
     else if ( ch->pcdata->powers[SHAPE_FORM] == FAERIE_FORM )
     {
-        /* Faerieblink deals big backstab damage for 2500 mana */
-        if ( ch->pcdata->powers[FAERIE_LEVEL] >= 5 && ch->mana >= 2500 && roll <= 30 )
+        /* Faerieblink: massive backstab burst for 2500 mana */
+        if ( ch->pcdata->powers[FAERIE_LEVEL] >= 5 && ch->mana >= 2500 && roll <= 50 )
         {
             bot_cmd( ch, "faerieblink" );
             return;
         }
-        if ( ch->pcdata->powers[FAERIE_LEVEL] >= 4 && ch->mana >= 1000 && ch->move >= 500 && roll <= 50 )
+        /* Faeriecurse: web + curse debuff, costs 1000 mana + 500 move */
+        if ( ch->pcdata->powers[FAERIE_LEVEL] >= 4
+          && ch->mana >= 1000 && ch->move >= 500 && roll <= 60 )
         {
-            bot_cmd( ch, "faeriecurse target" ); /* MUD uses get_char_room with argument */
-            /* wait do_faeriecurse needs the target's name explicitly */
-            /* We'll use target->name but safely formatting */
-            char buf[128];
-            snprintf(buf, sizeof(buf), "faeriecurse %s", target->name ? target->name : "none");
+            snprintf( buf, sizeof(buf), "faeriecurse %s",
+                      target->name ? target->name : "none" );
             bot_cmd( ch, buf );
             return;
         }
