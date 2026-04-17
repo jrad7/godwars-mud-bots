@@ -225,7 +225,7 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
         if ( bot->cmd_history_count < 10 )
             bot->cmd_history_count++;
 
-        if ( bot->cmd_history_count >= 10 && !bot->spell_training )
+        if ( bot->cmd_history_count >= 10 && !bot->spell_training && bot->nav_n == 0 )
         {
             bool stuck = TRUE;
             int i;
