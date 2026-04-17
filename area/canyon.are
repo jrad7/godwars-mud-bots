@@ -2040,29 +2040,9 @@ S
 
 
 #SPECIALS
-M 9202 spec_cast_cleric
-M 9204 spec_breath_any
-M 9207 spec_breath_any
-M 9208 spec_cast_cleric
-M 9209 spec_breath_fire
-M 9210 spec_breath_gas
-M 9211 spec_breath_lightning
-M 9212 spec_breath_acid
-M 9219 spec_breath_acid
-M 9223 spec_breath_lightning
 M 9224 spec_thief
 M 9225 spec_thief
-M 9226 spec_breath_fire
-M 9227 spec_breath_lightning
-M 9228 spec_breath_frost
-M 9230 spec_breath_gas
-M 9231 spec_cast_mage
-M 9232 spec_cast_cleric
-M 9233 spec_cast_mage
 M 9234 spec_thief
-M 9235 spec_breath_any
-M 9237 spec_breath_any
-M 9238 spec_cast_mage
 S
 
 
