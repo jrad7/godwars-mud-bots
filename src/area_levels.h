@@ -10,16 +10,16 @@ struct area_level_type
 static const struct area_level_type area_level_table[] =
 {
     { "hell.are",   125 },
-    { "heaven.are",  10 },
-    { "weed.are",    75 },
+    { "heaven.are", 125 },
+    { "weed.are",   125 },
     { "plains.are",  75 },
-    { "canyon.are",  45 },
+    { "canyon.are",  75 },
     { "moria.are",   45 },
     { "thalos.are",  45 },
     { "sewer.are",   25 },
-    { "smurf.are",   25 },
     { "shire.are",   25 },
     { "school.are",  10 },
+    { "smurf.are",   10 },
     { NULL, 0 }
 };
 
@@ -39,16 +39,16 @@ struct grind_zone_type
 static const struct grind_zone_type grind_zone_table[] =
 {
     { 3700,  3760,  100, "School"  },
-    { 7000,  7445,  125, "Sewer"   },
-    {  100,   129,  125, "Smurf"   },
-    { 3900,  4172,  150, "Moria"   },
-    { 9201,  9260,  150, "Canyon"  },
-    {  300,   350,  200, "Plains"  },
-    {30232, 30261,  200, "Weed"    },
-    { 5200,  5280,  300, "Thalos"  },
-    { 1100,  1157,  300, "Shire"   },
+    {  100,   129,  100, "Smurf"   },
+    { 7000,  7445,  150, "Sewer"   },
+    { 1100,  1157,  150, "Shire"   },
+    { 3900,  4172,  200, "Moria"   },
+    { 5200,  5280,  200, "Thalos"  },
+    { 9201,  9260,  300, "Canyon"  },
+    {  300,   350,  300, "Plains"  },
     {30100, 30200,  500, "Hell"    },
-    {99000, 99100,  100, "Heaven"  },
+    {99000, 99100,  500, "Heaven"  },
+    {30232, 30261,  500, "Weed"    },
     {    0,     0,    0, NULL      }   /* end */
 };
 
