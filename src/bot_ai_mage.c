@@ -189,6 +189,15 @@ static bool bot_mage_do_train( CHAR_DATA *ch )
     /* ---- Post-class: invoke ladder ---- */
     if ( !IS_CLASS(ch, CLASS_MAGE) ) return FALSE;
 
+    /* Mages are incredibly mana-hungry (1000 per attack). Prioritize 
+     * training mana up to 15,000 so they can smoothly sustain combat 
+     * before falling through to generic Superstance/HP training. */
+    if ( ch->max_mana < 15000 && ch->exp >= ch->max_mana + 1 )
+    {
+        bot_cmd( ch, "train mana all" );
+        return TRUE;
+    }
+
     if ( ch->pcdata->powers[PINVOKE] < 10 )
     {
         int cost = (ch->pcdata->powers[PINVOKE] + 1) * 20;
@@ -285,16 +294,12 @@ static bool bot_mage_buff_check( CHAR_DATA *ch )
  *
  * Priority:
  *   0. chant heal  - when HP < 40% and mana >= 1500
- *   1. discharge   - aggressively whenever mageshield is up (PINVOKE >= 4)
- *                    buff_check re-applies mageshield on the next tick
- *   2. chaos magic - 15% random chance when mana >= 1500
- *   3. chant damage - default when mana >= 1000
+ *   1. chant damage - default when mana >= 1000
  * ----------------------------------------------------------------------- */
 
 static void bot_mage_combat_action( CHAR_DATA *ch )
 {
     CHAR_DATA *target = ch->fighting;
-    char       cmd[MAX_INPUT_LENGTH];
 
     if ( target == NULL || ch->pcdata == NULL ) return;
     if ( !IS_CLASS(ch, CLASS_MAGE) ) return;
@@ -303,23 +308,6 @@ static void bot_mage_combat_action( CHAR_DATA *ch )
     if ( ch->hit < ch->max_hit * 2 / 5 && ch->mana >= 1500 )
     {
         bot_cmd( ch, "chant heal" );
-        return;
-    }
-
-    /* Priority 1: discharge aggressively - removes mageshield for AoE blast;
-     * buff_check will re-apply mageshield next tick */
-    if ( IS_ITEMAFF(ch, ITEMA_MAGESHIELD)
-      && ch->pcdata->powers[PINVOKE] >= 4 )
-    {
-        bot_cmd( ch, "discharge" );
-        return;
-    }
-
-    /* Priority 2: chaos magic (random 15%) */
-    if ( ch->mana >= 1500 && number_range(1, 100) <= 15 )
-    {
-        sprintf( cmd, "chaos %s", target->name );
-        bot_cmd( ch, cmd );
         return;
     }
 
