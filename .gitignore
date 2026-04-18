@@ -20,3 +20,5 @@ notes/Immortal
 src/crash.txt
 txt/
 notes/Immortal.old
+player/backup/.keep
+player/store/.keep
