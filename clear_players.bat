@@ -4,7 +4,7 @@ setlocal
 set "PLAYER_DIR=%~dp0player"
 
 for %%F in ("%PLAYER_DIR%\*") do (
-    if /i not "%%~nxF"=="Kast" if /i not "%%~nxF"=="Claude" if /i not "%%~nxF"=="Vict" if /i not "%%~nxF"=="Gemma"(
+    if /i not "%%~nxF"=="Kast" if /i not "%%~nxF"=="Claude" if /i not "%%~nxF"=="Vict" if /i not "%%~nxF"=="Gemma" (
         echo %%~nxF | findstr /r "^\." >nul 2>&1
         if errorlevel 1 del "%%F"
     )
@@ -19,5 +19,5 @@ if exist "%~dp0txt\bots.txt" (
     echo Deleted txt\bots.txt.
 )
 
-echo Done. Kept Kast and Claude.
+echo Done. Kept Kast, Claude, Vict, and Gemma.
 endlocal
