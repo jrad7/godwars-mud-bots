@@ -183,8 +183,11 @@ static bool bot_generic_buff_check( CHAR_DATA *ch );
  * ----------------------------------------------------------------------- */
 static bool bot_do_recall( CHAR_DATA *ch )
 {
-    if ( IS_AFFECTED(ch, AFF_CURSE) && bot_generic_buff_check(ch) )
-        return FALSE;   /* curing curse this tick; recall deferred */
+    if ( IS_AFFECTED(ch, AFF_CURSE) )
+    {
+        bot_cmd( ch, "cast 'remove curse' self" );
+        return FALSE;   /* curing curse this tick; recall next tick */
+    }
 
     bot_cmd( ch, "recall" );
 
