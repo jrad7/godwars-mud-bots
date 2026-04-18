@@ -194,12 +194,6 @@ void do_gensteal(CHAR_DATA *ch, char *argument)
         ch->in_room ? ch->in_room->vnum : 0 );
       fclose( pfp );
     }
-    if ( (pfp = fopen( CLASS_STATS_FILE, "a" )) != NULL )
-    {
-      fprintf( pfp, "[%s] GENSTEAL WIN  %s\n", tbuf, kclass );
-      fprintf( pfp, "[%s] GENSTEAL LOSS %s\n", tbuf, vclass );
-      fclose( pfp );
-    }
     fpReserve = fopen( NULL_FILE, "r" );
   }
   return;

@@ -5186,12 +5186,6 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
         victim->in_room->vnum );
       fclose( pfp );
     }
-    if ( (pfp = fopen( CLASS_STATS_FILE, "a" )) != NULL )
-    {
-      fprintf( pfp, "[%s] DECAP WIN  %s\n", tbuf, kclass );
-      fprintf( pfp, "[%s] DECAP LOSS %s\n", tbuf, vclass );
-      fclose( pfp );
-    }
     fpReserve = fopen( NULL_FILE, "r" );
   }
   players_decap++;
