@@ -2292,7 +2292,9 @@ void hurt_person( CHAR_DATA *ch, CHAR_DATA *victim, int dam )
               for ( forge_obj = corpse->contains; forge_obj != NULL; forge_obj = forge_next )
               {
                 forge_next = forge_obj->next_content;
-                if ( forge_obj->item_type == ITEM_STEEL
+                if ( forge_obj->item_type == ITEM_COPPER
+                  || forge_obj->item_type == ITEM_IRON
+                  || forge_obj->item_type == ITEM_STEEL
                   || forge_obj->item_type == ITEM_ADAMANTITE
                   || forge_obj->item_type == ITEM_GEMSTONE
                   || forge_obj->item_type == ITEM_HILT )
