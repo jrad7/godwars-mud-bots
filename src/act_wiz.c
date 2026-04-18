@@ -6944,7 +6944,7 @@ void do_copyover (CHAR_DATA *ch, char * argument)
        save_char_obj(gch);
        gch->pcdata->botdata->roster->online = FALSE;
        if (recover_bots)
-         gch->pcdata->botdata->roster->offline_until = 0; /* Signal: re-login on copyover */
+         gch->pcdata->botdata->roster->offline_until = -1; /* Signal: re-login on copyover */
      }
      save_bot_roster();
    }

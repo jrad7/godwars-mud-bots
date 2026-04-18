@@ -343,7 +343,8 @@ void copyover_recover_bots( void )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[i];
         if ( r->retired )      continue;
-        if ( r->offline_until != 0 ) continue; /* only bots marked for instant re-login */
+        if ( r->offline_until != -1 ) continue; /* only bots marked for instant re-login */
+        r->offline_until = 0;
 
         if ( bot_login(r) )
             count++;
