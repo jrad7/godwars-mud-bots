@@ -1132,22 +1132,22 @@ static bool bot_should_train( CHAR_DATA *ch )
              * If below the HP threshold, fall through to HP training below. */
             else if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
             {
-                if ( ch->max_hit >= 30000 ) return TRUE;  /* pool (bot_do_train gates at 120M) */
+                if ( ch->max_hit >= 30000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 120000000 ) return TRUE; else return FALSE; }
                 /* else fall through to HP training */
             }
             else if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
             {
-                if ( ch->max_hit >= 40000 ) return TRUE;  /* pool until 140M */
+                if ( ch->max_hit >= 40000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 140000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
             {
-                if ( ch->max_hit >= 50000 ) return TRUE;  /* pool until 200M */
+                if ( ch->max_hit >= 50000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 200000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
             {
-                if ( ch->max_hit >= 60000 ) return TRUE;  /* pool until 380M */
+                if ( ch->max_hit >= 60000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 380000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else
@@ -1161,9 +1161,9 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation. */
     if ( bot_is_pre_upgrade(ch) )
     {
-        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->exp >= ch->max_hit  + 1 ) return TRUE;
-        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->exp >= ch->max_mana + 1 ) return TRUE;
-        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->exp >= ch->max_move + 1 ) return TRUE;
+        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 ) return TRUE;
+        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 ) return TRUE;
         /* After targets met: pool for the next generation training step (gen 5->4->3->2).
          * Gen 1 comes from PvP gensteal only. */
         if ( ch->generation >= 3 )
@@ -1377,7 +1377,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 20000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 30000 || ch->max_hit >= hp_cap ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS3 - pool once max_hit >= 40k, buy at 140M */
@@ -1393,7 +1393,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 22000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 40000 || ch->max_hit >= hp_cap ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS4 - pool once max_hit >= 50k, buy at 200M */
@@ -1409,7 +1409,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 25000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 50000 || ch->max_hit >= hp_cap ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             /* SS5 - pool once max_hit >= 70k, buy at 380M */
@@ -1428,7 +1428,7 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot_cmd( ch, "setstance done" );
                     return TRUE;
                 }
-                if ( ch->max_hit >= 30000 ) return FALSE; /* pool */
+                if ( ch->max_hit >= 60000 || ch->max_hit >= hp_cap ) return FALSE; /* pool */
                 /* else fall through to HP training */
             }
             else
@@ -1490,11 +1490,11 @@ static bool bot_do_train( CHAR_DATA *ch )
      * Generation 5->4->3->2 via "train generation"; gen 1 only through PvP gensteal. */
     if ( bot_is_pre_upgrade(ch) )
     {
-        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->exp >= ch->max_hit  + 1 )
+        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->max_hit < hp_cap && ch->exp >= ch->max_hit  + 1 )
             { bot_cmd( ch, "train hp all" );   return TRUE; }
-        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->exp >= ch->max_mana + 1 )
+        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 )
             { bot_cmd( ch, "train mana all" ); return TRUE; }
-        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->exp >= ch->max_move + 1 )
+        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 )
             { bot_cmd( ch, "train move all" ); return TRUE; }
         /* Targets met: train generation down toward 2, then PvP for gen 1 */
         if ( ch->generation >= 3 )
