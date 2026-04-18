@@ -199,7 +199,7 @@ void do_classself(CHAR_DATA *ch, char *argument)
     send_to_char("You already have a class.\n\r",ch);
     return;
   }
-#if !SELFCLASS_ALLOW_UPGRADES
+#if !SELFCLASS_ALLOW_UPGRADES && !BOT_TEST_ADVANCED_CLASSES
   if (ch->level < 3)
   {
     send_to_char("You must be avatar to selfclass.\n\r",ch);
@@ -212,7 +212,7 @@ if ( arg1[0] == '\0' )
   send_to_char("#R[#0Demon#R]#n             #y((#LWerewolf#y))#n         #P.o0#0Drow#P0o.#n\n\r",ch);
   send_to_char("#C***#yNinja#C***#n         #0<<#RVampire#0>>#n          #0.x[#lMonk#0]x.\n\r",ch);
   send_to_char("#n{{#CBattlemage#n}}\n\r", ch);
-#if SELFCLASS_ALLOW_UPGRADES
+#if SELFCLASS_ALLOW_UPGRADES || BOT_TEST_ADVANCED_CLASSES
   send_to_char("\n\r#y[TESTING] Upgrade classes:#n\n\r", ch);
   send_to_char("  tanarri  droid  samurai  undead_knight  angel  shapeshifter  lich\n\r", ch);
 #endif
@@ -275,7 +275,7 @@ else if (!str_cmp(arg1,"mage") || !str_cmp(arg1,"battlemage"))
     return;
   }
 }
-#if SELFCLASS_ALLOW_UPGRADES
+#if SELFCLASS_ALLOW_UPGRADES || BOT_TEST_ADVANCED_CLASSES
 else if (!str_cmp(arg1,"tanarri"))
 {
   ch->class = CLASS_TANARRI;

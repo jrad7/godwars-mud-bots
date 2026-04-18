@@ -169,6 +169,30 @@ static void bot_generate_unique_name(int bot_class, char *buf, size_t buf_size)
 }
 
 /* -----------------------------------------------------------------------
+ * Class mapping helper
+ * ----------------------------------------------------------------------- */
+
+/* Map any class preference to its basic class counterpart.
+ * Used when retiring a bot to ensure its replacement slot starts fresh. */
+int bot_base_class_pref( int class_pref )
+{
+    if ( BOT_TEST_ADVANCED_CLASSES )
+        return class_pref;
+
+    switch ( class_pref )
+    {
+    case BOT_CLASS_UNDEAD_KNIGHT: return BOT_CLASS_VAMPIRE;
+    case BOT_CLASS_ANGEL:         return BOT_CLASS_MONK;
+    case BOT_CLASS_SAMURAI:       return BOT_CLASS_NINJA;
+    case BOT_CLASS_TANARRI:       return BOT_CLASS_DEMON;
+    case BOT_CLASS_DROID:         return BOT_CLASS_DROW;
+    case BOT_CLASS_SHAPESHIFTER:  return BOT_CLASS_WEREWOLF;
+    case BOT_CLASS_LICH:          return BOT_CLASS_MAGE;
+    default:                      return class_pref;
+    }
+}
+
+/* -----------------------------------------------------------------------
  * Roster persistence
  * ----------------------------------------------------------------------- */
 
@@ -221,11 +245,11 @@ void load_bot_roster( void )
     bot_roster_count = 0;
 
     /* 56 Permanent */
-    for ( i = 0; i < 56; i++ )
+    for ( i = 0; i < BOT_COUNT_PERM; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
-        r->class_pref   = i % BOT_CLASS_COUNT;
+        r->class_pref   = i % (BOT_TEST_ADVANCED_CLASSES ? BOT_CLASS_COUNT : 7);
         bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
         r->lifespan     = BOT_LIFE_PERMANENT;
         r->chattiness   = number_range(30, 90);
@@ -237,11 +261,11 @@ void load_bot_roster( void )
     }
 
     /* 28 Long-lived */
-    for ( i = 0; i < 28; i++ )
+    for ( i = 0; i < BOT_COUNT_LONG; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
-        r->class_pref   = i % BOT_CLASS_COUNT;
+        r->class_pref   = i % (BOT_TEST_ADVANCED_CLASSES ? BOT_CLASS_COUNT : 7);
         bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
         r->lifespan     = BOT_LIFE_LONG;
         r->chattiness   = number_range(30, 90);
@@ -253,11 +277,11 @@ void load_bot_roster( void )
     }
 
     /* 28 Short-lived */
-    for ( i = 0; i < 28; i++ )
+    for ( i = 0; i < BOT_COUNT_SHORT; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
         memset( r, 0, sizeof(*r) );
-        r->class_pref   = i % BOT_CLASS_COUNT;
+        r->class_pref   = i % (BOT_TEST_ADVANCED_CLASSES ? BOT_CLASS_COUNT : 7);
         bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
         r->lifespan     = BOT_LIFE_SHORT;
         r->chattiness   = number_range(30, 90);
@@ -708,6 +732,7 @@ void bot_logout( CHAR_DATA *ch )
             rename(old_file, new_file);
 
             /* Replace the bot directly within its roster slot to maintain constraints */
+            bot->roster->class_pref = bot_base_class_pref(bot->roster->class_pref);
             bot_generate_unique_name(bot->roster->class_pref, bot->roster->name, sizeof(bot->roster->name));
             bot->roster->total_playtime = 0;
             bot->roster->retired = FALSE;

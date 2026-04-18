@@ -21,7 +21,11 @@ struct descriptor_data;
  * prerequisites.  Also waives the avatar-level requirement so completely
  * fresh characters can pick one for testing.  Set to 0 to restore normal
  * upgrade-only restrictions. */
-#define SELFCLASS_ALLOW_UPGRADES  1
+#define SELFCLASS_ALLOW_UPGRADES  0
+
+/* Set to 1 to allow bots to spawn and selfclass as advanced classes when
+ * needed for testing.  If 0, bots strictly start as basic classes. */
+#define BOT_TEST_ADVANCED_CLASSES 0
 
 /* Set to 1 to disable hardcoded NPC social aggro (mob assists mob of same vnum
  * and 12.5% random NPC-assists-NPC in fight.c).  Useful while bots are active
@@ -68,6 +72,9 @@ typedef struct {
 } BOT_GRUDGE_ENTRY;
 
 /* Population settings */
+#define BOT_COUNT_PERM      14
+#define BOT_COUNT_LONG      28
+#define BOT_COUNT_SHORT     28
 #define MAX_BOT_ROSTER      128
 #define BOT_MIN_ONLINE      15
 #define BOT_MAX_ONLINE      45
@@ -340,6 +347,7 @@ void    bot_logout          ( struct char_data *ch );
 void    load_bot_roster     ( void );
 void    save_bot_roster     ( void );
 void    copyover_recover_bots ( void );
+int     bot_base_class_pref ( int class_pref );
 
 void    bot_ai_update       ( struct char_data *ch, BOT_DATA *bot );
 void    bot_change_state    ( struct char_data *ch, BOT_DATA *bot, bot_state_t new_state );
