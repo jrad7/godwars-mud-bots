@@ -191,13 +191,14 @@ void char_update( void )
     ch_next = ch->next;
     count++;
 
-    /* Remove ownerless lich golems from the world. */
+    /* Remove ownerless charmed summons from the world. */
     if ( IS_NPC(ch) && ch->master == NULL && ch->in_room != NULL
-    && IS_AFFECTED(ch, AFF_CHARM)
     && ( ch->pIndexData->vnum == MOB_VNUM_FIRE
       || ch->pIndexData->vnum == MOB_VNUM_STONE
       || ch->pIndexData->vnum == MOB_VNUM_IRON
-      || ch->pIndexData->vnum == MOB_VNUM_CLAY ) )
+      || ch->pIndexData->vnum == MOB_VNUM_CLAY
+      || ch->pIndexData->vnum == MOB_VNUM_GUARDIAN
+      || ch->pIndexData->vnum == MOB_VNUM_SERVANT ) )
     {
       act( "$n crumbles into dust.", ch, NULL, NULL, TO_ROOM );
       extract_char( ch, TRUE );
