@@ -135,7 +135,7 @@ QuestMakers : None
 #n
          This mud is based of the stock Dystopia 1.2 code, a godwars deriviative
 
-                      \=/,
+      ï¿½               \=/,
                       |  @___oo
             /\  /\   / (___,,,}
           ) /^\) ^\/ _)
@@ -2461,14 +2461,22 @@ MAXED   : At maximum.  Eg: "I'm maxed" (hitpoints, mana and move at max),
 
 0 WHO~
 Syntax: who
-Syntax: who <avatar/god>
+Syntax: who <playername>
+Syntax: who <class>
+Syntax: who kill/pvp
+Syntax: who gen/generation
+Syntax: who kingdom
 
-WHO shows the people currently in the game.  Some people may choose to
-remain unseen and won't appear on the WHO
- 
+WHO shows the people currently in the game. Some people may choose to
+remain unseen and won't appear on the WHO.
+
 WHO without any arguments shows all of the (visible) people currently playing.
 
-With arguments, WHO can show avatars (level 3's) or gods (level 4's and 5's).
+  <playername>  - Show only that player (supports partial name matching).
+  <class>       - Show only players of the specified class (e.g. vampire, mage).
+  kill / pvp    - Show only players who are valid PvP targets.
+  gen           - Show players who are valid gensteal targets.
+  kingdom       - Show only players in your kingdom.
 ~
 
 0 WHERE~

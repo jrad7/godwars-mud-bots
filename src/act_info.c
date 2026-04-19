@@ -2280,7 +2280,12 @@ void do_who(CHAR_DATA *ch, char *argument)
   int nPlayerVis = 0;
   int nImmVis = 0;
   int mightRate;
+  int filterClass = 0;
   bool rangeOnly = FALSE;
+  bool filterPlayer = FALSE;
+  bool filterGen = FALSE;
+  bool filterKingdom = FALSE;
+  char filterName[MAX_INPUT_LENGTH];
   bool canDecap;
   bool canKillYou;
   bool avatars = FALSE;
@@ -2306,7 +2311,90 @@ void do_who(CHAR_DATA *ch, char *argument)
 
   one_argument(argument, arg);
 
-  if (!str_cmp(arg, "kill")) rangeOnly = TRUE;
+  if (!str_cmp(arg, "kill") || !str_cmp(arg, "pvp"))
+    rangeOnly = TRUE;
+  else if (!str_cmp(arg, "gen") || !str_cmp(arg, "generation"))
+  {
+    if (ch->generation <= 1)
+    {
+      send_to_char("You are already the highest generation.\n\r", ch);
+      return;
+    }
+    if (ch->class == 0)
+    {
+      send_to_char("You don't have a class.\n\r", ch);
+      return;
+    }
+    filterGen = TRUE;
+  }
+  else if (!str_cmp(arg, "kingdom"))
+  {
+    if (ch->pcdata->kingdom < 1 || ch->pcdata->kingdom > MAX_KINGDOM)
+    {
+      send_to_char("You are not in a kingdom.\n\r", ch);
+      return;
+    }
+    filterKingdom = TRUE;
+  }
+  else if (arg[0] != '\0')
+  {
+    DESCRIPTOR_DATA *dt;
+    bool found = FALSE;
+
+    /* Check for exact player name match */
+    for (dt = descriptor_list; dt != NULL; dt = dt->next)
+    {
+      if (dt->connected != CON_PLAYING || dt->character == NULL) continue;
+      if (!str_cmp(arg, dt->character->pcdata->switchname))
+      {
+        filterPlayer = TRUE;
+        strcpy(filterName, dt->character->pcdata->switchname);
+        found = TRUE;
+        break;
+      }
+    }
+
+    /* Check for class name prefix match */
+    if (!found)
+    {
+      if (!str_prefix(arg, "demon"))             { filterClass = CLASS_DEMON; found = TRUE; }
+      else if (!str_prefix(arg, "mage"))         { filterClass = CLASS_MAGE; found = TRUE; }
+      else if (!str_prefix(arg, "werewolf"))     { filterClass = CLASS_WEREWOLF; found = TRUE; }
+      else if (!str_prefix(arg, "vampire"))      { filterClass = CLASS_VAMPIRE; found = TRUE; }
+      else if (!str_prefix(arg, "samurai"))       { filterClass = CLASS_SAMURAI; found = TRUE; }
+      else if (!str_prefix(arg, "drow"))         { filterClass = CLASS_DROW; found = TRUE; }
+      else if (!str_prefix(arg, "monk"))         { filterClass = CLASS_MONK; found = TRUE; }
+      else if (!str_prefix(arg, "ninja"))        { filterClass = CLASS_NINJA; found = TRUE; }
+      else if (!str_prefix(arg, "lich"))         { filterClass = CLASS_LICH; found = TRUE; }
+      else if (!str_prefix(arg, "shapeshifter")) { filterClass = CLASS_SHAPESHIFTER; found = TRUE; }
+      else if (!str_prefix(arg, "tanarri"))      { filterClass = CLASS_TANARRI; found = TRUE; }
+      else if (!str_prefix(arg, "angel"))        { filterClass = CLASS_ANGEL; found = TRUE; }
+      else if (!str_prefix(arg, "undead"))       { filterClass = CLASS_UNDEAD_KNIGHT; found = TRUE; }
+      else if (!str_prefix(arg, "droid"))        { filterClass = CLASS_DROID; found = TRUE; }
+    }
+
+    /* Check for prefix player name match */
+    if (!found)
+    {
+      for (dt = descriptor_list; dt != NULL; dt = dt->next)
+      {
+        if (dt->connected != CON_PLAYING || dt->character == NULL) continue;
+        if (!str_prefix(arg, dt->character->pcdata->switchname))
+        {
+          filterPlayer = TRUE;
+          strcpy(filterName, dt->character->pcdata->switchname);
+          found = TRUE;
+          break;
+        }
+      }
+    }
+
+    if (!found)
+    {
+      send_to_char("No matching filter, class, or player found.\n\r", ch);
+      return;
+    }
+  }
 
   buf1[0] = '\0';
   buf2[0] = '\0';
@@ -2355,6 +2443,10 @@ void do_who(CHAR_DATA *ch, char *argument)
     else canKillYou = fair_fight(gch, ch);
 
     if (rangeOnly && !canDecap) continue;
+    if (filterPlayer && str_cmp(gch->pcdata->switchname, filterName)) continue;
+    if (filterClass && !IS_SET(gch->class, filterClass)) continue;
+    if (filterGen && (gch == ch || gch->class != ch->class || gch->generation > 7 || gch->generation > ch->generation)) continue;
+    if (filterKingdom && gch->pcdata->kingdom != ch->pcdata->kingdom) continue;
 
     /*
      * Let's calculate the pkratio and the color of the symbols for players to be guided by.
