@@ -1805,12 +1805,12 @@ void update_monk(CHAR_DATA *ch)
   } 
   if (!IS_ITEMAFF(ch, ITEMA_MONKCHI))
   {
-    if (ch->position != POS_FIGHTING 	&& ch->chi[CURRENT] > 0	&& number_range( 1,4 ) == 2)
-    {
-      ch->chi[CURRENT]--;
-      stc("You feel more relaxed.\n\r",ch);
-      act("$n looks more relaxed.",ch,NULL,NULL,TO_ROOM);
-    }
+    //if (ch->position != POS_FIGHTING 	&& ch->chi[CURRENT] > 0	&& number_range( 1,4 ) == 2)
+    //{
+    //  ch->chi[CURRENT]--;
+    //  stc("You feel more relaxed.\n\r",ch);
+    //  act("$n looks more relaxed.",ch,NULL,NULL,TO_ROOM);
+    //}
   }
   if ( ch->hit < ch->max_hit || ch->mana < ch->max_mana || ch->move < ch->max_move )
     werewolf_regen(ch, 2);
