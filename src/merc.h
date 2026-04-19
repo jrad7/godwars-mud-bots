@@ -4418,6 +4418,7 @@ char *	crypt		args( ( const char *key, const char *salt ) );
 
 #if defined(unix)
 #define PLAYER_DIR	"../player/"	/* Player files			*/
+#define BOT_DIR		"../bot/"	/* Bot player files		*/
 #define BACKUP_DIR      "../player/backup/" /*reimb shit*/
 
 #define NULL_FILE	"/dev/null"	/* To reserve one stream	*/

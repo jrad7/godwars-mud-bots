@@ -2301,6 +2301,14 @@ void nanny( DESCRIPTOR_DATA *d, char *argument )
 	}
 	else
 	{
+	    /* Block humans from taking a bot roster name */
+	    if ( is_bot_name( argument ) )
+	    {
+		write_to_buffer( d, " That name is reserved.\n\r Enter thy name brave traveler: ", 0 );
+		free_char( d->character );
+		d->character = NULL;
+		return;
+	    }
 	    /* New player */
 	    sprintf( buf, " You want %s engraved on your tombstone (Y/N)? ", argument );
 	    write_to_buffer( d, buf, 0 );

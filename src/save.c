@@ -74,7 +74,9 @@ void save_char_obj( CHAR_DATA *ch )
 
     ch->save_time = current_time;
     fclose( fpReserve );
-    sprintf( strsave, "%s%s", PLAYER_DIR, capitalize( ch->pcdata->switchname ) );
+    sprintf( strsave, "%s%s",
+	ch->pcdata->is_bot ? BOT_DIR : PLAYER_DIR,
+	capitalize( ch->pcdata->switchname ) );
     if ( ( fp = fopen( strsave, "w" ) ) == NULL )
     {
 	bug( "Save_char_obj: fopen", 0 );
@@ -83,7 +85,7 @@ void save_char_obj( CHAR_DATA *ch )
     else
     {
 		fwrite_char( ch, fp );
-		
+
 	if ( ch->carrying != NULL )
 	    fwrite_obj( ch, ch->carrying, fp, 0 );
 	fprintf( fp, "#END\n" );
@@ -110,7 +112,9 @@ void save_char_obj_backup( CHAR_DATA *ch )
 
     ch->save_time = current_time;
     fclose( fpReserve );
-    sprintf( strsave, "%sstore/%s", PLAYER_DIR, capitalize(ch->pcdata->switchname) );
+    sprintf( strsave, "%sstore/%s",
+	ch->pcdata->is_bot ? BOT_DIR : PLAYER_DIR,
+	capitalize(ch->pcdata->switchname) );
     if ( ( fp = fopen( strsave, "w" ) ) == NULL )
     {
 	bug( "Save_char_obj: fopen", 0 );
@@ -158,7 +162,9 @@ void save_char_obj_finger( CHAR_DATA *ch )
 
     ch->save_time = current_time;
     fclose( fpReserve );
-    sprintf( strsave, "%sbackup/%s", PLAYER_DIR, capitalize(ch->pcdata->switchname) );
+    sprintf( strsave, "%sbackup/%s",
+	ch->pcdata->is_bot ? BOT_DIR : PLAYER_DIR,
+	capitalize(ch->pcdata->switchname) );
     if ( ( fp = fopen( strsave, "w" ) ) == NULL )
     {
 	bug( "Save_char_obj: fopen", 0 );
@@ -870,7 +876,12 @@ bool load_char_short( DESCRIPTOR_DATA *d, char *name)
     found = FALSE;
     fclose( fpReserve );
     sprintf( strsave, "%s%s", PLAYER_DIR, capitalize( name ) );
-    if ( ( fp = fopen( strsave, "r" ) ) != NULL )
+    if ( ( fp = fopen( strsave, "r" ) ) == NULL )
+    {
+        sprintf( strsave, "%s%s", BOT_DIR, capitalize( name ) );
+        fp = fopen( strsave, "r" );
+    }
+    if ( fp != NULL )
     {
         int iNest;
 
@@ -882,7 +893,7 @@ bool load_char_short( DESCRIPTOR_DATA *d, char *name)
         {
             char letter;
             char *word;
-    
+
             letter = fread_letter( fp );
             if ( letter == '*' )
             {
@@ -1109,7 +1120,12 @@ bool load_char_obj( DESCRIPTOR_DATA *d, char *name)
     found = FALSE;
     fclose( fpReserve );
     sprintf( strsave, "%s%s", PLAYER_DIR, capitalize( name ) );
-    if ( ( fp = fopen( strsave, "r" ) ) != NULL )
+    if ( ( fp = fopen( strsave, "r" ) ) == NULL )
+    {
+	sprintf( strsave, "%s%s", BOT_DIR, capitalize( name ) );
+	fp = fopen( strsave, "r" );
+    }
+    if ( fp != NULL )
     {
 	int iNest;
 

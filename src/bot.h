@@ -240,6 +240,9 @@ typedef struct bot_data BOT_DATA;
 extern BOT_ROSTER_ENTRY bot_roster[MAX_BOT_ROSTER];
 extern int              bot_roster_count;
 
+/* Returns TRUE if the name matches any bot in the roster */
+bool    is_bot_name     args( ( const char *name ) );
+
 /* -----------------------------------------------------------------------
  * Grind zone navigation table
  *

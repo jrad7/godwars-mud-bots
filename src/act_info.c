@@ -5062,7 +5062,12 @@ void do_finger( CHAR_DATA *ch, char *argument )
   }
   fclose( fpReserve );
   sprintf( strsave, "%sbackup/%s", PLAYER_DIR, capitalize(argument) );
-  if ( ( fp = fopen( strsave, "r" ) ) != NULL )
+  if ( ( fp = fopen( strsave, "r" ) ) == NULL )
+  {
+    sprintf( strsave, "%sbackup/%s", BOT_DIR, capitalize(argument) );
+    fp = fopen( strsave, "r" );
+  }
+  if ( fp != NULL )
   {
     sprintf(buf2, "#0==<>==<>==<>==<>==<>==<>  #G%s  #0<>==<>==<>==<>==<>==<>==#n\n\r", MUDNAME);
     send_to_char(buf2,ch);
@@ -5187,7 +5192,12 @@ void 	do_finger( CHAR_DATA *ch, char *argument )
     }
     fclose( fpReserve );
     sprintf( strsave, "%sbackup/%s", PLAYER_DIR, capitalize(argument) );
-    if ( ( fp = fopen( strsave, "r" ) ) != NULL )
+    if ( ( fp = fopen( strsave, "r" ) ) == NULL )
+    {
+	sprintf( strsave, "%sbackup/%s", BOT_DIR, capitalize(argument) );
+	fp = fopen( strsave, "r" );
+    }
+    if ( fp != NULL )
     {
 	send_to_char("----------------------------------------------------------------------------\n\r",ch);
 	buf=fread_string( fp );

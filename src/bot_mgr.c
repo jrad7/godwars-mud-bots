@@ -328,6 +328,18 @@ void save_bot_roster( void )
     bot_roster_dirty = FALSE;
 }
 
+/* Returns TRUE if the given name matches any bot in the roster */
+bool is_bot_name( const char *name )
+{
+    int i;
+    for ( i = 0; i < bot_roster_count; i++ )
+    {
+        if ( !str_cmp( name, bot_roster[i].name ) )
+            return TRUE;
+    }
+    return FALSE;
+}
+
 /* -----------------------------------------------------------------------
  * Copyover bot recovery
  *
@@ -726,11 +738,13 @@ void bot_logout( CHAR_DATA *ch )
 
         if ( retiring )
         {
-            char old_file[256];
-            char new_file[256];
-            snprintf(old_file, sizeof(old_file), "%s%s", PLAYER_DIR, capitalize(ch->name));
-            snprintf(new_file, sizeof(new_file), "%sretired/%s", PLAYER_DIR, capitalize(ch->name));
-            rename(old_file, new_file);
+            char bot_file[256];
+            snprintf(bot_file, sizeof(bot_file), "%s%s", BOT_DIR, capitalize(ch->name));
+            unlink(bot_file);
+            snprintf(bot_file, sizeof(bot_file), "%sbackup/%s", BOT_DIR, capitalize(ch->name));
+            unlink(bot_file);
+            snprintf(bot_file, sizeof(bot_file), "%sstore/%s", BOT_DIR, capitalize(ch->name));
+            unlink(bot_file);
 
             /* Replace the bot directly within its roster slot to maintain constraints */
             bot->roster->class_pref = bot_base_class_pref(bot->roster->class_pref);
@@ -740,7 +754,7 @@ void bot_logout( CHAR_DATA *ch )
             bot->roster->chattiness = number_range(30, 90);
             bot->roster->aggression = number_range(30, 90);
             bot->roster->explorer = number_range(30, 90);
-            
+
             sprintf( log_buf, "Bot Mgr: A bot has retired. Roster slot replaced with new bot %s.", bot->roster->name );
             log_string( log_buf );
         }

@@ -4338,13 +4338,25 @@ bool char_exists( bool backup, char *argument )
 
     fclose( fpReserve );
     if (backup)
-    	sprintf( buf, "%sbackup/%s", PLAYER_DIR, capitalize( argument ) );
+	sprintf( buf, "%sbackup/%s", PLAYER_DIR, capitalize( argument ) );
     else
-    	sprintf( buf, "%s%s", PLAYER_DIR, capitalize( argument ) );
+	sprintf( buf, "%s%s", PLAYER_DIR, capitalize( argument ) );
     if ( ( fp = fopen( buf, "r" ) ) != NULL )
     {
 	found = TRUE;
 	fclose( fp );
+    }
+    else
+    {
+	if (backup)
+	    sprintf( buf, "%sbackup/%s", BOT_DIR, capitalize( argument ) );
+	else
+	    sprintf( buf, "%s%s", BOT_DIR, capitalize( argument ) );
+	if ( ( fp = fopen( buf, "r" ) ) != NULL )
+	{
+	    found = TRUE;
+	    fclose( fp );
+	}
     }
     fpReserve = fopen( NULL_FILE, "r" );
     return found;
