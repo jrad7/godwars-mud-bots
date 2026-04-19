@@ -4196,11 +4196,28 @@ void do_brief4( CHAR_DATA *ch, char *argument )
 
 void do_llmbrief( CHAR_DATA *ch, char *argument )
 {
+    char arg[MAX_INPUT_LENGTH];
+
     if ( IS_NPC(ch) ) return;
-    /* Always set, never toggle -- LLM mode is persistent once enabled.
-     * Sets all brief sub-flags so existing suppression checks work. */
-    SET_BIT(ch->act, PLR_LLM | PLR_BRIEF | PLR_BRIEF2 | PLR_BRIEF3 | PLR_BRIEF4);
-    send_to_char("LLM brief mode enabled.\n\r", ch);
+
+    one_argument(argument, arg);
+
+    if (arg[0] == '\0' || !str_cmp(arg, "on"))
+    {
+        /* Existing behavior: Sets all brief sub-flags so existing suppression checks work. */
+        SET_BIT(ch->act, PLR_LLM | PLR_BRIEF | PLR_BRIEF2 | PLR_BRIEF3 | PLR_BRIEF4);
+        send_to_char("LLM brief mode enabled.\n\r", ch);
+    }
+    else if (!str_cmp(arg, "off"))
+    {
+        /* Disable LLM mode and all brief sub-flags */
+        REMOVE_BIT(ch->act, PLR_LLM | PLR_BRIEF | PLR_BRIEF2 | PLR_BRIEF3 | PLR_BRIEF4);
+        send_to_char("LLM brief mode disabled.\n\r", ch);
+    }
+    else
+    {
+        send_to_char("Syntax: llmbrief [on|off]\n\r", ch);
+    }
     return;
 }
 
