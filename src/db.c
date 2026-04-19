@@ -1856,6 +1856,28 @@ void reset_room( ROOM_INDEX_DATA *pRoom )
             if (pMobIndex != NULL)
             {
                 CHAR_DATA *rand_mob = create_mobile( pMobIndex );
+
+                /* Override level to match the grinding zone, not the mob's
+                 * source area — mobs from overlapping VNUM ranges (e.g.
+                 * kavir.are mob 6640 spawning in daycare.are) would
+                 * otherwise keep their original level and stats. */
+                {
+                    int lvl = number_fuzzy( pRoom->area->mob_level );
+                    int hp;
+                    rand_mob->level   = lvl;
+                    rand_mob->hitroll = lvl;
+                    rand_mob->damroll = lvl;
+                    rand_mob->armor   = interpolate( lvl, 100, -100 );
+                    if (lvl <= 50)
+                        hp = lvl * lvl * 20 + number_range(lvl * lvl * 5, lvl * lvl * 10);
+                    else
+                        hp = (int)(lvl * sqrt((double)lvl)) * 140
+                           + number_range((int)(lvl * sqrt((double)lvl)) * 35,
+                                          (int)(lvl * sqrt((double)lvl)) * 70);
+                    rand_mob->max_hit = hp;
+                    rand_mob->hit     = hp;
+                }
+
                 if ( room_is_dark( pRoom ) )
                     SET_BIT(rand_mob->affected_by, AFF_INFRARED);
                 REMOVE_BIT(rand_mob->affected_by, AFF_SANCTUARY);
