@@ -1913,8 +1913,7 @@ void do_recall( CHAR_DATA *ch, char *argument )
     if ( ch->in_room == location )
 	return;
 
-    if ( IS_SET(ch->in_room->room_flags, ROOM_NO_RECALL)
-    ||   IS_AFFECTED(ch, AFF_CURSE) )
+    if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
 	send_to_char( "You are unable to recall.\n\r", ch );
 	return;
