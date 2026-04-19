@@ -2200,7 +2200,7 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
 
      /* Random Forge Objects */
 
-  if (number_percent() < FORGE_DROP_CHANCE)
+  if (number_percent() < FORGE_DROP_BASE + mob->level / FORGE_DROP_LEVEL_SCALE)
   {
 
 	OBJ_DATA *obj;
