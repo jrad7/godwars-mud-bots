@@ -1078,9 +1078,8 @@ static bool bot_should_train( CHAR_DATA *ch )
     /* Upgrade ready: enter training state to navigate to the altar */
     if ( bot_upgrade_ready(ch) ) return TRUE;
 
-    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher.
-     * Pre-upgrade bots skip this until stat targets are met (handled in terminal block). */
-    if ( !bot_is_pre_upgrade(ch) && ch->generation >= 6 && ch->exp >= 10000000 )
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher. */
+    if ( ch->generation >= 6 && ch->exp >= 10000000 )
         return TRUE;
 
     /* Primal for class gear takes priority over hp/mana/move spending */
@@ -1111,8 +1110,7 @@ static bool bot_should_train( CHAR_DATA *ch )
         }
     }
 
-    /* Check for Superstances pooling before training stats (skipped for pre-upgrade bots) */
-    if ( !bot_is_pre_upgrade(ch) )
+    /* Check for Superstances pooling before training stats */
     {
         bool basic_maxed = TRUE;
         int i;
@@ -1292,9 +1290,8 @@ static bool bot_do_train( CHAR_DATA *ch )
         }
     }
 
-    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher.
-     * Pre-upgrade bots skip this until stat targets are met — handled in terminal block. */
-    if ( !bot_is_pre_upgrade(ch) && ch->generation >= 6 && ch->exp >= 10000000 )
+    /* Cheap generation upgrade: costs only 10M exp at gen 6 or higher. */
+    if ( ch->generation >= 6 && ch->exp >= 10000000 )
     {
         bot_cmd( ch, "train generation" );
         return TRUE;
@@ -1333,8 +1330,7 @@ static bool bot_do_train( CHAR_DATA *ch )
         }
     }
 
-    /* Prioritize Superstances ahead of HP/Mana/Move (skipped for pre-upgrade bots) */
-    if ( !bot_is_pre_upgrade(ch) )
+    /* Prioritize Superstances ahead of HP/Mana/Move */
     {
         bool basic_maxed = TRUE;
         int i;
@@ -1475,15 +1471,15 @@ static bool bot_do_train( CHAR_DATA *ch )
         if ( pool > 0 ) return FALSE;
     }
 
-    /* Ninja: pool exp for belt ranks that cost > 10M (skipped for pre-upgrade bots) */
-    if ( !bot_is_pre_upgrade(ch) && IS_CLASS(ch, CLASS_NINJA) && ch->max_hit >= 5000 )
+    /* Ninja: pool exp for belt ranks that cost > 10M */
+    if ( IS_CLASS(ch, CLASS_NINJA) && ch->max_hit >= 5000 )
     {
         long pool = bot_ninja_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
     }
 
-    /* Vampire: pool exp for age milestones that cost > 10M (skipped for pre-upgrade bots) */
-    if ( !bot_is_pre_upgrade(ch) && IS_CLASS(ch, CLASS_VAMPIRE) && ch->max_hit >= 5000 )
+    /* Vampire: pool exp for age milestones that cost > 10M */
+    if ( IS_CLASS(ch, CLASS_VAMPIRE) && ch->max_hit >= 5000 )
     {
         long pool = bot_vamp_pool_exp( ch );
         if ( pool > 0 ) return FALSE;
