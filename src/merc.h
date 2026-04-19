@@ -1304,6 +1304,7 @@ extern char *scale[SCALE_COLS];
 #define ITEM_ADAMANTITE		 44
 #define ITEM_GEMSTONE        45
 #define ITEM_HILT            46
+#define FORGE_DROP_CHANCE     6  /* percent chance for forge item drop */
 #define ITEM_DTOKEN		     47
 #define ITEM_HEAD		     48
 #define ITEM_COOKINGPOT   	50
