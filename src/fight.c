@@ -5195,7 +5195,7 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
     fpReserve = fopen( NULL_FILE, "r" );
   }
   players_decap++;
-  ch->pcdata->bounty += number_range(30,80);
+  ch->pcdata->bounty += number_range(1000,2000);
   ch->pcdata->quest += 500;
   send_to_char( "You receive 500 quest points for the decapitation.\n\r", ch );
 
