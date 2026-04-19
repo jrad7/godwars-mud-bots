@@ -3372,7 +3372,7 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
     int xp_modifier = 100;
 
     if (!is_same_group( gch, ch )) continue;
-    xp = xp_compute( gch, victim ) * 2;
+    long long calc_xp = (long long)xp_compute( gch, victim ) * 2LL;
 
     sprintf(buf2,"#RExp modifiers  #G:");
     if ((IS_EVIL(gch) && IS_GOOD(victim)) || (IS_GOOD(gch) && IS_EVIL(victim)))
@@ -3420,7 +3420,10 @@ void group_gain( CHAR_DATA *ch, CHAR_DATA *victim )
       xp_modifier /= 75 * members;
     }
     strcat(buf2,"\n\r");
-    xp = xp * xp_modifier / 100;
+    calc_xp = calc_xp * xp_modifier / 100LL;
+    if (calc_xp > 1500000000LL) calc_xp = 1500000000LL;
+    else if (calc_xp < 0) calc_xp = 0;
+    xp = (int)calc_xp;
     if (!IS_SET(gch->act, PLR_BRIEF4) && !IS_SET(gch->act, PLR_LLM)) send_to_char(buf2,gch);
     sprintf(buf2,"#RTotal modifier #G:#n %d percent bonus\n\r",xp_modifier - 100);
     if (!IS_SET(gch->act, PLR_BRIEF4) && !IS_SET(gch->act, PLR_LLM)) send_to_char(buf2,gch);
@@ -3541,9 +3544,10 @@ int xp_compute( CHAR_DATA *gch, CHAR_DATA *victim )
   
   {
       int gmult = get_grind_mult(victim);
-      if (gmult > 0) xp = (xp * gmult) / 100;
+      if (gmult > 0) xp = (xp * gmult) / 100.0;
   }
   
+  if (xp > 1000000000.0) xp = 1000000000.0;
   return (int) xp;
 }
 

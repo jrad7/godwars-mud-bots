@@ -75,10 +75,20 @@ void gain_exp( CHAR_DATA *ch, int gain )
     if ( IS_NPC(ch) && (mount = ch->mount) != NULL && !IS_NPC(mount))
     {
 	if ( (master = ch->master) == NULL || master != mount )
-	    mount->exp += gain;
+	{
+	    long long m_exp = (long long)mount->exp + gain;
+	    if (m_exp > 2000000000) m_exp = 2000000000;
+	    else if (m_exp < 0) m_exp = 0;
+	    mount->exp = (int)m_exp;
+	}
     }
     if ( !IS_NPC(ch) )
-	ch->exp += gain;
+    {
+        long long c_exp = (long long)ch->exp + gain;
+        if (c_exp > 2000000000) c_exp = 2000000000;
+        else if (c_exp < 0) c_exp = 0;
+        ch->exp = (int)c_exp;
+    }
     return;
 }
 
