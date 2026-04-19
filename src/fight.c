@@ -1628,7 +1628,7 @@ void one_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt, int handtype)
   if (dt == gsn_circle && ch->pcdata->rank == BELT_EIGHT)    dam *= 2;
   if (dt == gsn_circle && ch->pcdata->rank == BELT_NINE)     dam *= 2.5;
   if (dt == gsn_circle && ch->pcdata->rank == BELT_TEN)      dam *= 3.0;
-  if (dt == gsn_heavenlyaura && IS_CLASS(ch, CLASS_MONK))    dam /= 3;
+  if (dt == gsn_heavenlyaura && IS_CLASS(ch, CLASS_MONK))    dam /= 1.5;
   if (dt == gsn_deathaura)                                   dam /= 1.7;
   if (dt == gsn_potato)                                      dam /= 2;
   if (dt == gsn_shred)                                       dam *= 2;
