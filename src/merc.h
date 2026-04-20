@@ -4674,6 +4674,7 @@ void    check_leaderboard  args( ( CHAR_DATA *ch ));
 void    update_top_board   args( ( CHAR_DATA *ch ));
 void    crashrecov      args( (int) );
 void    retell_mccp   args( ( DESCRIPTOR_DATA *d ));
+void    award_pkill_bounty args( ( CHAR_DATA *ch, CHAR_DATA *victim, const char *action ) );
 
 /* handler.c */
 

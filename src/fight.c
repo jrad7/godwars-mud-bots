@@ -5039,6 +5039,26 @@ void do_killperson( CHAR_DATA *ch, char *argument )
   return;
 }
 
+/* Shared bounty handling for PvP victories (decap, tie-up, etc.) */
+void award_pkill_bounty( CHAR_DATA *ch, CHAR_DATA *victim, const char *action )
+{
+  char buf[MAX_STRING_LENGTH];
+
+  if (IS_NPC(ch) || IS_NPC(victim)) return;
+
+  if (victim->pcdata->bounty > 0)
+  {
+    sprintf(buf,"You recive a %d QP bounty, for %s %s.\n\r", victim->pcdata->bounty, action, victim->name);
+    send_to_char(buf, ch);
+    ch->pcdata->quest += victim->pcdata->bounty;
+    victim->pcdata->bounty = 0;
+  }
+  ch->pcdata->bounty += number_range(1000,2000);
+  ch->pcdata->quest += 500;
+  sprintf(buf, "You receive 500 quest points for the %s.\n\r", action);
+  send_to_char(buf, ch);
+}
+
 /* For decapitating players - KaVir */
 void do_decapitate( CHAR_DATA *ch, char *argument )
 {
@@ -5125,13 +5145,7 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
       return;
   }
 
-  if (victim->pcdata->bounty > 0)
-  {
-    sprintf(buf,"You recive a %d QP bounty, for killing %s.\n\r", victim->pcdata->bounty, victim->name);
-    send_to_char(buf, ch);
-    ch->pcdata->quest += victim->pcdata->bounty;
-    victim->pcdata->bounty =0;
-  }
+  award_pkill_bounty(ch, victim, "decapitation");
 
   ch->exp += victim->exp / 2;
   victim->exp -= victim->exp / 2;
@@ -5195,9 +5209,7 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
     fpReserve = fopen( NULL_FILE, "r" );
   }
   players_decap++;
-  ch->pcdata->bounty += number_range(1000,2000);
-  ch->pcdata->quest += 500;
-  send_to_char( "You receive 500 quest points for the decapitation.\n\r", ch );
+
 
   /*
    * update kingdoms

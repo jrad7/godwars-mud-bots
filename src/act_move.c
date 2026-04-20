@@ -4293,6 +4293,10 @@ void do_tie( CHAR_DATA *ch, char *argument )
     SET_BIT(victim->extra,TIED_UP);
     sprintf(buf,"#P%s #yhas been tied up by #R%s#n",victim->name,ch->name);
     do_info(ch,buf);
+
+    /* Bounty handling - same as decap */
+    award_pkill_bounty(ch, victim, "tie up");
+
     return;
 }
 
