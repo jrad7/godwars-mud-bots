@@ -2876,7 +2876,7 @@ void bot_update( CHAR_DATA *ch )
     if ( IS_HEAD( ch, LOST_HEAD ) )
     {
         if ( !bot->decap_recovery )
-            bot_flame_got_headed( ch );
+            //bot_flame_got_headed( ch );
         bot->decap_recovery = TRUE;
         if ( bot->state != BOT_TRAINING )
             bot_change_state( ch, bot, BOT_TRAINING );
