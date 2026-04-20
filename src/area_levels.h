@@ -55,7 +55,7 @@ static const struct grind_zone_type grind_zone_table[] =
     { 9301,  9371,  200, "Galaxy"  },
     { 9201,  9260,  300, "Canyon"  },
     {  300,   350,  300, "Plains"  },
-    { 1000,  1040,  700, "Air"     },
+    { 1000,  1040,  300, "Air"     },
     {30232, 30261,  700, "Weed"    },
     { 5100,  5150,  700, "Drow"    },
     {50000, 50100,  700, "Disney"  },
