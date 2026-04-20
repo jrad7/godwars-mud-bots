@@ -1444,6 +1444,8 @@ found = TRUE;
 		else if (!str_cmp( cmd_table[cmd].name, "report" )) found = TRUE;
 		else if (!str_cmp( cmd_table[cmd].name, "goto" )) found = TRUE;
 		else if (!str_cmp( cmd_table[cmd].name, "flex" )) found = TRUE;
+		else if (!str_cmp( cmd_table[cmd].name, "blindfold" )) found = TRUE;
+		else if (!str_cmp( cmd_table[cmd].name, "gag" )) found = TRUE;
 		else if (!str_cmp( cmd_table[cmd].name, "change" )) found = TRUE;
 		else if (!str_cmp( cmd_table[cmd].name, "drink" )) found = TRUE;
 		else {

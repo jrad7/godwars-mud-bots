@@ -2586,6 +2586,42 @@ static void bot_ensure_geared( CHAR_DATA *ch )
 }
 
 /* -----------------------------------------------------------------------
+ * bot_check_tied_up - detect and recover from being tied up / gagged
+ *
+ * Called at the top of bot_update() before bot_check_vision().
+ * Returns TRUE if a recovery action was taken (caller should return).
+ *
+ * TIED_UP: the bot is restrained and interp.c blocks almost every command.
+ *   'flex' IS on the tied-up whitelist and do_flex removes TIED_UP (plus
+ *   any AFF_WEBBED).  We issue flex first; next tick the bot is free.
+ *
+ * GAGGED: set on tied-up victims; only blocks speech.  Once TIED_UP is
+ *   cleared, 'gag self' removes the gag.
+ *
+ * BLINDFOLDED is handled separately by bot_check_vision after untying.
+ * ----------------------------------------------------------------------- */
+static bool bot_check_tied_up( CHAR_DATA *ch, BOT_DATA *bot )
+{
+    /* Flex removes TIED_UP (and webs); 'flex' is on the tied-up whitelist */
+    if ( IS_EXTRA(ch, TIED_UP) )
+    {
+        bot_watch_msg( ch, "[TIED] tied up -- flexing to break free\n\r" );
+        bot_cmd( ch, "flex" );
+        return TRUE;
+    }
+
+    /* Remove gag once no longer tied (gag self requires not being tied) */
+    if ( IS_EXTRA(ch, GAGGED) )
+    {
+        bot_watch_msg( ch, "[TIED] gagged -- removing gag\n\r" );
+        bot_cmd( ch, "gag self" );
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* -----------------------------------------------------------------------
  * bot_check_vision - detect and recover from blindness or darkness
  *
  * Called at the top of bot_update() before the nav queue is drained.
@@ -2789,7 +2825,11 @@ void bot_update( CHAR_DATA *ch )
     if ( !bot->decap_recovery )
         bot_ensure_geared( ch );
 
-    /* Recover from blindness or total darkness before anything else */
+    /* Break free from tied-up / gagged state before anything else */
+    if ( bot_check_tied_up( ch, bot ) )
+        return;
+
+    /* Recover from blindness or total darkness */
     if ( bot_check_vision( ch, bot ) )
         return;
 
