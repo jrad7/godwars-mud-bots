@@ -183,6 +183,9 @@ static bool bot_generic_buff_check( CHAR_DATA *ch );
  * ----------------------------------------------------------------------- */
 static bool bot_do_recall( CHAR_DATA *ch )
 {
+    if ( IS_HEAD(ch, LOST_HEAD) )
+        return FALSE;
+
     if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
         bot_cmd( ch, "cast 'remove curse' self" );
@@ -2744,6 +2747,20 @@ void bot_update( CHAR_DATA *ch )
     bot = ch->pcdata->botdata;
     if ( bot == NULL ) return;
 
+    /* While in "head" state (LOST_HEAD set after a decap) the bot has no body
+     * and cannot act.  behead() already called "call all" so class gear is
+     * already in inventory; skip ALL AI until the head respawns with a body
+     * and LOST_HEAD is cleared.  This must be the very first check so that
+     * no other code path (watchbot, trap eject, PvP, state dispatch, etc.)
+     * can issue commands while the bot is a severed head. */
+    if ( IS_HEAD( ch, LOST_HEAD ) )
+    {
+        bot->decap_recovery = TRUE;
+        if ( bot->state != BOT_TRAINING )
+            bot_change_state( ch, bot, BOT_TRAINING );
+        return;
+    }
+
     /* Per-tick status prompt to any watchbot watcher (every 3 ticks) */
     if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
     {
@@ -2792,17 +2809,6 @@ void bot_update( CHAR_DATA *ch )
             bot_change_state( ch, bot, BOT_IDLE );
             return;
         }
-    }
-
-    /* While in "head" state (LOST_HEAD set after a decap) the bot has no body
-     * and cannot act.  behead() already called "call all" so class gear is
-     * already in inventory; skip all AI and gear management until the head
-     * respawns with a body and LOST_HEAD is cleared. */
-    if ( IS_HEAD( ch, LOST_HEAD ) )
-    {
-        bot->decap_recovery = TRUE;
-        bot_change_state( ch, bot, BOT_TRAINING );
-        return;
     }
 
     /* Skip all gear management during decap recovery — the bot has class gear
