@@ -580,8 +580,7 @@ void mobile_update( void )
         if (IS_CLASS( ch, CLASS_DEMON))
         {
           update_demon(ch);
-          if (IS_SET(ch->warp, WARP_REGENERATE)) update_demon_regen(ch);
-          else if (IS_ITEMAFF(ch, ITEMA_REGENERATE)) update_arti_regen(ch);
+          update_demon_regen(ch);
         }
         if (IS_CLASS(ch, CLASS_SHAPESHIFTER)) update_shapeshifter(ch);
         if (IS_CLASS(ch, CLASS_DROW))

@@ -2399,21 +2399,9 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Demons must heal in Hell (93420) */
-    if ( IS_CLASS(ch, CLASS_DEMON) )
-    {
-        if ( ch->in_room != NULL && !(ch->in_room->vnum >= ROOM_VNUM_HELL && ch->in_room->vnum <= ROOM_VNUM_HELL + 6) )
-        {
-            bot_watch_msg( ch, "[REASON] Demon retreating to Hell to heal\n\r" );
-            char_from_room(ch);
-            char_to_room(ch, get_room_index(ROOM_VNUM_HELL));
-            bot_cmd(ch, "look");
-        }
-    }
-
     /* Remove curse before anything else -- AFF_CURSE blocks recall so a bot
-     * stuck in a no-exit classhq zone (e.g. Hell) can never escape until it
-     * is cleared.  bot_generic_buff_check handles the skill check. */
+     * stuck in a no-exit classhq zone can never escape until it is cleared.
+     * bot_generic_buff_check handles the skill check. */
     if ( IS_AFFECTED(ch, AFF_CURSE) && bot_generic_buff_check(ch) )
         return;
 
@@ -2774,14 +2762,12 @@ void bot_update( CHAR_DATA *ch )
 
     /* Safety: eject any bot trapped in a sealed classhq cluster.
      * 93350-93356: spider web area (vampire HQ) -- queen webs/traps.
-     * 93420-93426: Hell (demon HQ) -- non-demon bots swallowed by spec_eater Satan.
-     * Demon bots belong in Hell to heal, but non-demons have no exit and get stuck.
+     * 93420-93426: Hell (demon HQ) -- bots swallowed by spec_eater Satan.
      * All exits in both clusters loop back internally with no path to the world. */
     {
         int vnum = ch->in_room ? ch->in_room->vnum : 0;
         bool in_vamp_trap = ( vnum >= ROOM_VNUM_VAMP_CRYPT && vnum <= ROOM_VNUM_VAMP_CRYPT + 6 );
-        bool in_hell_trap = ( vnum >= ROOM_VNUM_HELL && vnum <= ROOM_VNUM_HELL + 6 )
-                         && !IS_CLASS(ch, CLASS_DEMON);
+        bool in_hell_trap = ( vnum >= ROOM_VNUM_HELL && vnum <= ROOM_VNUM_HELL + 6 );
         bool in_trap      = in_vamp_trap || in_hell_trap;
         if ( in_trap )
         {
