@@ -1092,7 +1092,7 @@ static bool bot_should_train( CHAR_DATA *ch )
     {
         static const char *practice_spells[] = {
             "repair", "rem", "stone", "sanctuary", "fly", "pass door", "shield", "armor", "bless", "frenzy",
-            "cure blindness", NULL
+            "cure blindness", "faerie fog", NULL
         };
         int i;
         for ( i = 0; practice_spells[i] != NULL; i++ )
@@ -1318,7 +1318,7 @@ static bool bot_do_train( CHAR_DATA *ch )
     {
         static const char *practice_spells[] = {
             "repair", "remove curse", "stone skin", "sanctuary", "fly", "pass door", "shield", "armor", "bless", "frenzy",
-            "cure blindness", NULL
+            "cure blindness", "faerie fog", NULL
         };
         int i;
         for ( i = 0; practice_spells[i] != NULL; i++ )
@@ -2620,9 +2620,13 @@ static bool bot_check_tied_up( CHAR_DATA *ch, BOT_DATA *bot )
  *
  * Two distinct causes of blindness, handled differently:
  *
- * Darkness (ROOM_TOTAL_DARKNESS or dark room without nightsight/infrared):
- *   Cure blindness does nothing here - the bot must recall to a lit room.
- *   Two-phase via blind_recovery flag; after recall the room will be lit.
+ * Darkness (ROOM_TOTAL_DARKNESS from player-cast darkness):
+ *   Phase 1: cast faerie fog to dispel the darkness, preserving nav queue.
+ *   Phase 2 (blind_recovery set): if still dark, faerie fog failed -- abort
+ *   nav queue and recall.  If fog cleared the darkness, resume normally.
+ *
+ * Non-dispellable darkness (ROOM_DARK flag, nighttime):
+ *   Faerie fog cannot help here.  Recall immediately.
  *
  * AFF_BLIND from gsn_blindness spell:
  *   Cast cure blindness in place.  The bot checks is_affected(gsn_blindness)
@@ -2635,6 +2639,7 @@ static bool bot_check_tied_up( CHAR_DATA *ch, BOT_DATA *bot )
 static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
 {
     bool in_darkness;
+    bool in_total_darkness;
     bool is_blind;
     bool is_blindfolded;
 
@@ -2645,7 +2650,8 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
      *   VAM_SONIC      - vampire bat form echolocation
      *   ITEMA_VISION   - certain artifact items
      * Drow/Droid are also immune to ROOM_TOTAL_DARKNESS specifically. */
-    in_darkness = FALSE;
+    in_darkness       = FALSE;
+    in_total_darkness = FALSE;
     if ( ch->in_room != NULL
       && !IS_IMMORTAL(ch)
       && !IS_ITEMAFF(ch, ITEMA_VISION)
@@ -2655,7 +2661,10 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
         if ( IS_SET(ch->in_room->room_flags, ROOM_TOTAL_DARKNESS)
           && !IS_CLASS(ch, CLASS_DROW)
           && !IS_CLASS(ch, CLASS_DROID) )
-            in_darkness = TRUE;
+        {
+            in_darkness       = TRUE;
+            in_total_darkness = TRUE;
+        }
         else if ( room_is_dark( ch->in_room )
                && !IS_AFFECTED(ch, AFF_INFRARED)
                && !IS_VAMPAFF(ch, VAM_NIGHTSIGHT) )
@@ -2666,28 +2675,55 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
     is_blind       = ( IS_AFFECTED(ch, AFF_BLIND)
                     && !IS_AFFECTED(ch, AFF_SHADOWSIGHT) );
 
-    /* Phase 2: recalled from a dark room last tick - just clear the flag.
-     * If the bot is still somehow in darkness, in_darkness will catch it
-     * below; if not, we're done. */
+    /* Phase 2: faerie fog was cast last tick -- check if it worked.
+     * If the room is no longer dark, clear the flag and resume normally.
+     * If still dark, faerie fog failed -- fall through to the recall path. */
     if ( bot->blind_recovery )
     {
         bot->blind_recovery = FALSE;
-        /* Fall through to handle any lingering conditions */
+        if ( !in_darkness )
+        {
+            bot_watch_msg( ch, "[VISION] faerie fog cleared darkness -- resuming\n\r" );
+            return FALSE;   /* darkness gone, continue normal AI */
+        }
+        /* Still dark after faerie fog -- fall through to recall below */
     }
 
-    /* Can't see due to darkness: cure blindness won't help - recall */
+    /* Darkness: attempt faerie fog first for player-cast ROOM_TOTAL_DARKNESS.
+     * Faerie fog strips NEW_DARKNESS from Drow/Droid in the room and clears
+     * the ROOM_TOTAL_DARKNESS flag.  Non-dispellable darkness (ROOM_DARK flag,
+     * nighttime) skips straight to recall since faerie fog can't help. */
     if ( in_darkness )
     {
         if ( ch->position == POS_FIGHTING )
-            return FALSE;   /* Can't recall while fighting */
+            return FALSE;   /* Can't cast or recall while fighting */
+
+        /* Try faerie fog for player-cast total darkness */
+        if ( in_total_darkness )
+        {
+            int sn = skill_lookup( "faerie fog" );
+            bool can_cast = ( sn > 0
+                           && ch->pcdata->learned[sn] > 0
+                           && !( IS_CLASS(ch, CLASS_SHAPESHIFTER)
+                              && ch->pcdata->powers[SHAPE_FORM] != 0 ) );
+
+            if ( can_cast )
+            {
+                bot_watch_msg( ch, "[VISION] darkness - casting faerie fog\n\r" );
+                bot_cmd( ch, "cast 'faerie fog'" );
+                bot->blind_recovery = TRUE;  /* check result next tick */
+                return TRUE;  /* nav queue preserved */
+            }
+        }
+
+        /* Faerie fog unavailable or non-dispellable darkness -- recall */
         if ( bot->nav_n > 0 )
         {
             bot_watch_msg( ch, "[VISION] darkness - aborting nav queue\n\r" );
             bot->nav_n = 0;
         }
         bot_watch_msg( ch, "[VISION] darkness - recalling\n\r" );
-        if ( bot_do_recall(ch) )
-            bot->blind_recovery = TRUE;
+        bot_do_recall(ch);
         return TRUE;
     }
 
