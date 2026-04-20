@@ -1031,8 +1031,28 @@ static bool bot_is_pre_upgrade( CHAR_DATA *ch )
           || IS_CLASS(ch, CLASS_MAGE) );
 }
 
-/* TRUE once stat targets are met — bot is actively seeking upgrade requirements
- * (pkscore 1000, gen 1, 40k QP) through PvP. */
+/* Effective hp/mana/move needed for do_upgrade — mirrors upgrade.c:
+ * when pkscore < 1000, each 100-point gap adds 3000 to each stat requirement. */
+static void bot_upgrade_stat_needs( CHAR_DATA *ch, int *hp_need, int *mana_need, int *move_need )
+{
+    int hp   = BOT_UPGRADE_HP;
+    int mana = BOT_UPGRADE_MANA;
+    int move = BOT_UPGRADE_MOVE;
+    int ratio = get_ratio(ch);
+    if ( ratio < BOT_UPGRADE_PKSCORE )
+    {
+        int gap = (BOT_UPGRADE_PKSCORE - UMAX(ratio, 0)) / 100;
+        hp   += 3000 * gap;
+        mana += 3000 * gap;
+        move += 3000 * gap;
+    }
+    if ( hp_need   ) *hp_need   = hp;
+    if ( mana_need ) *mana_need = mana;
+    if ( move_need ) *move_need = move;
+}
+
+/* TRUE once base stat targets are met — bot is actively seeking upgrade requirements
+ * (gen 1, 40k QP, and enough stats to cover any pkscore penalty) through PvP. */
 static bool bot_in_upgrade_hunt( CHAR_DATA *ch )
 {
     return ( bot_is_pre_upgrade(ch)
@@ -1041,14 +1061,18 @@ static bool bot_in_upgrade_hunt( CHAR_DATA *ch )
           && ch->max_move >= BOT_UPGRADE_MOVE );
 }
 
-/* TRUE when every upgrade requirement is satisfied. */
+/* TRUE when every upgrade requirement is satisfied, including any pkscore
+ * penalty on hp/mana/move. */
 static bool bot_upgrade_ready( CHAR_DATA *ch )
 {
+    int hp_need, mana_need, move_need;
     if ( !bot_in_upgrade_hunt(ch) )                     return FALSE;
     if ( ch->pcdata->quest      < BOT_UPGRADE_QP )      return FALSE;
-    if ( ch->pcdata->questtotal < BOT_UPGRADE_QP )      return FALSE;
     if ( ch->generation != 1 )                          return FALSE;
-    if ( get_ratio(ch) < BOT_UPGRADE_PKSCORE )          return FALSE;
+    bot_upgrade_stat_needs( ch, &hp_need, &mana_need, &move_need );
+    if ( ch->max_hit  < hp_need  )                      return FALSE;
+    if ( ch->max_mana < mana_need )                     return FALSE;
+    if ( ch->max_move < move_need )                     return FALSE;
     return TRUE;
 }
 
@@ -1178,6 +1202,16 @@ static bool bot_should_train( CHAR_DATA *ch )
             else if ( ch->generation == 5 ) gencost =  50000000;
             else                            gencost =  10000000;
             if ( ch->exp >= gencost ) return TRUE;
+        }
+        /* Gen/QP/stats all met but pkscore below upgrade threshold: dump excess
+         * exp into hp/mana/move up to hp_cap while PvPing for pkscore. */
+        if ( ch->generation == 1
+          && ch->pcdata->quest      >= BOT_UPGRADE_QP
+          && get_ratio(ch) < BOT_UPGRADE_PKSCORE )
+        {
+            if ( ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+            if ( ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 ) return TRUE;
+            if ( ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 ) return TRUE;
         }
         return FALSE;  /* pool — grind/PvP for more exp or gen 1 via gensteal */
     }
@@ -1531,6 +1565,19 @@ static bool bot_do_train( CHAR_DATA *ch )
             else                            gencost =  10000000;
             if ( ch->exp >= gencost )
                 { bot_cmd( ch, "train generation" ); return TRUE; }
+        }
+        /* Gen/QP/stats all met but pkscore below upgrade threshold: dump excess
+         * exp into hp/mana/move up to hp_cap while PvPing for pkscore. */
+        if ( ch->generation == 1
+          && ch->pcdata->quest      >= BOT_UPGRADE_QP
+          && get_ratio(ch) < BOT_UPGRADE_PKSCORE )
+        {
+            if ( ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 )
+                { bot_cmd( ch, "train hp all" );   return TRUE; }
+            if ( ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 )
+                { bot_cmd( ch, "train mana all" ); return TRUE; }
+            if ( ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 )
+                { bot_cmd( ch, "train move all" ); return TRUE; }
         }
         return FALSE;  /* pool — keep grinding/PvPing for more exp or gen 1 via gensteal */
     }
