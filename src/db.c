@@ -2190,6 +2190,22 @@ CHAR_DATA *create_mobile( MOB_INDEX_DATA *pMobIndex )
 
     mob->act		= pMobIndex->act;
     mob->affected_by	= pMobIndex->affected_by;
+
+    /* Strip ACT_NOEXP from any mob that lives in a registered grind zone
+     * so a stale area-file flag can never silently zero out kill XP. */
+    if ( IS_SET(mob->act, ACT_NOEXP) )
+    {
+        int _gvnum = pMobIndex->vnum, _gi;
+        for (_gi = 0; grind_zone_table[_gi].name != NULL; _gi++)
+        {
+            if (_gvnum >= grind_zone_table[_gi].vnum_lo
+            &&  _gvnum <= grind_zone_table[_gi].vnum_hi)
+            {
+                REMOVE_BIT(mob->act, ACT_NOEXP);
+                break;
+            }
+        }
+    }
     mob->alignment	= pMobIndex->alignment;
     mob->sex		= pMobIndex->sex;
 
