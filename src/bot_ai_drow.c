@@ -303,7 +303,7 @@ static void bot_drow_combat_action( CHAR_DATA *ch )
       && ch->mana >= 150
       && roll <= 70 )
     {
-        bot_cmd( ch, "earthshatter" );
+        //bot_cmd( ch, "earthshatter" );
         return;
     }
 
