@@ -1541,6 +1541,63 @@ static bool bot_needs_rest( CHAR_DATA *ch )
           || ch->mana < ch->max_mana * 3 / 10 );
 }
 
+/* Returns TRUE if any other player character (including other bots) is in
+ * the room.  NPCs are ignored. */
+static bool bot_room_has_others( CHAR_DATA *ch )
+{
+    CHAR_DATA *p;
+    if ( ch->in_room == NULL ) return FALSE;
+    for ( p = ch->in_room->people; p != NULL; p = p->next_in_room )
+    {
+        if ( p == ch )       continue;
+        if ( IS_NPC(p) )    continue;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/* Try to move to an adjacent room that has no other player characters.
+ * Returns TRUE if the bot issued a move command, FALSE if no suitable
+ * exit was found (bot stays put). */
+static bool bot_find_empty_room( CHAR_DATA *ch )
+{
+    int door, tries;
+    EXIT_DATA *pexit;
+
+    for ( tries = 0; tries < 6; tries++ )
+    {
+        door = number_range( 0, 5 );
+        if ( ch->in_room == NULL ) return FALSE;
+
+        if ( !bot_dir_allowed( ch, door ) )              continue;
+        pexit = ch->in_room->exit[door];
+        if ( pexit == NULL || pexit->to_room == NULL )   continue;
+        if ( IS_SET(pexit->exit_info, EX_CLOSED) )       continue;
+        if ( IS_SET(pexit->to_room->room_flags, ROOM_PRIVATE) ) continue;
+
+        /* Check if the destination room is empty of other PCs */
+        {
+            CHAR_DATA *p;
+            bool has_pc = FALSE;
+            for ( p = pexit->to_room->people; p != NULL; p = p->next_in_room )
+            {
+                if ( !IS_NPC(p) )
+                {
+                    has_pc = TRUE;
+                    break;
+                }
+            }
+            if ( !has_pc )
+            {
+                bot_watch_msg( ch, "[REST] moving to empty room to rest\n\r" );
+                bot_cmd( ch, dir_name[door] );
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 /* Pick a random direction and try to move */
 static void bot_try_move( CHAR_DATA *ch )
 {
@@ -2382,6 +2439,24 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bot_watch_msg( ch, "[REASON] attacked while resting, fleeing\n\r" );
         do_flee( ch, "" );
+        return;
+    }
+
+    /* Don't rest with other players around -- find an empty room first.
+     * The bot keeps searching each tick until it finds a room with no
+     * other PCs, or until the rest timer expires (at which point it
+     * gives up and rests in place). */
+    if ( bot_room_has_others(ch) && bot->state_timer > 0 )
+    {
+        if ( ch->position != POS_STANDING )
+        {
+            do_stand( ch, "" );
+            return;
+        }
+        if ( bot_find_empty_room(ch) )
+            return;  /* moved -- check again next tick */
+        /* No empty adjacent room found this tick -- try again next tick */
+        bot_watch_msg( ch, "[REST] searching for empty room...\n\r" );
         return;
     }
 
