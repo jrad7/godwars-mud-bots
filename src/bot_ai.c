@@ -1275,6 +1275,29 @@ static bool bot_do_train( CHAR_DATA *ch )
                     bot->roster->class_pref = new_pref;
                     save_bot_roster();
                 }
+                {
+                    FILE *ufp;
+                    time_t now = time(NULL);
+                    char tbuf[64];
+                    struct tm *tm_info = localtime(&now);
+                    const char *new_class_name = player_class_name( ch );
+                    const char *old_class_name;
+                    int saved_class = ch->class;
+                    ch->class = old_class;
+                    old_class_name = player_class_name( ch );
+                    ch->class = saved_class;
+                    strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
+                    fclose( fpReserve );
+                    if ( ( ufp = fopen( "../txt/bot_upgrades.log", "a" ) ) != NULL )
+                    {
+                        fprintf( ufp, "[%s] %s upgraded: %s -> %s (gen %d)\n",
+                            tbuf, ch->name,
+                            old_class_name, new_class_name,
+                            ch->generation );
+                        fclose( ufp );
+                    }
+                    fpReserve = fopen( NULL_FILE, "r" );
+                }
                 bot_watch_msg( ch, "[UPGRADE] Class upgraded! Roster updated.\n\r" );
                 bot_do_recall( ch );  /* return home so new class can start training */
             }
