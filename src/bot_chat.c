@@ -130,6 +130,52 @@ static const char *unprompted_chat[] = {
     NULL
 };
 
+/* -----------------------------------------------------------------------
+ * Flame channel trash-talk tables
+ * ----------------------------------------------------------------------- */
+
+static const char *flame_grudge_hunt[] = {
+    "Time to take out the trash.  %s, you're on my list.",
+    "Hey %s, hope you stretched.  I'm coming for you.",
+    "%s thinks they can hide.  Cute.",
+    "Hunting season is open and %s is on the menu.",
+    "Dear %s: run.  It won't help, but it'll be funny.",
+    "%s crossed me.  Big mistake.",
+    "On my way to rearrange %s's face.  Stay tuned.",
+    "%s, you better pray to whatever god you worship.",
+    "Somebody tell %s I said hi.  In person.  With violence.",
+    "I've got a date with %s.  They just don't know it yet.",
+    NULL
+};
+
+static const char *flame_got_headed[] = {
+    "Anybody seen my body?  Asking for a friend.",
+    "Well THAT was humiliating.",
+    "I'm literally just a head right now.  This is fine.",
+    "Don't mind me, just rolling around on the floor.",
+    "Lost my head there for a second.  Literally.",
+    "You know what's worse than dying?  Being a head.",
+    "Who needs a body anyway?  Overrated.",
+    "Someone wanna kick my head back to my body?",
+    "This is NOT how I planned my evening.",
+    "Can heads even type?  Apparently yes.",
+    NULL
+};
+
+static const char *flame_grudge_kill[] = {
+    "And THAT is what happens when you mess with me, %s.",
+    "%s just learned a valuable life lesson.  Or death lesson.",
+    "Get rekt %s.  Absolutely dismantled.",
+    "Another day, another corpse.  Thanks for playing, %s.",
+    "%s is taking a dirt nap courtesy of yours truly.",
+    "Dear diary: today I deleted %s.  It felt great.",
+    "Someone scrape %s off the floor.",
+    "Revenge is a dish best served with a decapitation.  Right, %s?",
+    "%s thought they were tough.  They were wrong.",
+    "Scoreboard updated.  %s: 0, Me: 1.",
+    NULL
+};
+
 /* Count entries in a NULL-terminated string array */
 static int arr_len( const char **arr )
 {
@@ -324,4 +370,50 @@ void bot_unprompted_chat( CHAR_DATA *ch, BOT_DATA *bot )
         }
         break;
     }
+}
+
+/* -----------------------------------------------------------------------
+ * bot_flame_grudge_hunt - trash-talk on flame when initiating a grudge hunt
+ * bot_flame_got_headed  - trash-talk on flame when decapitated
+ * bot_flame_grudge_kill - trash-talk on flame after finishing a grudge kill
+ * ----------------------------------------------------------------------- */
+
+static void bot_flame_with_table( CHAR_DATA *ch, const char *table[], const char *target )
+{
+    char buf[MAX_STRING_LENGTH];
+    int  n;
+    const char *pick;
+
+    n = arr_len( (const char **)table );
+    if ( n == 0 ) return;
+
+    pick = table[number_range( 0, n - 1 )];
+
+    if ( target != NULL && strstr( pick, "%s" ) != NULL )
+    {
+        char expanded[MAX_STRING_LENGTH];
+        snprintf( expanded, sizeof(expanded), pick, target );
+        snprintf( buf, sizeof(buf), "flame %s", expanded );
+    }
+    else
+    {
+        snprintf( buf, sizeof(buf), "flame %s", pick );
+    }
+
+    bot_cmd( ch, buf );
+}
+
+void bot_flame_grudge_hunt( CHAR_DATA *ch, const char *target )
+{
+    bot_flame_with_table( ch, flame_grudge_hunt, target );
+}
+
+void bot_flame_got_headed( CHAR_DATA *ch )
+{
+    bot_flame_with_table( ch, flame_got_headed, NULL );
+}
+
+void bot_flame_grudge_kill( CHAR_DATA *ch, const char *target )
+{
+    bot_flame_with_table( ch, flame_grudge_kill, target );
 }

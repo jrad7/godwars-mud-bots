@@ -377,5 +377,8 @@ const char *bot_get_response( const char *trigger, int chattiness );
 void    bot_hear_say        ( struct char_data *bot, struct char_data *speaker, char *msg );
 void    bot_hear_tell       ( struct char_data *bot, struct char_data *speaker, char *msg );
 void    bot_unprompted_chat ( struct char_data *ch, BOT_DATA *bot );
+void    bot_flame_grudge_hunt ( struct char_data *ch, const char *target );
+void    bot_flame_got_headed  ( struct char_data *ch );
+void    bot_flame_grudge_kill ( struct char_data *ch, const char *target );
 
 #endif /* BOT_H */

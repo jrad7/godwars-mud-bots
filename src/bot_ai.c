@@ -1809,6 +1809,8 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
                 bot->pvp_bot_initiated = TRUE;
                 snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                 bot_watch_msg( ch, msg );
+                if ( bot_pvp_is_grudge(bot, target->name) )
+                    bot_flame_grudge_hunt( ch, target->name );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;
             }
@@ -2063,6 +2065,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                     bot->pvp_bot_initiated = TRUE;
                     snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                     bot_watch_msg( ch, msg );
+                    if ( bot_pvp_is_grudge(bot, target->name) )
+                        bot_flame_grudge_hunt( ch, target->name );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
                 else
@@ -2137,6 +2141,8 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                     bot->pvp_bot_initiated = TRUE;
                     snprintf(msg, sizeof(msg), "[PVP] Selected %s for hunting\n\r", bot->pvp_target);
                     bot_watch_msg( ch, msg );
+                    if ( bot_pvp_is_grudge(bot, target->name) )
+                        bot_flame_grudge_hunt( ch, target->name );
                     bot_change_state( ch, bot, BOT_PVP_HUNT );
                 }
                 else
@@ -2396,12 +2402,15 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
         /* Time to finish them -- count this as a win regardless of who initiated */
         char cmd[256];
         char killmsg[128];
+        bool was_grudge = bot_pvp_is_grudge( bot, victim->name );
         /* Revenge satisfied: remove from grudge list and clear nemesis if applicable */
         bot_pvp_remove_grudge( bot, victim->name );
         if ( bot->nemesis[0] != '\0' && !str_cmp( bot->nemesis, victim->name ) )
             bot->nemesis[0] = '\0';
         snprintf( killmsg, sizeof(killmsg), "[GRUDGE] Finishing %s -- removed from grudge list.\n\r", victim->name );
         bot_watch_msg( ch, killmsg );
+        if ( was_grudge )
+            bot_flame_grudge_kill( ch, victim->name );
         if ( ch->class == victim->class && ch->generation >= victim->generation && victim->generation < 7 && victim->generation > 1 )
         {
             sprintf( cmd, "gensteal %s", victim->name );
@@ -2866,6 +2875,8 @@ void bot_update( CHAR_DATA *ch )
      * can issue commands while the bot is a severed head. */
     if ( IS_HEAD( ch, LOST_HEAD ) )
     {
+        if ( !bot->decap_recovery )
+            bot_flame_got_headed( ch );
         bot->decap_recovery = TRUE;
         if ( bot->state != BOT_TRAINING )
             bot_change_state( ch, bot, BOT_TRAINING );
@@ -3060,6 +3071,7 @@ void bot_update( CHAR_DATA *ch )
             char msg[128];
             snprintf( msg, sizeof(msg), "[GRUDGE] Nemesis %s is here -- attacking!\n\r", bot->nemesis );
             bot_watch_msg( ch, msg );
+            bot_flame_grudge_hunt( ch, bot->nemesis );
             strncpy( bot->pvp_target, bot->nemesis, sizeof(bot->pvp_target)-1 );
             bot->pvp_target[sizeof(bot->pvp_target)-1] = '\0';
             bot->pvp_bot_initiated = TRUE;
@@ -3093,6 +3105,8 @@ void bot_update( CHAR_DATA *ch )
                 bot->pvp_bot_initiated = TRUE;
                 snprintf(msg, sizeof(msg), "[PVP] WAR MODE ongoing override -> hunting %s\n\r", bot->pvp_target);
                 bot_watch_msg( ch, msg );
+                if ( bot_pvp_is_grudge(bot, target->name) )
+                    bot_flame_grudge_hunt( ch, target->name );
                 bot_change_state( ch, bot, BOT_PVP_HUNT );
                 return;
             }
