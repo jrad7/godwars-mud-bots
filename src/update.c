@@ -435,7 +435,8 @@ void char_update( void )
     if (IS_CLASS(ch, CLASS_VAMPIRE) && (!IS_AFFECTED(ch,AFF_SHADOWPLANE)) &&
        (!IS_NPC(ch) && !IS_IMMUNE(ch,IMM_SUNLIGHT)) && ch->in_room != NULL &&
        (!ch->in_room->sector_type == SECT_INSIDE) && !is_obj &&
-       (!room_is_dark(ch->in_room)) && (weather_info.sunlight != SUN_DARK))
+       (!room_is_dark(ch->in_room)) &&
+       (time_info.hour >= 5 && time_info.hour < 20))
     {
       act( "$n's flesh smolders in the sunlight!", ch, NULL, NULL, TO_ROOM );
       send_to_char( "Your flesh smolders in the sunlight!\n\r", ch );
@@ -689,17 +690,17 @@ void weather_update( void )
 	break;
 
     case  6:
-	weather_info.sunlight = SUN_RISE;
+	weather_info.sunlight = SUN_LIGHT;
 	strcat( buf, "The sun rises in the east.\n\r" );
 	break;
 
     case 19:
-	weather_info.sunlight = SUN_SET;
+	weather_info.sunlight = SUN_LIGHT;
 	strcat( buf, "The sun slowly disappears in the west.\n\r" );
 	break;
 
     case 20:
-        weather_info.sunlight = SUN_DARK;
+        weather_info.sunlight = SUN_LIGHT;
 	strcat( buf, "The night has begun.\n\r" );
 	break;
 
