@@ -39,67 +39,74 @@
  * Returns the DISC_WERE_* index of the next discipline to research,
  * or -1 if all priority targets are already met.
  *
- * Priority rationale:
- *   1. Boar 3   — incoming dam /= 2; biggest single survivability jump
- *   2. Bear 5   — dam *= 1.2; 20% melee damage boost
- *   3. Lynx 2   — +2 extra attacks per round (multi_hit)
- *   4. Raptor 1 — auto rfangs attack every round
- *   5. Spider 1 — passive poison on every hit
- *   6. Luna 1   — flameclaws toggle (Luna 1 is the cheapest unlock)
- *   6b.Luna 2   — moonarmour unlock (gear system requires DISC_WERE_LUNA >= 2)
- *   7. Bear 7   — skin (−100 armor) and rend toggles
- *   8. Bear 8   — slam auto-proc (1 in 2–5 rounds depending on Bear lvl)
- *   9. Hawk 5   — quills toggle (extra multi_hit per round)
- *  10. Wolf 2   — rage/wolfman form
- *  11. Mantis 3 — dodge/disarm-resist bonus
- *  12. Raptor 3 — perception toggle
- *  13. Boar 7   — extra attacks from move pool
+ * Priority rationale — damage first (thresholds match fight.c's `>`
+ * checks, so targets are one level above the docstring label —
+ * e.g. "Bear 5" activates at power[BEAR] > 5, i.e. 6):
+ *   1. Raptor 1 — auto rfangs extra multi_hit every round (1-point unlock)
+ *   2. Spider 1 — passive poison on every hit (1-point unlock)
+ *   3. Wolf 2   — wolfman form: +50 hit/dam, rage+400 max_dam in combat
+ *   4. Bear 6   — dam *= 1.2; 20% melee damage boost (fight.c:1515 uses > 5)
+ *   5. Lynx 3   — +2 extra attacks per round (fight.c:1082 uses > 2)
+ *   6. Boar 3   — incoming dam /= 2; opportunistic survival pickup
+ *   7. Luna 1   — flameclaws toggle (cheapest Luna unlock)
+ *   8. Luna 2   — moonarmour unlock (gear system requires DISC_WERE_LUNA >= 2)
+ *   9. Bear 8   — slam auto-proc (1 in 2–5 rounds depending on Bear lvl)
+ *  10. Hawk 5   — quills toggle (extra multi_hit per round)
+ *  11. Pain 10  — +750 max_dam flat (expensive but huge damage cap bump)
+ *  12. Boar 7   — extra attacks from move pool
+ *  13. Bear 7   — skin (−100 armor) and rend toggles
  *  14. Wolf 4   — razorclaws (requires claws active)
- *  15. Raptor 8 — jawlock (prevents target fleeing)
- *  16. Luna 3   — motherstouch self-heal in combat
- *  17. Spider 2 — web command
- *  18. Raptor 10 — talons burst (2k–4k vs NPCs)
- *  19. Luna 8   — moonbeam (500-mana burst)
- *  20. Owl 5    — staredown (force flee)
- *  21. Pain 10  — +750 max_dam flat
+ *  15. Mantis 3 — dodge/disarm-resist bonus
+ *  16. Raptor 3 — perception toggle
+ *  17. Raptor 8 — jawlock (prevents target fleeing)
+ *  18. Luna 3   — motherstouch self-heal in combat
+ *  19. Spider 2 — web command
+ *  20. Raptor 10 — talons burst (2k–4k vs NPCs)
+ *  21. Luna 8   — moonbeam (500-mana burst)
  *  22. Mantis 6 — full dodge/parry bonus
- *  23. Owl 8    — cocoon (gnosis-gated dam/2)
- *  24. Max remaining disciplines to 10
+ *  23. Max remaining disciplines to 10 (skip Owl — gnosis-gated)
+ *
+ * Owl 5/8 and Pain (beyond 10) omitted from the active list:
+ * staredown force-flees (wastes kills) and cocoon needs gnosis points
+ * that aren't trained; they fall into the final max-to-10 sweep.
  * ----------------------------------------------------------------------- */
 
 static int bot_ww_pick_research( CHAR_DATA *ch )
 {
     static const struct { int disc; int target; } prio[] = {
+        /* Raptor 1: auto rfangs extra attack every round — 1-point unlock */
+        { DISC_WERE_RAPT, 1  },
+        /* Spider 1: passive poison on hit — 1-point unlock */
+        { DISC_WERE_SPID, 1  },
+        /* Wolf 2: wolfman form (rage max_dam bonus, +50 hitroll/damroll) */
+        { DISC_WERE_WOLF, 2  },
+        /* Bear 6: 20% outgoing damage boost (fight.c:1515 uses > 5) */
+        { DISC_WERE_BEAR, 6  },
+        /* Lynx 3: +2 extra attacks (fight.c:1082 uses > 2) */
+        { DISC_WERE_LYNX, 3  },
+        /* Boar 3: halves incoming damage — opportunistic survival pickup
+         * (fight.c uses > 2, so 3 is the activation level) */
+        { DISC_WERE_BOAR, 3  },
         /* Luna 1: flameclaws toggle */
         { DISC_WERE_LUNA, 1  },
         /* Luna 2: moonarmour unlock (DISC_WERE_LUNA >= 2 required by bot gear) */
         { DISC_WERE_LUNA, 2  },
-        /* Boar 3: halves all incoming damage */
-        { DISC_WERE_BOAR, 3  },
-        /* Bear 5: 20% outgoing damage boost */
-        { DISC_WERE_BEAR, 5  },
-        /* Lynx 2: +2 extra attacks */
-        { DISC_WERE_LYNX, 2  },
-        /* Raptor 1: auto rfangs every round */
-        { DISC_WERE_RAPT, 1  },
-        /* Spider 1: passive poison on hit */
-        { DISC_WERE_SPID, 1  },
-        /* Bear 7: skin + rend */
-        { DISC_WERE_BEAR, 7  },
         /* Bear 8: slam auto-proc */
         { DISC_WERE_BEAR, 8  },
         /* Hawk 5: quills toggle */
         { DISC_WERE_HAWK, 5  },
-        /* Wolf 2: rage/wolfman form */
-        { DISC_WERE_WOLF, 2  },
+        /* Pain 10: +750 max_dam flat */
+        { DISC_WERE_PAIN, 10 },
+        /* Boar 7: extra attacks from move pool */
+        { DISC_WERE_BOAR, 7  },
+        /* Bear 7: skin + rend */
+        { DISC_WERE_BEAR, 7  },
+        /* Wolf 4: razorclaws */
+        { DISC_WERE_WOLF, 4  },
         /* Mantis 3: dodge and disarm-resist bonus */
         { DISC_WERE_MANT, 3  },
         /* Raptor 3: perception toggle */
         { DISC_WERE_RAPT, 3  },
-        /* Boar 7: extra attacks from move pool */
-        { DISC_WERE_BOAR, 7  },
-        /* Wolf 4: razorclaws */
-        { DISC_WERE_WOLF, 4  },
         /* Raptor 8: jawlock */
         { DISC_WERE_RAPT, 8  },
         /* Luna 3: motherstouch self-heal */
@@ -110,14 +117,8 @@ static int bot_ww_pick_research( CHAR_DATA *ch )
         { DISC_WERE_RAPT, 10 },
         /* Luna 8: moonbeam */
         { DISC_WERE_LUNA, 8  },
-        /* Owl 5: staredown */
-        { DISC_WERE_OWL,  5  },
-        /* Pain 10: +750 max_dam */
-        { DISC_WERE_PAIN, 10 },
         /* Mantis 6: full dodge/parry bonus */
         { DISC_WERE_MANT, 6  },
-        /* Owl 8: cocoon */
-        { DISC_WERE_OWL,  8  },
         /* Max remaining */
         { DISC_WERE_BEAR, 10 },
         { DISC_WERE_BOAR, 10 },
@@ -217,13 +218,16 @@ static bool bot_ww_do_train( CHAR_DATA *ch )
  *
  * Buff priority (highest first):
  *   1. flameclaws  — flaming claws (Luna 1)
- *   2. rage        — wolfman form (Wolf 2); only if rage > 99
- *   3. quills      — extra quills attack each round (Hawk 5)
- *   4. skin        — −100 armor (Bear 7)
- *   5. slam        — auto shoulder slam (Bear 8)
- *   6. rend        — rend target equipment (Bear or Boar 7)
- *   7. perception  — detect hidden/stealthy (Raptor 3)
- *   8. jawlock     — prevent flee (Raptor 8)
+ *   2. quills      — extra quills attack each round (Hawk 5)
+ *   3. skin        — −100 armor (Bear 7)
+ *   4. slam        — auto shoulder slam (Bear 8)
+ *   5. perception  — detect hidden/stealthy (Raptor 3)
+ *   6. jawlock     — prevent flee (Raptor 8)
+ *
+ * Wolfman form (rage) is not buffed here: update_werewolf auto-fires
+ * do_werewolf when rage hits 100 during combat, and rage decays back
+ * below 100 out of combat — manual activation would be immediately
+ * undone by the next idle tick.
  * ----------------------------------------------------------------------- */
 
 static bool bot_ww_buff_check( CHAR_DATA *ch )
@@ -234,13 +238,6 @@ static bool bot_ww_buff_check( CHAR_DATA *ch )
     if ( ch->power[DISC_WERE_LUNA] >= 1
       && !IS_SET(ch->newbits, NEW_MONKFLAME) )
     { bot_cmd( ch, "flameclaws" ); return TRUE; }
-
-    /* Rage / wolfman form (Wolf 2): enter only after rage > 99
-     * so the max_dam bonus is already in effect when we transform */
-    if ( ch->power[DISC_WERE_WOLF] >= 2
-      && !IS_SET(ch->special, SPC_WOLFMAN)
-      && ch->rage > 99 )
-    { bot_cmd( ch, "rage" ); return TRUE; }
 
     /* Quills (Hawk 5): extra multi_hit quills attack each round */
     if ( ch->power[DISC_WERE_HAWK] >= 5
@@ -283,9 +280,11 @@ static bool bot_ww_buff_check( CHAR_DATA *ch )
  *   1 (20%): moonbeam   — Luna 8, 500 mana, 500–1000 burst by alignment
  *   2 (45%): talons     — Raptor 10, 2k–4k vs NPCs, no mana cost
  *   3 (65%): motherstouch self — Luna 3, 50 mana, +100 HP; only if hurt
- *   4 (78%): roar       — Bear 6, 1-in-6 force flee
- *   5 (88%): staredown  — Owl 5, high force-flee rate vs NPCs
- *   6 (95%): web        — Spider 2, immobilize target
+ *   4 (80%): web        — Spider 2, immobilize target
+ *
+ * Roar and staredown intentionally omitted: both force the target to flee,
+ * which wastes the kill (no xp, no corpse to devour) and breaks the
+ * bot's grind loop.
  * ----------------------------------------------------------------------- */
 
 static void bot_ww_combat_action( CHAR_DATA *ch )
@@ -330,27 +329,9 @@ static void bot_ww_combat_action( CHAR_DATA *ch )
         return;
     }
 
-    /* Priority 4 (78%): roar — force flee (1-in-6 chance, 18-beat lag) */
-    //if ( ch->power[DISC_WERE_BEAR] >= 6
-    //  && roll <= 78 )
-    //{
-    //    bot_cmd( ch, "roar" );
-    //    return;
-    //}
-
-    /* Priority 5 (88%): staredown — Owl 5 force flee
-     * Owl 5 NPC: ~2/3 success; Owl 6+ NPC: near-certain; 16-beat lag */
-    if ( ch->power[DISC_WERE_OWL] >= 5
-      && roll <= 88 )
-    {
-        sprintf( cmd, "staredown %s", tname );
-        bot_cmd( ch, cmd );
-        return;
-    }
-
-    /* Priority 6 (95%): web — immobilize target */
+    /* Priority 4 (80%): web — immobilize target */
     if ( ch->power[DISC_WERE_SPID] >= 2
-      && roll <= 95 )
+      && roll <= 80 )
     {
         sprintf( cmd, "web %s", tname );
         bot_cmd( ch, cmd );
@@ -366,9 +347,12 @@ static void bot_ww_combat_action( CHAR_DATA *ch )
  * Setup performed between kills during the grinding loop.
  * Returns TRUE if a command was issued (stops hunt processing that tick).
  *
- * Steps:
- *   1. Build rage to > 99 via `rage` command (Wolf 2+, not already wolfman)
- *   2. Devour a corpse in the room if injured (Raptor 5+)
+ * Rage is intentionally not built here: update_werewolf (update.c:1854)
+ * auto-builds rage +5-10/tick while fighting and auto-fires do_werewolf
+ * at 100, so the max_dam bonus and wolfman form come online naturally
+ * during combat.  Out of combat rage decays -1/tick (update.c:1860)
+ * and drops wolfman below 100, so manual pre-raging just wastes a
+ * 12-beat lag on rage that will decay before the next fight starts.
  * ----------------------------------------------------------------------- */
 
 static bool bot_ww_between_fights( CHAR_DATA *ch )
@@ -377,18 +361,7 @@ static bool bot_ww_between_fights( CHAR_DATA *ch )
 
     if ( !IS_CLASS(ch, CLASS_WEREWOLF) ) return FALSE;
 
-    /* Step 1: build rage above 99 for the max_dam bonus
-     * Each call to `rage` (outside wolfman) adds ~40-60 rage.
-     * Once rage > 99, enter wolfman form via buff_check instead. */
-    if ( ch->power[DISC_WERE_WOLF] >= 2
-      && !IS_SET(ch->special, SPC_WOLFMAN)
-      && ch->rage < 100 )
-    {
-        bot_cmd( ch, "rage" );
-        return TRUE;
-    }
-
-    /* Step 2: devour NPC corpse in room to recover HP */
+    /* Devour NPC corpse in room to recover HP (Raptor 5+) */
     if ( ch->power[DISC_WERE_RAPT] >= 5
       && ch->hit < ch->max_hit )
     {
