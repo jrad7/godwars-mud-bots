@@ -2020,6 +2020,16 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 {
     CHAR_DATA *victim;
 
+    /* Decapped bots are mortals (level 2) and can't wear their class gear,
+     * which leaves them stuck re-trying the newbiepack forever. Bounce to
+     * training so 'train avatar' restores their class before grinding. */
+    if ( ch->level == 2 && ch->max_hit >= 2000 )
+    {
+        bot_watch_msg( ch, "[REASON] mortal in grind state, needs train avatar\n\r" );
+        bot_change_state( ch, bot, BOT_TRAINING );
+        return;
+    }
+
     /* Scatter: take random steps into the zone so bots don't all pile up at
      * the entrance.  Stop early if combat starts. */
     if ( bot->scatter_steps > 0 && ch->position != POS_FIGHTING )
