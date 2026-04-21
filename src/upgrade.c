@@ -116,7 +116,7 @@ void upgrade2(CHAR_DATA *ch)
   ch->pcdata->upgrade_level++;
   ch->pcdata->quest -= qp_needed;
   {
-    int reset_val = ch->is_bot ? 2000 : 5000;
+    int reset_val = ch->pcdata->is_bot ? 2000 : 5000;
     ch->max_hit  = reset_val;
     ch->hit      = reset_val;
     ch->max_move = reset_val;
@@ -219,7 +219,7 @@ void clearshit(CHAR_DATA *ch)
   ch->special                         = 0;
   ch->newbits                         = 0;
   {
-    int reset_val = ch->is_bot ? 2000 : 5000;
+    int reset_val = ch->pcdata->is_bot ? 2000 : 5000;
     ch->max_hit			      = reset_val;
     ch->max_mana                        = reset_val;
     ch->max_move                        = reset_val;
