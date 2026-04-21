@@ -1305,7 +1305,7 @@ extern char *scale[SCALE_COLS];
 #define ITEM_GEMSTONE        45
 #define ITEM_HILT            46
 #define FORGE_DROP_BASE       2  /* base percent chance for forge item drop */
-#define FORGE_DROP_LEVEL_SCALE 5 /* mob level divisor added to base (e.g. 8 = +1% per 8 levels) */
+#define FORGE_DROP_LEVEL_SCALE 3 /* mob level divisor added to base (e.g. 8 = +1% per 8 levels) */
 #define ITEM_DTOKEN		     47
 #define ITEM_HEAD		     48
 #define ITEM_COOKINGPOT   	50
