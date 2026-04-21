@@ -927,7 +927,7 @@ void multi_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt )
           break;
         case 3 :
           if ((sn = skill_lookup( "imp heal" ) ) > 0)
-            (*skill_table[sn].spell_fun) (sn,50,ch,victim);
+            (*skill_table[sn].spell_fun) (sn,50,ch,ch);
           break;
         case 4 :
           if ((sn = skill_lookup( "imp fireball" ) ) > 0)
@@ -935,7 +935,7 @@ void multi_hit( CHAR_DATA *ch, CHAR_DATA *victim, int dt )
           break;
         case 5 :
           if ((sn = skill_lookup( "godbless" ) ) > 0)
-            (*skill_table[sn].spell_fun) (sn,50,ch,victim);
+            (*skill_table[sn].spell_fun) (sn,50,ch,ch);
           break;
       }
     }
