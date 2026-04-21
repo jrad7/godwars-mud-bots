@@ -115,12 +115,15 @@ void upgrade2(CHAR_DATA *ch)
   }
   ch->pcdata->upgrade_level++;
   ch->pcdata->quest -= qp_needed;
-  ch->max_hit  = 5000;
-  ch->hit      = 5000;
-  ch->max_move = 5000;
-  ch->move     = 5000;
-  ch->max_mana = 5000;
-  ch->mana     = 5000;
+  {
+    int reset_val = ch->is_bot ? 2000 : 5000;
+    ch->max_hit  = reset_val;
+    ch->hit      = reset_val;
+    ch->max_move = reset_val;
+    ch->move     = reset_val;
+    ch->max_mana = reset_val;
+    ch->mana     = reset_val;
+  }
   ch->exp      = 0;
   if (IS_CLASS(ch, CLASS_UNDEAD_KNIGHT)) sprintf(buf,"The torments and horrors of undead life has made %s even more powerful",ch->name);
   else if (IS_CLASS(ch, CLASS_LICH)) sprintf(buf,"Through studies of ancient and forbidden texts %s has grown more powerful",ch->name);
@@ -215,12 +218,15 @@ void clearshit(CHAR_DATA *ch)
   ch->practice                        = 0;
   ch->special                         = 0;
   ch->newbits                         = 0;
-  ch->max_hit			      = 5000;
-  ch->max_mana                        = 5000;
-  ch->max_move                        = 5000;
-  ch->hit                             = 5000;
-  ch->mana                            = 5000;
-  ch->move                            = 5000;
+  {
+    int reset_val = ch->is_bot ? 2000 : 5000;
+    ch->max_hit			      = reset_val;
+    ch->max_mana                        = reset_val;
+    ch->max_move                        = reset_val;
+    ch->hit                             = reset_val;
+    ch->mana                            = reset_val;
+    ch->move                            = reset_val;
+  }
   ch->generation		      = 5;
   ch->pcdata->familiar                = NULL;
   ch->pcdata->chobj                   = NULL;
