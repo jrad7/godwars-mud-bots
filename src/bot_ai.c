@@ -2030,6 +2030,13 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
+    if ( bot_upgrade_ready(ch) && ch->position != POS_FIGHTING )
+    {
+        bot_watch_msg( ch, "[REASON] upgrade ready -- heading to altar\n\r" );
+        bot_change_state( ch, bot, BOT_TRAINING );
+        return;
+    }
+
     /* Scatter: take random steps into the zone so bots don't all pile up at
      * the entrance.  Stop early if combat starts. */
     if ( bot->scatter_steps > 0 && ch->position != POS_FIGHTING )
@@ -2340,6 +2347,15 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
     if ( bot->pvp_target[0] == '\0' )
     {
         bot_change_state( ch, bot, BOT_GRINDING );
+        return;
+    }
+
+    if ( bot_upgrade_ready(ch) )
+    {
+        bot_watch_msg( ch, "[REASON] upgrade ready -- abandoning hunt for altar\n\r" );
+        bot->pvp_target[0] = '\0';
+        bot->pvp_chasing = FALSE;
+        bot_change_state( ch, bot, BOT_TRAINING );
         return;
     }
 
