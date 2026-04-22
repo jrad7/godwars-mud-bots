@@ -60,9 +60,11 @@ HOST = os.environ.get("RAG_HOST", "127.0.0.1")
 PORT = int(os.environ.get("RAG_PORT", "8765"))
 
 SYSTEM_PROMPT = """You are an in-game help assistant for Dystopia, a godwars-derived MUD.
-Answer the player's question using ONLY the help entries provided in the context.
+Answer the player's question using ONLY the sources provided in the context. Sources
+may be in-game help entries or supplementary docs -- treat both as authoritative.
 If the context does not contain the answer, say so plainly -- do not invent commands,
-stats, or mechanics. Quote the relevant help topic names when useful. Be concise."""
+stats, or mechanics. Cite the source title (help topic or doc section) when useful.
+Be concise."""
 
 
 class RagState:
@@ -85,12 +87,29 @@ class RagState:
         ]
 
 
+def hit_label(hit: dict) -> str:
+    """Human-readable label for a retrieved chunk.
+
+    Help entries carry `primary`; doc chunks carry `doc` + `section`.
+    Falls back to the source field for anything unexpected.
+    """
+    meta = hit.get("metadata") or {}
+    kind = meta.get("kind")
+    if kind == "help" or "primary" in meta:
+        return f"Help: {meta['primary']}"
+    if kind == "doc" or "doc" in meta:
+        doc = meta.get("doc", "doc")
+        section = meta.get("section")
+        return f"Doc: {doc}" + (f" — {section}" if section else "")
+    return meta.get("source", "chunk")
+
+
 def build_messages(question: str, hits: list[dict]) -> list[dict]:
     blocks = [
-        f"--- Help entry {i}: {h['metadata']['primary']} ---\n{h['document']}"
+        f"--- Source {i}: {hit_label(h)} ---\n{h['document']}"
         for i, h in enumerate(hits, 1)
     ]
-    user = f"Context from Dystopia helpfiles:\n\n" + "\n\n".join(blocks) + f"\n\nQuestion: {question}"
+    user = f"Context from Dystopia helpfiles and docs:\n\n" + "\n\n".join(blocks) + f"\n\nQuestion: {question}"
     return [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user}]
 
 
@@ -142,8 +161,13 @@ class Handler(BaseHTTPRequestHandler):
             response: dict = {
                 "hits": [
                     {
-                        "primary": h["metadata"]["primary"],
-                        "keywords": h["metadata"].get("keywords", ""),
+                        "label": hit_label(h),
+                        "kind": (h.get("metadata") or {}).get("kind", "help"),
+                        "primary": (h.get("metadata") or {}).get("primary", ""),
+                        "keywords": (h.get("metadata") or {}).get("keywords", ""),
+                        "doc": (h.get("metadata") or {}).get("doc", ""),
+                        "section": (h.get("metadata") or {}).get("section", ""),
+                        "source": (h.get("metadata") or {}).get("source", ""),
                         "distance": h["distance"],
                     }
                     for h in hits

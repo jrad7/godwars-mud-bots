@@ -84,8 +84,10 @@ Re-run `parse_help.py` then `ingest.py` whenever `area/help.are` changes.
 
 ## What's indexed
 
-- Only entries with `level <= 0` (player-visible). Immortal-only entries
-  (positive levels) are skipped; edit the filter in `ingest.py` if you
-  want them included for staff use.
-- Color codes (`#R`, `#n`, `##`) are stripped from the embedded text so
-  they don't pollute the vectors.
+- Help entries from `area/help.are` with `level <= 0` (player-visible).
+  Immortal-only entries (positive levels) are skipped; edit the filter in
+  `ingest.py` if you want them included for staff use.
+- Every `*.md` file under `rag/doc/`, chunked by H2 section. Add new
+  markdown files there and re-run `ingest.py` to pick them up.
+- Color codes (`#R`, `#n`, `##`) are stripped from help bodies so they
+  don't pollute the vectors.
