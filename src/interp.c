@@ -304,6 +304,7 @@ const	struct	cmd_type	cmd_table	[] =
      */
     { "affects",          do_affects,       POS_DEAD,                0,  LOG_NORMAL, 0,0,0},
     { "areas",		do_areas,	POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0},
+    { "ask",		do_ask,		POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0},
     { "commands",		do_commands,POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0},
     { "credits",		do_credits,	POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0},
     { "equipment",	do_equipment,POS_DEAD,	 	 0,  LOG_NORMAL, 0,0,0},

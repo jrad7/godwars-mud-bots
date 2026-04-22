@@ -2,7 +2,7 @@ CC      = gcc
 C_FLAGS = -Wall -g
 L_FLAGS = -rdynamic -lz -lcrypt -lpthread -lm
 
-O_FILES = act_comm.o act_info.o act_move.o act_obj.o act_wiz.o bit.o mccp.o \
+O_FILES = act_comm.o act_info.o act_move.o act_obj.o act_wiz.o ask.o bit.o mccp.o \
 	board.o build.o clan.o comm.o daemon.o db.o angel.o socials.o\
 	demon.o drow.o fight.o kav_wiz.o handler.o kav_fight.o kav_info.o \
 	interp.o mage.o magic.o mem.o monk.o monk2.o ninja.o olc.o upgrade.o \

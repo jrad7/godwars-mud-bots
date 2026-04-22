@@ -3554,6 +3554,8 @@ DECLARE_DO_FUN(	do_bounty	);
 DECLARE_DO_FUN(	do_bountylist	);
 DECLARE_DO_FUN(	do_ansi		);
 DECLARE_DO_FUN(	do_areas	);
+DECLARE_DO_FUN(	do_ask		);
+void	ask_pump	args( ( void ) );
 DECLARE_DO_FUN(	do_artifact	);
 DECLARE_DO_FUN(	do_at		);
 DECLARE_DO_FUN(	do_autoexit	);

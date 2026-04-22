@@ -65,13 +65,26 @@ PORT = int(os.environ.get("RAG_PORT", "8765"))
 MAX_CHARS_PER_HIT = int(os.environ.get("RAG_MAX_CHARS_PER_HIT", "1200"))
 # Default number of chunks retrieved when the request doesn't specify k.
 DEFAULT_K = int(os.environ.get("RAG_DEFAULT_K", "3"))
+# Subtract this from the cosine distance of doc hits to push them up the
+# ranking vs. help hits. 0 disables the bias; typical useful range 0.05-0.2.
+DOC_BOOST = float(os.environ.get("RAG_DOC_BOOST", "0.10"))
+# Over-fetch factor: retrieve k * FETCH_MULT chunks, then re-rank and keep k.
+# Gives the doc boost more candidates to work with without blowing up prompt size.
+FETCH_MULT = int(os.environ.get("RAG_FETCH_MULT", "3"))
 
 SYSTEM_PROMPT = """You are an in-game help assistant for Dystopia, a godwars-derived MUD.
 Answer the player's question using ONLY the sources provided in the context. Sources
-may be in-game help entries or supplementary docs -- treat both as authoritative.
-If the context does not contain the answer, say so plainly -- do not invent commands,
-stats, or mechanics. Cite the source title (help topic or doc section) when useful.
-Be concise."""
+may be in-game help entries or supplementary docs. When both are present, prefer
+the docs -- they are the authoritative, curated reference. Help entries are
+secondary and may be incomplete or out of date.
+Do not invent commands, stats, or mechanics.
+Summarize in your own words -- do NOT quote or paraphrase source text verbatim.
+If a full answer would essentially reproduce a help entry, give a one-or-two
+sentence summary and tell the player to type `help <topic>` for the full text,
+using the help entry's primary keyword as <topic>. Never reproduce doc sources
+verbatim -- always summarize.
+Be concise. Do NOT cite, name, quote, or reference the sources (the `help <topic>`
+pointer above is the only exception)."""
 
 
 class RagState:
@@ -86,12 +99,27 @@ class RagState:
         print(f"[rag] Ready -- {self.collection.count()} entries indexed.", flush=True)
 
     def retrieve(self, question: str, k: int) -> list[dict]:
+        """Retrieve top-k chunks with a bias favoring docs over help entries.
+
+        Over-fetches k * FETCH_MULT raw candidates, subtracts DOC_BOOST from
+        the effective distance of doc hits, re-sorts, and returns the top k.
+        """
         qv = self.embedder.encode([question], normalize_embeddings=True)[0].tolist()
-        res = self.collection.query(query_embeddings=[qv], n_results=k)
-        return [
-            {"document": doc, "metadata": meta, "distance": dist}
-            for doc, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0])
-        ]
+        fetch_k = max(k, k * FETCH_MULT)
+        res = self.collection.query(query_embeddings=[qv], n_results=fetch_k)
+
+        candidates = []
+        for doc, meta, dist in zip(res["documents"][0], res["metadatas"][0], res["distances"][0]):
+            is_doc = (meta or {}).get("kind") == "doc"
+            effective = dist - DOC_BOOST if is_doc else dist
+            candidates.append(
+                {"document": doc, "metadata": meta, "distance": dist, "_effective": effective}
+            )
+        candidates.sort(key=lambda c: c["_effective"])
+        top = candidates[:k]
+        for c in top:
+            c.pop("_effective", None)
+        return top
 
 
 def hit_label(hit: dict) -> str:
@@ -118,9 +146,14 @@ def truncate(text: str, limit: int) -> str:
 
 
 def build_messages(question: str, hits: list[dict]) -> list[dict]:
+    # Put doc hits first so the LLM reads the preferred sources before help.
+    ordered = sorted(
+        hits,
+        key=lambda h: 0 if (h.get("metadata") or {}).get("kind") == "doc" else 1,
+    )
     blocks = [
         f"--- Source {i}: {hit_label(h)} ---\n{truncate(h['document'], MAX_CHARS_PER_HIT)}"
-        for i, h in enumerate(hits, 1)
+        for i, h in enumerate(ordered, 1)
     ]
     user = f"Context from Dystopia helpfiles and docs:\n\n" + "\n\n".join(blocks) + f"\n\nQuestion: {question}"
     return [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user}]

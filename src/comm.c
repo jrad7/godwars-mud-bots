@@ -698,6 +698,9 @@ void game_loop_mac_msdos( void )
 	 */
 	update_handler( );
 
+	/* Deliver any completed ask-command replies. */
+	ask_pump( );
+
 
 
 	/*
@@ -937,6 +940,9 @@ void game_loop_unix( int control )
 	 * Autonomous game motion.
 	 */
 	update_handler( );
+
+	/* Deliver any completed ask-command replies. */
+	ask_pump( );
 
 
 
