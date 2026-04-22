@@ -59,6 +59,13 @@ LLM_MODEL = os.environ.get("RAG_LLM_MODEL", "gemma-4-e4b")
 HOST = os.environ.get("RAG_HOST", "127.0.0.1")
 PORT = int(os.environ.get("RAG_PORT", "8765"))
 
+# Cap per-chunk characters fed to the LLM. Retrieval still sees the full
+# chunks -- this only trims the prompt so large doc sections don't blow up
+# inference time. Override with RAG_MAX_CHARS_PER_HIT.
+MAX_CHARS_PER_HIT = int(os.environ.get("RAG_MAX_CHARS_PER_HIT", "1200"))
+# Default number of chunks retrieved when the request doesn't specify k.
+DEFAULT_K = int(os.environ.get("RAG_DEFAULT_K", "3"))
+
 SYSTEM_PROMPT = """You are an in-game help assistant for Dystopia, a godwars-derived MUD.
 Answer the player's question using ONLY the sources provided in the context. Sources
 may be in-game help entries or supplementary docs -- treat both as authoritative.
@@ -104,9 +111,15 @@ def hit_label(hit: dict) -> str:
     return meta.get("source", "chunk")
 
 
+def truncate(text: str, limit: int) -> str:
+    if limit <= 0 or len(text) <= limit:
+        return text
+    return text[:limit].rstrip() + "\n... [truncated]"
+
+
 def build_messages(question: str, hits: list[dict]) -> list[dict]:
     blocks = [
-        f"--- Source {i}: {hit_label(h)} ---\n{h['document']}"
+        f"--- Source {i}: {hit_label(h)} ---\n{truncate(h['document'], MAX_CHARS_PER_HIT)}"
         for i, h in enumerate(hits, 1)
     ]
     user = f"Context from Dystopia helpfiles and docs:\n\n" + "\n\n".join(blocks) + f"\n\nQuestion: {question}"
@@ -154,7 +167,7 @@ class Handler(BaseHTTPRequestHandler):
             if not question:
                 self._json(400, {"error": "missing 'question'"})
                 return
-            k = int(body.get("k", 5))
+            k = int(body.get("k", DEFAULT_K))
             use_llm = bool(body.get("llm", True))
 
             hits = self.state.retrieve(question, k)
