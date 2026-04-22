@@ -24,3 +24,9 @@ player/backup/.keep
 player/store/.keep
 bot/
 .claude/settings.local.json
+rag/.venv/*
+rag/.venv
+rag/.env
+rag/chroma_db/
+rag/help_entries.jsonl
+rag/__pycache__/
