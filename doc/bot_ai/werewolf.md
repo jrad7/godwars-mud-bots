@@ -130,58 +130,77 @@ These should be kept active at all times by the bot.
 Handled in `between_fights` hook:
 
 ```
-1. ch->rage < 100 and Wolf ≥ 2  → rage    (build rage toward >99 for max_dam bonus)
-2. HP < max_hit and Raptor ≥ 5  → devour  (eat NPC corpse in room for 100–250 HP)
+1. HP < max_hit and Raptor ≥ 5  → devour  (eat NPC corpse in room for 100–250 HP)
 ```
 
-> The `rage` command when NOT in wolfman form adds 40–60 rage. Issue it twice
-> across two ticks to push `ch->rage > 99`.  The max\_dam bonus (`+rage+400`)
-> then activates automatically in every fight round.
+> Rage is **not** manually built by the bot.  `update_werewolf` (update.c)
+> auto-builds +5–10 rage/tick while in combat and auto-fires `do_werewolf`
+> once rage ≥ 100, flipping the bot to wolfman form.  Any manual `rage`
+> command here wastes the 12-beat lag for no benefit.
 
 ---
 
 ## Bot AI Training Priority
 
+Damage-first ordering — survival is already covered by the rage/wolfman
+transform; extra attacks and outgoing boosts matter more than the Boar 3
+halver for bots that can't die anyway.  Off-by-one thresholds account for
+`fight.c` using `>` (so Bear ≥ 6 to activate the ≥ 5 check, etc.).  Owl is
+skipped entirely — its best effects (cocoon, disquiet) are gnosis-gated.
+
 ```
-1.  Boar  → 3    (incoming dam /= 2 — biggest single survivability gain)
-2.  Bear  → 5    (dam *= 1.2 — 20% damage boost)
-3.  Lynx  → 2    (+2 extra attacks per round)
-4.  Raptor → 1   (auto rfangs every round)
-5.  Spider → 1   (passive poison on every hit)
-6.  Luna  → 1    (flameclaws toggle unlock)
-6b. Luna  → 2    (moonarmour unlock — gear system requires DISC_WERE_LUNA ≥ 2)
-7.  Bear  → 7    (skin and rend toggles)
-8.  Bear  → 8    (slam auto-proc)
-9.  Hawk  → 5    (quills toggle)
-10. Wolf  → 2    (rage/wolfman form)
-11. Mantis → 3   (dodge/disarm resist bonus)
-12. Raptor → 3   (perception toggle)
-13. Boar  → 7    (extra attacks from move pool)
-14. Wolf  → 4    (razorclaws)
-15. Raptor → 8   (jawlock — prevent flee)
-16. Luna  → 3    (motherstouch self-heal in combat)
-17. Spider → 2   (web command)
-18. Raptor → 10  (talons burst)
-19. Luna  → 8    (moonbeam 500-mana burst)
-20. Owl   → 5    (staredown — force flee)
-21. Pain  → 10   (+750 max_dam)
+1.  Raptor → 1   (auto rfangs extra attack every round)
+2.  Spider → 1   (passive poison on every hit)
+3.  Wolf   → 2   (rage/wolfman — +rage+400 max_dam, +hitroll/damroll)
+4.  Bear   → 6   (dam *= 1.2 — fight.c uses `>` so need 6)
+5.  Lynx   → 3   (+2/+1 extra attacks — fight.c uses `>` so need 3)
+6.  Boar   → 3   (incoming dam /= 2 — only then worth the points)
+7.  Luna   → 1   (flameclaws toggle)
+8.  Luna   → 2   (moonarmour unlock — gear system gate)
+9.  Bear   → 8   (slam auto-proc)
+10. Hawk   → 5   (quills toggle)
+11. Pain   → 10  (+750 max_dam)
+12. Boar   → 7   (extra attacks from move pool)
+13. Bear   → 7   (skin, rend toggles)
+14. Wolf   → 4   (razorclaws)
+15. Mantis → 3   (dodge/disarm resist bonus)
+16. Raptor → 3   (perception toggle)
+17. Raptor → 8   (jawlock — prevent flee)
+18. Luna   → 3   (motherstouch self-heal in combat)
+19. Spider → 2   (web command)
+20. Raptor → 10  (talons burst)
+21. Luna   → 8   (moonbeam 500-mana burst)
 22. Mantis → 6   (full dodge/parry bonus)
-23. Owl   → 8    (cocoon — gnosis-gated dam/2)
-24. Max remaining disciplines to 10
+23. Max remaining disciplines (except Owl) to 10
 ```
 
 ---
 
 ## Combat Action Priority (each combat pulse)
 
+`roar` and `staredown` are deliberately excluded — both force-flee the
+target, which wastes the kill and the exp.
+
 ```
 1. roll 1–20:  moonbeam <target>     — Luna ≥ 8, mana ≥ 500
 2. roll 21–45: talons                — Raptor ≥ 10
 3. roll 46–65: motherstouch self     — Luna ≥ 3, mana ≥ 50, HP < max_hit*75%
-4. roll 66–78: roar                  — Bear ≥ 6
-5. roll 79–88: staredown <target>    — Owl ≥ 5
-6. roll 89–95: web <target>          — Spider ≥ 2
+4. roll 66–80: web <target>          — Spider ≥ 2
 ```
+
+---
+
+## Gear
+
+Werewolves wield the **klaive** (`do_klaive`, vnum 33114, 30d60 weapon —
+avg 915 damage).  It costs 60 primal to craft and carries
+`SITEM_WOLFWEAPON`, so `do_werewolf` preserves it through the wolfman
+transform instead of stripping it off the hand.
+
+The bot gear table puts the klaive at `WEAR_WIELD` with no discipline
+requirement — it is crafted as soon as the bot has 60 primal.  Moonarmour
+pieces require `DISC_WERE_LUNA ≥ 2` and are guarded per-entry in
+`bot_gear_check`; the klaive is not gated by that check.
 
 ---
 
@@ -189,7 +208,8 @@ Handled in `between_fights` hook:
 
 | File | Contents |
 |------|----------|
-| `src/ww.c` | `do_sclaws`, `do_moonbeam`, `do_moongate`, `do_gmotherstouch`, `do_motherstouch`, `do_flameclaws`, `do_moonarmour`, `do_rend`, `do_skin`, `do_jawlock`, `do_perception`, `do_roar`, `do_slam`, `do_shred`, `do_talons`, `do_devour`, `do_staredown`, `do_disquiet`, `do_reshape`, `do_cocoon`, `do_quills`, `do_burrow`, `do_wither`, `do_razorclaws` |
+| `src/ww.c` | `do_klaive` (class weapon, 60 primal, vnum 33114), `do_sclaws`, `do_moonbeam`, `do_moongate`, `do_gmotherstouch`, `do_motherstouch`, `do_flameclaws`, `do_moonarmour`, `do_rend`, `do_skin`, `do_jawlock`, `do_perception`, `do_roar`, `do_slam`, `do_shred`, `do_talons`, `do_devour`, `do_staredown`, `do_disquiet`, `do_reshape`, `do_cocoon`, `do_quills`, `do_burrow`, `do_wither`, `do_razorclaws` |
+| `src/bot_gear.c` | `gear_werewolf` table (klaive + 15 moonarmour pieces), per-entry Luna-2 guard for moonarmour |
 | `src/clan.c` | `do_rage` (SPC\_WOLFMAN, rage build), `do_calm` (rage reduce), `do_web`, `do_claws` |
 | `src/fight.c` | DISC\_WERE\_BEAR dam boost, DISC\_WERE\_BOAR incoming reduction/knockdown, DISC\_WERE\_LYNX/BOAR extra attacks, DISC\_WERE\_RAPT auto rfangs, NEW\_QUILLS multi\_hit, NEW\_SLAM proc, rage max\_dam bonus, DISC\_WERE\_PAIN max\_dam |
 | `src/act_move.c` | `do_research`, `do_train`, discipline name table (indices 18–29) |

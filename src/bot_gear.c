@@ -197,10 +197,13 @@ static const BOT_GEAR_PIECE gear_drow[] = {
     { WEAR_NONE, NULL, 0 }
 };
 
-/* Werewolf class gear uses moonarmour (CLASS_WEREWOLF command, costs 60 primal/piece).
- * Requires DISC_WERE_LUNA >= 2 — enforced by the discipline guard in bot_gear_check.
- * No wield/hold: werewolves fight with claws. */
+/* Werewolf class gear: klaive wield (33114, 30d60 avg 915) + moonarmour armor.
+ * Klaive has SITEM_WOLFWEAPON so it survives the wolfman transform.
+ * Moonarmour requires DISC_WERE_LUNA >= 2 — enforced by the discipline
+ * guard in bot_gear_check.  Klaive has no discipline requirement. */
 static const BOT_GEAR_PIECE gear_werewolf[] = {
+    { WEAR_WIELD,    "klaive",              60 },
+    { WEAR_HOLD,     "klaive",              60 },
     { WEAR_FINGER_L, "moonarmour ring",     60 },
     { WEAR_FINGER_R, "moonarmour ring",     60 },
     { WEAR_NECK_1,   "moonarmour collar",   60 },
@@ -660,15 +663,10 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
-    /* Werewolf moonarmour requires DISC_WERE_LUNA >= 2.
-     * Skip class gear entirely until the discipline is learned;
-     * newbiepack fills slots in the meantime via step 5. */
-    if ( class_pref == BOT_CLASS_WEREWOLF
-      && ch->power[DISC_WERE_LUNA] < 2 )
-    {
-        force_newbiepack = TRUE;
-        goto newbiepack_sweep;
-    }
+    /* Werewolf moonarmour pieces require DISC_WERE_LUNA >= 2, but the
+     * klaive wield has no discipline requirement.  Per-entry skip below
+     * lets the bot craft the klaive immediately while deferring moonarmour
+     * until Luna 2 is trained. */
 
     /* Step 4: classed bot — class-gear pass (one slot upgraded per tick).
      *
@@ -678,6 +676,13 @@ void bot_gear_check( CHAR_DATA *ch )
      * extracted by step 2 on the following tick. */
     for ( entry = table; entry->wear_slot != WEAR_NONE; entry++ )
     {
+        /* Werewolf moonarmour requires DISC_WERE_LUNA >= 2.  The klaive
+         * wield has no discipline requirement, so it's not skipped here. */
+        if ( class_pref == BOT_CLASS_WEREWOLF
+          && ch->power[DISC_WERE_LUNA] < 2
+          && strncmp( entry->cmd, "moonarmour", 10 ) == 0 )
+            continue;
+
         current = get_eq_char( ch, entry->wear_slot );
 
         /* Already has class gear here — nothing to do */
@@ -775,10 +780,8 @@ void bot_gear_check( CHAR_DATA *ch )
     }
 
     /* Step 5: newbiepack sweep for slots covered by the newbiepack but absent
-     * from the class gear table.  These slots
-     * stay filled with newbiepack permanently.
-     * Also the landing point for the werewolf Luna-2 discipline guard above. */
-    newbiepack_sweep:
+     * from the class gear table.  These slots stay filled with newbiepack
+     * permanently (e.g. drow WEAR_NECK_2 when the class table lacks it). */
     for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
     {
         in_table = FALSE;
