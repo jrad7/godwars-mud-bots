@@ -297,14 +297,25 @@ void powerdown(CHAR_DATA *ch)
 
 int get_ratio(CHAR_DATA *ch)
 {
+  /* Deaths are weighted at 0.75 of a kill when computing pkscore, so a
+   * losing streak doesn't bury a player (especially bots) so deeply that
+   * they can never climb back to the upgrade threshold. */
   int ratio;
+  int weighted_death;
+  int denom;
 
   if (IS_NPC(ch)) return 0;
   if ((ch->pkill + ch->pdeath) == 0) ratio = 0; // to avoid divide by zero.
-  else if (ch->pkill > 0)
-    ratio = ch->pkill * 100 * ((ch->pkill * ch->pkill) - (ch->pdeath * ch->pdeath))/((ch->pkill + ch->pdeath) * (ch->pkill + ch->pdeath));
   else
-    ratio = 100 * ((ch->pkill * ch->pkill) - (ch->pdeath * ch->pdeath))/((ch->pkill + ch->pdeath) * (ch->pkill + ch->pdeath));
+  {
+    weighted_death = (ch->pdeath * 3) / 4;
+    denom = (ch->pkill + weighted_death) * (ch->pkill + weighted_death);
+    if (denom == 0) ratio = 0;
+    else if (ch->pkill > 0)
+      ratio = ch->pkill * 100 * ((ch->pkill * ch->pkill) - (weighted_death * weighted_death)) / denom;
+    else
+      ratio = 100 * ((ch->pkill * ch->pkill) - (weighted_death * weighted_death)) / denom;
+  }
   if (ratio < 0) ratio = 0;
   return ratio;
 }
