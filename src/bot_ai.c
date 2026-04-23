@@ -2421,7 +2421,10 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         }
         snprintf( echo, sizeof(echo), "[PVP] BFS found path -- stepping %s to reach %s\n\r", dir_name[dir], bot->pvp_target );
         bot_watch_msg( ch, echo );
-        bot_cmd( ch, dir_name[dir] );
+        /* Route through the nav queue so the stuck detector does not fire when
+         * BFS returns the same direction many ticks in a row (e.g. the target
+         * oscillates between two rooms during a chase). */
+        bot_nav_queue( bot, dir_name[dir] );
     }
     else
     {
