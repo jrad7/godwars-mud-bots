@@ -5183,13 +5183,16 @@ void do_decapitate( CHAR_DATA *ch, char *argument )
   if (ch->pcdata->mean_paradox_counter > 0) ch->pcdata->mean_paradox_counter--;
   ch->pkill = ch->pkill + 1;
   victim->pdeath = victim->pdeath + 1;
-  /* Cap stored pdeath so the weighted ratio never sits below zero: once it
-   * would go negative, hold pdeath at the edge instead. This way the next
-   * kill always moves pkscore off zero rather than paying down hidden debt. */
+  /* pdeath stays a true lifetime counter (displayed elsewhere, on the
+   * leaderboard, etc.).  pdeath_forgiven absorbs any excess so the weighted
+   * pkscore ratio floors at zero -- next kill always moves the needle
+   * instead of paying down hidden debt. */
   if (!IS_NPC(victim))
   {
-    int max_pdeath = (victim->pkill * 4) / 3;
-    if (victim->pdeath > max_pdeath) victim->pdeath = max_pdeath;
+    int effective = victim->pdeath - victim->pdeath_forgiven;
+    int max_effective = (victim->pkill * 4) / 3;
+    if (effective > max_effective)
+      victim->pdeath_forgiven += effective - max_effective;
   }
   if (!IS_CLASS(victim, CLASS_NINJA)) victim->rage = 0;
   victim->level = 2;

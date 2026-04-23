@@ -281,6 +281,7 @@ power[43]);
 
     fprintf( fp, "PkPdMkMd     %d %d %d %d\n",
 	ch->pkill, ch->pdeath, ch->mkill, ch->mdeath );
+    fprintf( fp, "PdForgiven   %d\n", ch->pdeath_forgiven );
     fprintf( fp, "Alos         %d\n", ch->pcdata->alosses);
     fprintf( fp, "Awin         %d\n", ch->pcdata->awins); 
     fprintf( fp, "Weapons      %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
@@ -806,10 +807,11 @@ bool load_char_short( DESCRIPTOR_DATA *d, char *name)
     for( sn=0 ; sn < 11 ; sn++ )
          ch->cmbt[sn]                   = 0;
 
-    ch->pkill                           = 0;      
-    ch->pdeath                          = 0;   
-    ch->mkill                           = 0;   
-    ch->mdeath                          = 0;   
+    ch->pkill                           = 0;
+    ch->pdeath                          = 0;
+    ch->pdeath_forgiven                 = 0;
+    ch->mkill                           = 0;
+    ch->mdeath                          = 0;
     ch->class                           = 0;   
     ch->pcdata->followers               = 0;
     ch->pcdata->perm_str                = 13;
@@ -1052,6 +1054,7 @@ bool load_char_obj( DESCRIPTOR_DATA *d, char *name)
 
     ch->pkill                           = 0;
     ch->pdeath                          = 0;
+    ch->pdeath_forgiven                 = 0;
     ch->mkill                           = 0;
     ch->mdeath                          = 0;
     ch->class                           = 0;
@@ -1955,6 +1958,7 @@ void fread_char( CHAR_DATA *ch, FILE *fp )
 		fMatch = TRUE;
 		break;
 	    }
+	    KEY( "PdForgiven",  ch->pdeath_forgiven,    fread_number( fp ) );
 	    KEY( "Prompt",      ch->prompt,             fread_string( fp ) );
 	    break;
 

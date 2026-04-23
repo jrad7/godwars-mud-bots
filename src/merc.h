@@ -2292,6 +2292,7 @@ struct char_data
     sh_int		wait;
     int			pkill;
     int			pdeath;
+    int			pdeath_forgiven;
     int			mkill;
     int			mdeath;
     int		        hit;

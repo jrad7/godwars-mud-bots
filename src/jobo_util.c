@@ -299,16 +299,22 @@ int get_ratio(CHAR_DATA *ch)
 {
   /* Deaths are weighted at 0.75 of a kill when computing pkscore, so a
    * losing streak doesn't bury a player (especially bots) so deeply that
-   * they can never climb back to the upgrade threshold. */
+   * they can never climb back to the upgrade threshold.  pdeath_forgiven
+   * tracks deaths that would have pushed ratio below zero, so the raw
+   * pdeath stat (used elsewhere for displays, leaderboards, etc.) stays
+   * accurate while the ratio floor holds at zero. */
   int ratio;
+  int effective_death;
   int weighted_death;
   int denom;
 
   if (IS_NPC(ch)) return 0;
-  if ((ch->pkill + ch->pdeath) == 0) ratio = 0; // to avoid divide by zero.
+  effective_death = ch->pdeath - ch->pdeath_forgiven;
+  if (effective_death < 0) effective_death = 0;
+  if ((ch->pkill + effective_death) == 0) ratio = 0; // to avoid divide by zero.
   else
   {
-    weighted_death = (ch->pdeath * 3) / 4;
+    weighted_death = (effective_death * 3) / 4;
     denom = (ch->pkill + weighted_death) * (ch->pkill + weighted_death);
     if (denom == 0) ratio = 0;
     else if (ch->pkill > 0)
