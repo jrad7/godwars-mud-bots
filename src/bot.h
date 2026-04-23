@@ -219,6 +219,7 @@ struct bot_data {
     int                 nav_n;             /* How many are pending        */
     char                pvp_target[32];    /* Current target of PVP hunt  */
     bool                pvp_chasing;       /* TRUE = chasing fleeing target, skip health gate */
+    int                 pvp_path_target_vnum; /* victim's room vnum when current nav path was planned; 0 = no path */
     bool                pvp_bot_initiated; /* TRUE = bot chose this hunt unprovoked (not fight-back) */
     char                pvp_attacker[32];  /* Who attacked us (flee mode) -- cleared when fight_timer==0 */
     char                pvp_flee_zone[64]; /* Area filename we fled from -- skip when picking hide zone */

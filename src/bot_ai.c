@@ -2246,97 +2246,97 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     }
 }
 
-/* Find first step of shortest path from start to target. Returns direction 0-5, or -1 if no path. */
-static int bot_find_path( ROOM_INDEX_DATA *start, ROOM_INDEX_DATA *target )
+/* Find shortest path from start to target. Fills path[] with directions (0-5)
+ * and returns path length, or -1 if no path. max_steps caps the output buffer. */
+static int bot_find_path( ROOM_INDEX_DATA *start, ROOM_INDEX_DATA *target,
+                          int *path, int max_steps )
 {
     struct bfs_queue {
         ROOM_INDEX_DATA *room;
-        int first_dir;
     } *queue;
+    /* parent_vnum[v] = vnum of the room we came from to reach v.
+     * parent_dir[v]  = direction taken from parent to reach v.
+     * Together these let us walk back from target to start and reverse. */
+    int  *parent_vnum;
+    char *parent_dir;
     bool *visited;
     int head = 0, tail = 0;
-    int i, dir = -1;
+    int i, len = -1;
 
-    if ( start == NULL || target == NULL || start == target )
+    if ( start == NULL || target == NULL || path == NULL || max_steps <= 0 )
+        return -1;
+    if ( start == target )
         return -1;
 
-    /* A massive array of visited flags, indexed by vnum. Safe for up to vnum 200k */
-    visited = calloc( 250000, sizeof(bool) );
-    if ( visited == NULL ) return -1;
-
-    /* A queue of rooms to check, max 20000 nodes searched */
-    queue = calloc( 20000, sizeof(struct bfs_queue) );
-    if ( queue == NULL )
-    {
-        free( visited );
-        return -1;
-    }
+    visited     = calloc( 250000, sizeof(bool) );
+    parent_vnum = calloc( 250000, sizeof(int) );
+    parent_dir  = calloc( 250000, sizeof(char) );
+    queue       = calloc( 20000,  sizeof(struct bfs_queue) );
+    if ( visited == NULL || parent_vnum == NULL || parent_dir == NULL || queue == NULL )
+        goto done;
 
     visited[start->vnum] = TRUE;
+    queue[tail++].room = start;
 
-    /* Enqueue initial available directions */
-    for ( i = 0; i < 6; i++ )
-    {
-        EXIT_DATA *pexit = start->exit[i];
-        if ( pexit != NULL && pexit->to_room != NULL 
-          && !IS_SET(pexit->exit_info, EX_LOCKED) 
-          && pexit->to_room->vnum < 250000 )
-        {
-            if ( pexit->to_room == target )
-            {
-                dir = i;
-                goto done;
-            }
-            if ( !visited[pexit->to_room->vnum] )
-            {
-                visited[pexit->to_room->vnum] = TRUE;
-                queue[tail].room = pexit->to_room;
-                queue[tail].first_dir = i;
-                tail++;
-            }
-        }
-    }
-
-    /* Process queue */
     while ( head < tail && tail < 19990 )
     {
-        ROOM_INDEX_DATA *r = queue[head].room;
-        int f_dir = queue[head].first_dir;
-        head++;
+        ROOM_INDEX_DATA *r = queue[head++].room;
+
+        if ( r == target )
+        {
+            /* Walk back from target to start via parent_dir, collecting directions.
+             * Then reverse into the caller's path[] buffer. */
+            int   rev[1024];
+            int   n = 0;
+            ROOM_INDEX_DATA *cur = target;
+            while ( cur != start && n < (int)(sizeof(rev)/sizeof(rev[0])) )
+            {
+                rev[n++] = parent_dir[cur->vnum];
+                {
+                    int pv = parent_vnum[cur->vnum];
+                    ROOM_INDEX_DATA *p = get_room_index( pv );
+                    if ( p == NULL ) { n = -1; break; }
+                    cur = p;
+                }
+            }
+            if ( n > 0 )
+            {
+                int copy = n < max_steps ? n : max_steps;
+                int k;
+                for ( k = 0; k < copy; k++ )
+                    path[k] = rev[n - 1 - k];
+                len = copy;
+            }
+            goto done;
+        }
 
         for ( i = 0; i < 6; i++ )
         {
             EXIT_DATA *pexit = r->exit[i];
-            if ( pexit != NULL && pexit->to_room != NULL 
-              && !IS_SET(pexit->exit_info, EX_LOCKED) 
-              && pexit->to_room->vnum < 250000 )
+            if ( pexit != NULL && pexit->to_room != NULL
+              && !IS_SET(pexit->exit_info, EX_LOCKED)
+              && pexit->to_room->vnum < 250000
+              && !visited[pexit->to_room->vnum] )
             {
-                if ( pexit->to_room == target )
-                {
-                    dir = f_dir;
-                    goto done;
-                }
-                if ( !visited[pexit->to_room->vnum] )
-                {
-                    visited[pexit->to_room->vnum] = TRUE;
-                    queue[tail].room = pexit->to_room;
-                    queue[tail].first_dir = f_dir;
-                    tail++;
-                }
+                visited[pexit->to_room->vnum]     = TRUE;
+                parent_vnum[pexit->to_room->vnum] = r->vnum;
+                parent_dir[pexit->to_room->vnum]  = (char)i;
+                queue[tail++].room = pexit->to_room;
             }
         }
     }
 
 done:
-    free( visited );
-    free( queue );
-    return dir;
+    if ( visited )     free( visited );
+    if ( parent_vnum ) free( parent_vnum );
+    if ( parent_dir )  free( parent_dir );
+    if ( queue )       free( queue );
+    return len;
 }
 
 static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
 {
     CHAR_DATA *victim;
-    int dir;
 
     if ( ch->position == POS_FIGHTING )
     {
@@ -2407,31 +2407,45 @@ static void bot_state_pvp_hunt( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    dir = bot_find_path( ch->in_room, victim->in_room );
+    {
+        int path[32];
+        int path_len;
+        int nav_cap = (int)(sizeof(bot->nav_cmds) / sizeof(bot->nav_cmds[0]));
+        int max_steps = (int)(sizeof(path) / sizeof(path[0]));
+        if ( nav_cap < max_steps ) max_steps = nav_cap;
 
-    if ( dir != -1 )
-    {
-        EXIT_DATA *pexit = ch->in_room->exit[dir];
-        char echo[256];
-        if ( pexit != NULL && IS_SET(pexit->exit_info, EX_CLOSED) )
+        path_len = bot_find_path( ch->in_room, victim->in_room, path, max_steps );
+
+        if ( path_len > 0 )
         {
-            char cmd[64];
-            sprintf(cmd, "open %s", dir_name[dir]);
-            bot_cmd( ch, cmd );
+            EXIT_DATA *pexit = ch->in_room->exit[path[0]];
+            char echo[256];
+            int k;
+            if ( pexit != NULL && IS_SET(pexit->exit_info, EX_CLOSED) )
+            {
+                char cmd[64];
+                sprintf(cmd, "open %s", dir_name[path[0]]);
+                bot_cmd( ch, cmd );
+            }
+            snprintf( echo, sizeof(echo), "[PVP] BFS found %d-step path -- heading %s to reach %s\n\r",
+                      path_len, dir_name[path[0]], bot->pvp_target );
+            bot_watch_msg( ch, echo );
+            /* Queue the full path; the nav queue drain handles one step per tick.
+             * If the victim moves off this path, bot_tick's pre-drain check will
+             * flush the queue so we re-plan on the next tick. */
+            bot->nav_n = 0;
+            for ( k = 0; k < path_len; k++ )
+                bot_nav_queue( bot, dir_name[path[k]] );
+            bot->pvp_path_target_vnum = victim->in_room->vnum;
         }
-        snprintf( echo, sizeof(echo), "[PVP] BFS found path -- stepping %s to reach %s\n\r", dir_name[dir], bot->pvp_target );
-        bot_watch_msg( ch, echo );
-        /* Route through the nav queue so the stuck detector does not fire when
-         * BFS returns the same direction many ticks in a row (e.g. the target
-         * oscillates between two rooms during a chase). */
-        bot_nav_queue( bot, dir_name[dir] );
-    }
-    else
-    {
-        bot_watch_msg( ch, "[PVP] BFS failed -- target unreachable. Halting hunt.\n\r" );
-        bot->pvp_target[0] = '\0';
-        bot->pvp_chasing = FALSE;
-        bot_change_state( ch, bot, BOT_GRINDING );
+        else
+        {
+            bot_watch_msg( ch, "[PVP] BFS failed -- target unreachable. Halting hunt.\n\r" );
+            bot->pvp_target[0] = '\0';
+            bot->pvp_chasing = FALSE;
+            bot->pvp_path_target_vnum = 0;
+            bot_change_state( ch, bot, BOT_GRINDING );
+        }
     }
 }
 
@@ -3089,6 +3103,23 @@ void bot_update( CHAR_DATA *ch )
 
     /* Reset cmd delay - human-like pause between commands */
     bot->cmd_delay = number_range( 1, 2 );
+
+    /* PvP hunt: invalidate the queued path if the victim has moved off it.
+     * bot->pvp_path_target_vnum is the victim's room at plan time; if the victim
+     * is no longer there, the rest of our path is stale -- flush and re-plan on
+     * the next state-dispatch tick instead of marching to where they used to be. */
+    if ( bot->state == BOT_PVP_HUNT && bot->nav_n > 0 && bot->pvp_path_target_vnum != 0
+      && bot->pvp_target[0] != '\0' )
+    {
+        CHAR_DATA *hv = get_char_world( ch, bot->pvp_target );
+        if ( hv == NULL || hv->in_room == NULL
+          || hv->in_room->vnum != bot->pvp_path_target_vnum )
+        {
+            bot_watch_msg( ch, "[PVP] target moved off planned path -- flushing queue to re-plan\n\r" );
+            bot->nav_n = 0;
+            bot->pvp_path_target_vnum = 0;
+        }
+    }
 
     /* Ensure pass door is up before stepping through the nav queue -- otherwise
      * the bot stalls at closed doors en route to the grind zone. */
