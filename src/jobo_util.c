@@ -305,6 +305,7 @@ int get_ratio(CHAR_DATA *ch)
     ratio = ch->pkill * 100 * ((ch->pkill * ch->pkill) - (ch->pdeath * ch->pdeath))/((ch->pkill + ch->pdeath) * (ch->pkill + ch->pdeath));
   else
     ratio = 100 * ((ch->pkill * ch->pkill) - (ch->pdeath * ch->pdeath))/((ch->pkill + ch->pdeath) * (ch->pkill + ch->pdeath));
+  if (ratio < 0) ratio = 0;
   return ratio;
 }
 
