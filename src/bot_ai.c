@@ -3082,6 +3082,19 @@ void bot_update( CHAR_DATA *ch )
     /* Reset cmd delay - human-like pause between commands */
     bot->cmd_delay = number_range( 1, 2 );
 
+    /* Ensure pass door is up before stepping through the nav queue -- otherwise
+     * the bot stalls at closed doors en route to the grind zone. */
+    if ( bot->nav_n > 0 && ch->position >= POS_STANDING && !IS_AFFECTED(ch, AFF_PASS_DOOR) )
+    {
+        int sn = skill_lookup("pass door");
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 && ch->mana >= skill_table[sn].min_mana )
+        {
+            bot_watch_msg( ch, "[NAV] pre-casting pass door before traversal\n\r" );
+            bot_cmd( ch, "cast \"pass door\"" );
+            return;
+        }
+    }
+
     /* Drain navigation queue before normal AI */
     if ( bot->nav_n > 0 )
     {
