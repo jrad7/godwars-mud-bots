@@ -3167,6 +3167,30 @@ void bot_update( CHAR_DATA *ch )
     }
 
     /* -----------------------------------------------------------------------
+     * Combat target switch: if we're fighting an NPC and a player starts
+     * attacking us, drop the mob and switch to the player.  Never switch
+     * off a player we're already fighting.
+     * ----------------------------------------------------------------------- */
+    if ( ch->fighting != NULL
+      && IS_NPC( ch->fighting )
+      && ch->in_room != NULL )
+    {
+        CHAR_DATA *rch;
+        for ( rch = ch->in_room->people; rch != NULL; rch = rch->next_in_room )
+        {
+            if ( rch == ch ) continue;
+            if ( IS_NPC( rch ) ) continue;
+            if ( rch->fighting != ch ) continue;
+
+            char cmd[MAX_INPUT_LENGTH];
+            snprintf( cmd, sizeof(cmd), "combatswitch %s", rch->name );
+            bot_watch_msg( ch, "[COMBAT] player attacker detected -- switching target\n\r" );
+            bot_cmd( ch, cmd );
+            break;
+        }
+    }
+
+    /* -----------------------------------------------------------------------
      * PvP victim detection (central, runs every tick before state dispatch)
      *
      * If a player or bot attacked us and we haven't recorded them yet,
