@@ -2781,7 +2781,10 @@ static void bot_ensure_geared( CHAR_DATA *ch )
  * GAGGED: set on tied-up victims; only blocks speech.  Once TIED_UP is
  *   cleared, 'gag self' removes the gag.
  *
- * BLINDFOLDED is handled separately by bot_check_vision after untying.
+ * BLINDFOLDED: applied alongside tie/gag (gensteal, do_tie).  Handled here
+ *   so recovery runs before any state logic that would try to target mobs
+ *   the bot can't see.  bot_check_vision has the same branch but is gated
+ *   behind darkness/fighting checks that can leave the bit stuck.
  * ----------------------------------------------------------------------- */
 static bool bot_check_tied_up( CHAR_DATA *ch, BOT_DATA *bot )
 {
@@ -2798,6 +2801,23 @@ static bool bot_check_tied_up( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bot_watch_msg( ch, "[TIED] gagged -- removing gag\n\r" );
         bot_cmd( ch, "gag self" );
+        return TRUE;
+    }
+
+    /* Remove blindfold once no longer tied.  do_blindfold requires
+     * POS_STANDING, so stand up first if resting/sitting. */
+    if ( IS_EXTRA(ch, BLINDFOLDED) )
+    {
+        if ( ch->position == POS_FIGHTING )
+            return FALSE;   /* can't blindfold while fighting; try next tick */
+        if ( ch->position < POS_STANDING )
+        {
+            bot_watch_msg( ch, "[TIED] blindfolded -- standing to remove\n\r" );
+            bot_cmd( ch, "stand" );
+            return TRUE;
+        }
+        bot_watch_msg( ch, "[TIED] blindfolded -- removing blindfold\n\r" );
+        bot_cmd( ch, "blindfold self" );
         return TRUE;
     }
 
