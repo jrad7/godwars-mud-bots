@@ -489,7 +489,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
     case BOT_RESTING:
         bot->state_timer     = number_range( BOT_TIMER_RESTING_MIN, BOT_TIMER_RESTING_MAX );
         bot->needs_meditate  = ( IS_CLASS(ch, CLASS_MAGE) || IS_CLASS(ch, CLASS_MONK)
-                               || IS_CLASS(ch, CLASS_NINJA) || IS_CLASS(ch, CLASS_DROW)
+                               || IS_CLASS(ch, CLASS_DROW)
                                || IS_CLASS(ch, CLASS_LICH) || IS_CLASS(ch, CLASS_ANGEL)
                                || IS_CLASS(ch, CLASS_TANARRI) );
         bot->ready_meditate  = FALSE;
@@ -2594,6 +2594,17 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     {
         const BOT_CLASS_AI *ai = bot_class_ai[bot->roster->class_pref];
         if ( ai && ai->between_fights && ai->between_fights(ch) )
+            return;
+    }
+
+    /* Ninja HP regen (update_ninja in update.c) requires ch->rage > 0, and
+     * rage decays by 1/tick when not fighting.  Fire michi via buff_check so
+     * ninjas refresh rage while resting instead of meditating (which doesn't
+     * help them regen). */
+    if ( IS_CLASS(ch, CLASS_NINJA) && bot->roster )
+    {
+        const BOT_CLASS_AI *ai = bot_class_ai[bot->roster->class_pref];
+        if ( ai && ai->buff_check && ai->buff_check(ch) )
             return;
     }
 
