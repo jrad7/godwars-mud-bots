@@ -1799,6 +1799,7 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
         if ( victim->fighting )                     continue;   /* Skip mobs already in combat */
         if ( IS_AFFECTED(victim, AFF_ETHEREAL) )    continue;   /* Can't fight ethereal mobs */
         if ( victim->master != NULL )               continue;   /* Don't attack summoned pets (golems, charmed mobs, etc.) */
+        if ( !can_see(ch, victim) )                 continue;   /* Can't attack what we can't see (invis, hidden, etc.) */
         if ( IS_SET(victim->act, ACT_IS_NPC) ) return victim;
     }
     return NULL;
