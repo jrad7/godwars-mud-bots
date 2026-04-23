@@ -2965,6 +2965,11 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
         }
         if ( ch->position == POS_FIGHTING )
             return FALSE;
+        /* Head form (post-decap) cannot cast spells — magic.c rejects
+         * polymorphed casters with "You cannot cast spells in this form."
+         * Without this guard the bot spams cast every tick while a severed head. */
+        if ( IS_HEAD(ch, LOST_HEAD) || IS_AFFECTED(ch, AFF_POLYMORPH) )
+            return FALSE;
         /* Shapeshifters in animal form cannot cast spells */
         if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
           && ch->pcdata->powers[SHAPE_FORM] != 0 )
