@@ -186,15 +186,15 @@ static bool bot_do_recall( CHAR_DATA *ch )
     if ( IS_HEAD(ch, LOST_HEAD) )
         return FALSE;
 
+    if ( ch->position < POS_FIGHTING && ch->position >= POS_SLEEPING )
+        bot_cmd( ch, "stand" );
+
     if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
         bot_cmd( ch, "cast 'remove curse' self" );
         return FALSE;   /* curing curse this tick; recall next tick */
     }
-
-    if ( ch->position < POS_FIGHTING && ch->position >= POS_SLEEPING )
-        bot_cmd( ch, "stand" );
-
+    
     bot_cmd( ch, "recall" );
 
     if ( ch->in_room == NULL || ch->in_room->vnum != ch->home )
