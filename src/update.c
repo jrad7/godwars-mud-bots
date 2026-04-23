@@ -2014,7 +2014,7 @@ void werewolf_regen( CHAR_DATA *ch, int multiplier )
     mana_gain += number_range(min,max);
     move_gain += number_range(min,max);
   }
-  if (ch->fighting == NULL)
+  if (ch->fighting == NULL && ch->fight_timer == 0)
   {
     hit_gain = UMAX(hit_gain, ch->max_hit * 3 / 100);
     mana_gain = UMAX(mana_gain, ch->max_mana * 3 / 100);
