@@ -194,7 +194,7 @@ static bool bot_do_recall( CHAR_DATA *ch )
         bot_cmd( ch, "cast 'remove curse' self" );
         return FALSE;   /* curing curse this tick; recall next tick */
     }
-    
+
     bot_cmd( ch, "recall" );
 
     if ( ch->in_room == NULL || ch->in_room->vnum != ch->home )
@@ -1160,22 +1160,22 @@ static bool bot_should_train( CHAR_DATA *ch )
              * If below the HP threshold, fall through to HP training below. */
             else if ( ch->stance[19] != -1 && ch->stance[13] >= 200 && ch->stance[20] == -1 )
             {
-                if ( ch->max_hit >= 30000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 120000000 ) return TRUE; else return FALSE; }
+                if ( ch->max_hit >= 20000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 120000000 ) return TRUE; else return FALSE; }
                 /* else fall through to HP training */
             }
             else if ( ch->stance[20] != -1 && ch->stance[14] >= 200 && ch->stance[21] == -1 )
             {
-                if ( ch->max_hit >= 40000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 140000000 ) return TRUE; else return FALSE; }
+                if ( ch->max_hit >= 22000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 140000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else if ( ch->stance[21] != -1 && ch->stance[15] >= 200 && ch->stance[22] == -1 )
             {
-                if ( ch->max_hit >= 50000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 200000000 ) return TRUE; else return FALSE; }
+                if ( ch->max_hit >= 24000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 200000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else if ( ch->stance[22] != -1 && ch->stance[16] >= 200 && ch->stance[23] == -1 )
             {
-                if ( ch->max_hit >= 60000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 380000000 ) return TRUE; else return FALSE; }
+                if ( ch->max_hit >= 26000 || ch->max_hit >= hp_cap ) { if ( ch->exp >= 380000000 ) return TRUE; else return FALSE; }
                 /* else fall through */
             }
             else
