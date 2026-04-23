@@ -317,11 +317,12 @@ void char_update( void )
       update_pos(ch);
     } 
     if ( ch->position > POS_STUNNED && !is_obj)
-    {  
-      if ( ch->hit  < ch->max_hit ) ch->hit = UMIN(ch->hit + number_range(5,10), ch->max_hit);
-      if ( ch->mana < ch->max_mana ) ch->mana = UMIN(ch->mana + number_range(5,10), ch->max_mana);
-      if ( ch->move < ch->max_move ) ch->move = UMIN(ch->move + number_range(5,10), ch->max_move);
-    }    
+    {
+      int regen_mult = (ch->fighting == NULL) ? 3 : 1;
+      if ( ch->hit  < ch->max_hit ) ch->hit = UMIN(ch->hit + number_range(5,10) * regen_mult, ch->max_hit);
+      if ( ch->mana < ch->max_mana ) ch->mana = UMIN(ch->mana + number_range(5,10) * regen_mult, ch->max_mana);
+      if ( ch->move < ch->max_move ) ch->move = UMIN(ch->move + number_range(5,10) * regen_mult, ch->max_move);
+    }
     else if ( ch->position <= POS_STUNNED && !is_obj)
     {
       ch->hit = ch->hit + number_range(2,4);
