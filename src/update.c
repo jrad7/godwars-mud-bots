@@ -318,18 +318,9 @@ void char_update( void )
     } 
     if ( ch->position > POS_STUNNED && !is_obj)
     {
-      if (ch->fighting == NULL)
-      {
-        if ( ch->hit  < ch->max_hit ) ch->hit = UMIN(ch->hit + UMAX(number_range(5,10), ch->max_hit * 3 / 100), ch->max_hit);
-        if ( ch->mana < ch->max_mana ) ch->mana = UMIN(ch->mana + UMAX(number_range(5,10), ch->max_mana * 3 / 100), ch->max_mana);
-        if ( ch->move < ch->max_move ) ch->move = UMIN(ch->move + UMAX(number_range(5,10), ch->max_move * 3 / 100), ch->max_move);
-      }
-      else
-      {
-        if ( ch->hit  < ch->max_hit ) ch->hit = UMIN(ch->hit + number_range(5,10), ch->max_hit);
-        if ( ch->mana < ch->max_mana ) ch->mana = UMIN(ch->mana + number_range(5,10), ch->max_mana);
-        if ( ch->move < ch->max_move ) ch->move = UMIN(ch->move + number_range(5,10), ch->max_move);
-      }
+      if ( ch->hit  < ch->max_hit ) ch->hit = UMIN(ch->hit + number_range(5,10), ch->max_hit);
+      if ( ch->mana < ch->max_mana ) ch->mana = UMIN(ch->mana + number_range(5,10), ch->max_mana);
+      if ( ch->move < ch->max_move ) ch->move = UMIN(ch->move + number_range(5,10), ch->max_move);
     }
     else if ( ch->position <= POS_STUNNED && !is_obj)
     {
@@ -2022,6 +2013,12 @@ void werewolf_regen( CHAR_DATA *ch, int multiplier )
     hit_gain += number_range(min,max);
     mana_gain += number_range(min,max);
     move_gain += number_range(min,max);
+  }
+  if (ch->fighting == NULL)
+  {
+    hit_gain = UMAX(hit_gain, ch->max_hit * 3 / 100);
+    mana_gain = UMAX(mana_gain, ch->max_mana * 3 / 100);
+    move_gain = UMAX(move_gain, ch->max_move * 3 / 100);
   }
   ch->hit = UMIN (ch->hit+(hit_gain*multiplier), ch->max_hit);
   ch->mana = UMIN (ch->mana+(mana_gain*multiplier), ch->max_mana);
