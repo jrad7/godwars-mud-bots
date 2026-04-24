@@ -95,11 +95,6 @@ void upgrade2(CHAR_DATA *ch)
     send_to_char(buf,ch);
     return;
   }
-  if (ch->pcdata->questtotal < qp_needed)
-  {
-    send_to_char("You need to have actually earned the qps.\n\r",ch);
-    return;
-  }
   if (get_ratio(ch) < pkscore_needed)
   {
     send_to_char("Your pkscore is to low.\n\r",ch);

@@ -1015,14 +1015,16 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
  * Upgrade-path helpers
  * ----------------------------------------------------------------------- */
 
-/* TRUE if bot has a base class that has not yet upgraded.
- * All seven base classes are candidates: Vampire/Monk/Ninja/Demon/Drow/WW/Mage. */
-static bool bot_is_pre_upgrade( CHAR_DATA *ch )
+/* TRUE if bot can still pursue an upgrade — either the first upgrade (base
+ * class -> advanced class) or upgrade2 (same advanced class, higher
+ * upgrade_level, capped at BOT_UPGRADE_LEVEL_MAX). */
+static bool bot_can_upgrade( CHAR_DATA *ch )
 {
     if ( !BOT_UPGRADES_ENABLED ) return FALSE;
     if ( IS_NPC(ch) || ch->pcdata == NULL ) return FALSE;
-    if ( is_upgrade(ch) ) return FALSE;   /* already an upgrade class */
     if ( ch->class == 0 ) return FALSE;   /* no class chosen yet */
+    if ( is_upgrade(ch) )
+        return ( ch->pcdata->upgrade_level < BOT_UPGRADE_LEVEL_MAX );
     return ( IS_CLASS(ch, CLASS_VAMPIRE)
           || IS_CLASS(ch, CLASS_MONK)
           || IS_CLASS(ch, CLASS_NINJA)
@@ -1032,48 +1034,93 @@ static bool bot_is_pre_upgrade( CHAR_DATA *ch )
           || IS_CLASS(ch, CLASS_MAGE) );
 }
 
-/* Effective hp/mana/move needed for do_upgrade — mirrors upgrade.c:
- * when pkscore < 1000, each 100-point gap adds 3000 to each stat requirement. */
-static void bot_upgrade_stat_needs( CHAR_DATA *ch, int *hp_need, int *mana_need, int *move_need )
+/* Current effective hp/mana/move/qp/pkscore needs for whichever upgrade the
+ * bot is chasing.  First upgrade mirrors do_upgrade's pkscore stat penalty
+ * (each 100-point gap below 1000 adds 3000 to each stat).  upgrade2 scales
+ * requirements by upgrade_level and has no stat penalty — pkscore is a hard
+ * gate. */
+static void bot_upgrade_stat_needs( CHAR_DATA *ch,
+    int *hp_need, int *mana_need, int *move_need,
+    int *qp_need, int *pkscore_need )
 {
-    int hp   = BOT_UPGRADE_HP;
-    int mana = BOT_UPGRADE_MANA;
-    int move = BOT_UPGRADE_MOVE;
-    int ratio = get_ratio(ch);
-    if ( ratio < BOT_UPGRADE_PKSCORE )
+    int hp, mana, move, qp, pk;
+
+    if ( is_upgrade(ch) )
     {
-        int gap = (BOT_UPGRADE_PKSCORE - UMAX(ratio, 0)) / 100;
-        hp   += 3000 * gap;
-        mana += 3000 * gap;
-        move += 3000 * gap;
+        int lvl = ch->pcdata->upgrade_level;
+        hp   = 80000 + lvl * 10000;
+        mana = 80000 + lvl * 10000;
+        move = 80000 + lvl * 10000;
+        qp   = (lvl + 1) * 40000;
+        pk   = 2000 + lvl * 500;
     }
-    if ( hp_need   ) *hp_need   = hp;
-    if ( mana_need ) *mana_need = mana;
-    if ( move_need ) *move_need = move;
+    else
+    {
+        int ratio = get_ratio(ch);
+        hp   = BOT_UPGRADE_HP;
+        mana = BOT_UPGRADE_MANA;
+        move = BOT_UPGRADE_MOVE;
+        qp   = BOT_UPGRADE_QP;
+        pk   = BOT_UPGRADE_PKSCORE;
+        if ( ratio < BOT_UPGRADE_PKSCORE )
+        {
+            int gap = (BOT_UPGRADE_PKSCORE - UMAX(ratio, 0)) / 100;
+            hp   += 3000 * gap;
+            mana += 3000 * gap;
+            move += 3000 * gap;
+        }
+    }
+
+    if ( hp_need      ) *hp_need      = hp;
+    if ( mana_need    ) *mana_need    = mana;
+    if ( move_need    ) *move_need    = move;
+    if ( qp_need      ) *qp_need      = qp;
+    if ( pkscore_need ) *pkscore_need = pk;
 }
 
-/* TRUE once base stat targets are met — bot is actively seeking upgrade requirements
- * (gen 1, 40k QP, and enough stats to cover any pkscore penalty) through PvP. */
+/* TRUE once base stat targets are met — bot is actively seeking remaining
+ * upgrade requirements (QP/pkscore, and gen 1 for the first upgrade) through
+ * PvP.  Uses the unpenalised baseline so we enter the hunt as soon as the
+ * raw targets are hit; pkscore-scaled overflow is handled by bot_upgrade_ready. */
 static bool bot_in_upgrade_hunt( CHAR_DATA *ch )
 {
-    return ( bot_is_pre_upgrade(ch)
-          && ch->max_hit  >= BOT_UPGRADE_HP
+    if ( !bot_can_upgrade(ch) ) return FALSE;
+    if ( is_upgrade(ch) )
+    {
+        int lvl = ch->pcdata->upgrade_level;
+        int target = 80000 + lvl * 10000;
+        return ( ch->max_hit  >= target
+              && ch->max_mana >= target
+              && ch->max_move >= target );
+    }
+    return ( ch->max_hit  >= BOT_UPGRADE_HP
           && ch->max_mana >= BOT_UPGRADE_MANA
           && ch->max_move >= BOT_UPGRADE_MOVE );
 }
 
 /* TRUE when every upgrade requirement is satisfied, including any pkscore
- * penalty on hp/mana/move. */
+ * penalty on hp/mana/move (first upgrade) or the superstance and pkscore hard
+ * gates (upgrade2). */
 static bool bot_upgrade_ready( CHAR_DATA *ch )
 {
-    int hp_need, mana_need, move_need;
+    int hp_need, mana_need, move_need, qp_need, pk_need;
     if ( !bot_in_upgrade_hunt(ch) )                     return FALSE;
-    if ( ch->pcdata->quest      < BOT_UPGRADE_QP )      return FALSE;
-    if ( ch->generation != 1 )                          return FALSE;
-    bot_upgrade_stat_needs( ch, &hp_need, &mana_need, &move_need );
+    bot_upgrade_stat_needs( ch, &hp_need, &mana_need, &move_need, &qp_need, &pk_need );
+    if ( ch->pcdata->quest < qp_need )                  return FALSE;
     if ( ch->max_hit  < hp_need  )                      return FALSE;
     if ( ch->max_mana < mana_need )                     return FALSE;
     if ( ch->max_move < move_need )                     return FALSE;
+    if ( get_ratio(ch) < pk_need )                      return FALSE;
+    if ( is_upgrade(ch) )
+    {
+        int i;
+        for ( i = 19; i <= 23; i++ )
+            if ( ch->stance[i] == -1 ) return FALSE;
+    }
+    else
+    {
+        if ( ch->generation != 1 )                      return FALSE;
+    }
     return TRUE;
 }
 
@@ -1187,15 +1234,20 @@ static bool bot_should_train( CHAR_DATA *ch )
         }
     }
 
-    /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation. */
-    if ( bot_is_pre_upgrade(ch) )
+    /* Bots pursuing an upgrade (first upgrade or upgrade2): train to the current
+     * stat targets, then pool for gen steps (first upgrade only).  Falls through
+     * to the post-upgrade branch when upgrade_level is maxed. */
+    if ( bot_can_upgrade(ch) )
     {
-        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 ) return TRUE;
-        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 ) return TRUE;
-        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 ) return TRUE;
-        /* After targets met: pool for the next generation training step (gen 5->4->3->2).
-         * Gen 1 comes from PvP gensteal only. */
-        if ( ch->generation >= 3 )
+        int hp_need, mana_need, move_need, qp_need, pk_need;
+        bot_upgrade_stat_needs( ch, &hp_need, &mana_need, &move_need, &qp_need, &pk_need );
+
+        if ( ch->max_hit  < hp_need   && ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 ) return TRUE;
+        if ( ch->max_mana < mana_need && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 ) return TRUE;
+        if ( ch->max_move < move_need && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 ) return TRUE;
+
+        /* First upgrade only: pool for gen 5->4->3->2; gen 1 via PvP gensteal. */
+        if ( !is_upgrade(ch) && ch->generation >= 3 )
         {
             int gencost;
             if      ( ch->generation == 3 ) gencost = 400000000;
@@ -1204,17 +1256,18 @@ static bool bot_should_train( CHAR_DATA *ch )
             else                            gencost =  10000000;
             if ( ch->exp >= gencost ) return TRUE;
         }
-        /* Gen/QP/stats all met but pkscore below upgrade threshold: dump excess
+        /* First upgrade: stats+QP met but pkscore below threshold — dump excess
          * exp into hp/mana/move up to hp_cap while PvPing for pkscore. */
-        if ( ch->generation == 1
-          && ch->pcdata->quest      >= BOT_UPGRADE_QP
-          && get_ratio(ch) < BOT_UPGRADE_PKSCORE )
+        if ( !is_upgrade(ch)
+          && ch->generation == 1
+          && ch->pcdata->quest >= qp_need
+          && get_ratio(ch) < pk_need )
         {
             if ( ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 ) return TRUE;
             if ( ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 ) return TRUE;
             if ( ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 ) return TRUE;
         }
-        return FALSE;  /* pool — grind/PvP for more exp or gen 1 via gensteal */
+        return FALSE;  /* pool — grind/PvP for QP/pkscore/gen */
     }
 
     /* Primary: dump all available exp into hp */
@@ -1299,16 +1352,26 @@ static bool bot_do_train( CHAR_DATA *ch )
         else
         {
             /* At the altar — upgrade! */
-            int old_class = ch->class;
+            int  old_class         = ch->class;
+            bool was_upgrade        = is_upgrade(ch);
+            int  old_upgrade_level  = ch->pcdata->upgrade_level;
             bot_cmd( ch, "upgrade" );
-            if ( is_upgrade(ch) )
+
+            bool did_first_upgrade = ( !was_upgrade && is_upgrade(ch) );
+            bool did_upgrade2      = ( was_upgrade
+                                    && ch->pcdata->upgrade_level > old_upgrade_level );
+
+            if ( did_first_upgrade || did_upgrade2 )
             {
-                int new_pref = bot_upgrade_class_pref( old_class );
-                BOT_DATA *bot = ch->pcdata->botdata;
-                if ( new_pref >= 0 && bot && bot->roster )
+                if ( did_first_upgrade )
                 {
-                    bot->roster->class_pref = new_pref;
-                    save_bot_roster();
+                    int new_pref = bot_upgrade_class_pref( old_class );
+                    BOT_DATA *bot = ch->pcdata->botdata;
+                    if ( new_pref >= 0 && bot && bot->roster )
+                    {
+                        bot->roster->class_pref = new_pref;
+                        save_bot_roster();
+                    }
                 }
                 {
                     FILE *ufp;
@@ -1325,16 +1388,26 @@ static bool bot_do_train( CHAR_DATA *ch )
                     fclose( fpReserve );
                     if ( ( ufp = fopen( "../txt/bot_upgrades.log", "a" ) ) != NULL )
                     {
-                        fprintf( ufp, "[%s] %s upgraded: %s -> %s (gen %d)\n",
-                            tbuf, ch->name,
-                            old_class_name, new_class_name,
-                            ch->generation );
+                        if ( did_upgrade2 )
+                            fprintf( ufp, "[%s] %s upgraded: %s L%d -> %s L%d (gen %d)\n",
+                                tbuf, ch->name,
+                                old_class_name, old_upgrade_level,
+                                new_class_name, ch->pcdata->upgrade_level,
+                                ch->generation );
+                        else
+                            fprintf( ufp, "[%s] %s upgraded: %s -> %s (gen %d)\n",
+                                tbuf, ch->name,
+                                old_class_name, new_class_name,
+                                ch->generation );
                         fclose( ufp );
                     }
                     fpReserve = fopen( NULL_FILE, "r" );
                 }
-                bot_watch_msg( ch, "[UPGRADE] Class upgraded! Roster updated.\n\r" );
-                bot_do_recall( ch );  /* return home so new class can start training */
+                if ( did_upgrade2 )
+                    bot_watch_msg( ch, "[UPGRADE] upgrade2 complete! Level up.\n\r" );
+                else
+                    bot_watch_msg( ch, "[UPGRADE] Class upgraded! Roster updated.\n\r" );
+                bot_do_recall( ch );  /* return home to start next training cycle */
             }
         }
         return TRUE;
@@ -1546,18 +1619,22 @@ static bool bot_do_train( CHAR_DATA *ch )
         if ( pool > 0 ) return FALSE;
     }
 
-    /* Pre-upgrade bots: train to upgrade stat targets, then pool exp for generation.
-     * Generation 5->4->3->2 via "train generation"; gen 1 only through PvP gensteal. */
-    if ( bot_is_pre_upgrade(ch) )
+    /* Bots pursuing an upgrade (first upgrade or upgrade2): train to current
+     * stat targets, then train generation (first upgrade only) or pool for PvP. */
+    if ( bot_can_upgrade(ch) )
     {
-        if ( ch->max_hit  < BOT_UPGRADE_HP   && ch->max_hit < hp_cap && ch->exp >= ch->max_hit  + 1 )
+        int hp_need, mana_need, move_need, qp_need, pk_need;
+        bot_upgrade_stat_needs( ch, &hp_need, &mana_need, &move_need, &qp_need, &pk_need );
+
+        if ( ch->max_hit  < hp_need   && ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 )
             { bot_cmd( ch, "train hp all" );   return TRUE; }
-        if ( ch->max_mana < BOT_UPGRADE_MANA && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 )
+        if ( ch->max_mana < mana_need && ch->max_mana < hp_cap && ch->exp >= ch->max_mana + 1 )
             { bot_cmd( ch, "train mana all" ); return TRUE; }
-        if ( ch->max_move < BOT_UPGRADE_MOVE && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 )
+        if ( ch->max_move < move_need && ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 )
             { bot_cmd( ch, "train move all" ); return TRUE; }
-        /* Targets met: train generation down toward 2, then PvP for gen 1 */
-        if ( ch->generation >= 3 )
+
+        /* First upgrade only: gen 5->4->3->2 via train; gen 1 via PvP gensteal. */
+        if ( !is_upgrade(ch) && ch->generation >= 3 )
         {
             int gencost;
             if      ( ch->generation == 3 ) gencost = 400000000;
@@ -1567,11 +1644,12 @@ static bool bot_do_train( CHAR_DATA *ch )
             if ( ch->exp >= gencost )
                 { bot_cmd( ch, "train generation" ); return TRUE; }
         }
-        /* Gen/QP/stats all met but pkscore below upgrade threshold: dump excess
+        /* First upgrade: stats+QP met but pkscore below threshold — dump excess
          * exp into hp/mana/move up to hp_cap while PvPing for pkscore. */
-        if ( ch->generation == 1
-          && ch->pcdata->quest      >= BOT_UPGRADE_QP
-          && get_ratio(ch) < BOT_UPGRADE_PKSCORE )
+        if ( !is_upgrade(ch)
+          && ch->generation == 1
+          && ch->pcdata->quest >= qp_need
+          && get_ratio(ch) < pk_need )
         {
             if ( ch->max_hit  < hp_cap && ch->exp >= ch->max_hit  + 1 )
                 { bot_cmd( ch, "train hp all" );   return TRUE; }
@@ -1580,7 +1658,7 @@ static bool bot_do_train( CHAR_DATA *ch )
             if ( ch->max_move < hp_cap && ch->exp >= ch->max_move + 1 )
                 { bot_cmd( ch, "train move all" ); return TRUE; }
         }
-        return FALSE;  /* pool — keep grinding/PvPing for more exp or gen 1 via gensteal */
+        return FALSE;  /* pool — keep grinding/PvPing for more exp, QP, pkscore, or gen */
     }
 
     /* Primary: dump all available exp into hp */

@@ -58,6 +58,9 @@ struct descriptor_data;
 #define BOT_UPGRADE_QP          40000
 #define BOT_UPGRADE_PKSCORE     1000
 
+/* Cap on upgrade2 iterations — mirrors upgrade.c's upgrade_level >= 4 gate. */
+#define BOT_UPGRADE_LEVEL_MAX   4
+
 /* PvP memory limits */
 #define BOT_PVP_GRUDGE_MAX    16   /* max players tracked in grudge list     */
 #define BOT_PVP_BLACKLIST_MAX 16   /* max players bot has given up attacking  */
