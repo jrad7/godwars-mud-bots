@@ -600,52 +600,59 @@ void bot_gear_check( CHAR_DATA *ch )
 
     /* Shapeshifters in animal form are blocked by act_obj.c from wearing
      * anything ("You cannot wear anything in this form").  Shift back to
-     * human first so the next tick can equip gear normally — but only when
-     * there's actually pending gear work, otherwise we spam 'shift human'
-     * (and hit the SHAPE_COUNTER>35 fatigue cap) every tick after combat
-     * just because the bot is still in BULL/HYDRA form. */
+     * human only when there's actually actionable gear work this tick —
+     * otherwise we spam 'shift human' (and hit the SHAPE_COUNTER>35 fatigue
+     * cap) every tick after combat. "Actionable" means a class piece sitting
+     * in inventory ready to wear, OR a slot we can afford to (re)craft this
+     * tick.  If we'd just be standing in human form waiting for primal,
+     * stay in form. */
     if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
       && IS_AFFECTED(ch, AFF_POLYMORPH)
       && ch->pcdata->powers[SHAPE_FORM] != 0 )
     {
-        bool gear_pending = FALSE;
+        bool gear_actionable = FALSE;
         const BOT_GEAR_PIECE *ge;
         OBJ_DATA *carry;
+        int cp = bot->roster->class_pref;
 
-        /* Pending if any class-gear slot is empty or holds a non-class piece. */
-        for ( ge = bot_class_gear[bot->roster->class_pref];
-              ge->wear_slot != WEAR_NONE; ge++ )
-        {
-            OBJ_DATA *worn = get_eq_char( ch, ge->wear_slot );
-            if ( worn == NULL || !bot_is_own_class_gear_vnum(
-                    bot->roster->class_pref, worn->pIndexData->vnum ) )
-            {
-                gear_pending = TRUE;
-                break;
-            }
-        }
-
-        /* Pending if there's a called-back class piece in inventory to wear. */
-        if ( !gear_pending && !bot->decap_recovery )
+        /* Class piece in inventory waiting to be worn. */
+        if ( !bot->decap_recovery )
         {
             for ( carry = ch->carrying; carry != NULL; carry = carry->next_content )
             {
                 if ( carry->wear_loc != WEAR_NONE ) continue;
-                if ( bot_is_own_class_gear_vnum(
-                        bot->roster->class_pref, carry->pIndexData->vnum ) )
+                if ( bot_is_own_class_gear_vnum( cp, carry->pIndexData->vnum ) )
                 {
-                    gear_pending = TRUE;
+                    gear_actionable = TRUE;
                     break;
                 }
             }
         }
 
-        if ( gear_pending )
+        /* Slot empty or holding newbiepack/prior-class gear AND we can
+         * afford the upgrade right now. */
+        if ( !gear_actionable )
+        {
+            for ( ge = bot_class_gear[cp]; ge->wear_slot != WEAR_NONE; ge++ )
+            {
+                OBJ_DATA *worn = get_eq_char( ch, ge->wear_slot );
+                if ( worn != NULL
+                  && bot_is_own_class_gear_vnum( cp, worn->pIndexData->vnum ) )
+                    continue;   /* already correct */
+                if ( ch->practice >= ge->primal_cost )
+                {
+                    gear_actionable = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if ( gear_actionable )
         {
             bot_cmd( ch, "shift human" );
             return;
         }
-        /* No gear work — leave the bot in form; between_fights handles shifts. */
+        /* Nothing useful to do in human form — stay in animal form. */
         return;
     }
 
