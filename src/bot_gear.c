@@ -797,12 +797,13 @@ void bot_gear_check( CHAR_DATA *ch )
      * extracted by step 2 on the following tick. */
     for ( entry = table; entry->wear_slot != WEAR_NONE; entry++ )
     {
+        bool skip_craft = FALSE;
         /* Werewolf moonarmour requires DISC_WERE_LUNA >= 2.  The klaive
          * wield has no discipline requirement, so it's not skipped here. */
         if ( class_pref == BOT_CLASS_WEREWOLF
           && ch->power[DISC_WERE_LUNA] < 2
           && strncmp( entry->cmd, "moonarmour", 10 ) == 0 )
-            continue;
+            skip_craft = TRUE;
 
         current = get_eq_char( ch, entry->wear_slot );
 
@@ -819,7 +820,7 @@ void bot_gear_check( CHAR_DATA *ch )
           && ( bot_is_newbiepack_vnum( current->pIndexData->vnum )
             || bot_is_class_gear_vnum( current->pIndexData->vnum ) ) )
         {
-            if ( ch->practice >= entry->primal_cost )
+            if ( !skip_craft && ch->practice >= entry->primal_cost )
             {
                 OBJ_DATA *before = ch->carrying;
                 OBJ_DATA *created;
@@ -840,7 +841,7 @@ void bot_gear_check( CHAR_DATA *ch )
                 {
                     char echo[256];
                     snprintf( echo, sizeof(echo),
-                        "[GEAR] %s: skip '%s' -- need %d primal, have %d\n\r",
+                        "[GEAR] %s: skip '%s' -- need %d primal (or discipline), have %d\n\r",
                         ch->name, entry->cmd, entry->primal_cost, ch->practice );
                     write_to_buffer( ch->desc->snoop_by, echo, 0 );
                     bot->last_gear_warn = now;
@@ -850,7 +851,7 @@ void bot_gear_check( CHAR_DATA *ch )
         }
 
         /* Slot is empty */
-        if ( ch->practice >= entry->primal_cost )
+        if ( !skip_craft && ch->practice >= entry->primal_cost )
         {
             OBJ_DATA *before  = ch->carrying;
             OBJ_DATA *created;
@@ -887,7 +888,7 @@ void bot_gear_check( CHAR_DATA *ch )
             {
                 char echo[256];
                 snprintf( echo, sizeof(echo),
-                    "[GEAR] %s: slot empty, skip '%s' -- need %d primal, have %d\n\r",
+                    "[GEAR] %s: slot empty, skip '%s' -- need %d primal (or discipline), have %d\n\r",
                     ch->name, entry->cmd, entry->primal_cost, ch->practice );
                 write_to_buffer( ch->desc->snoop_by, echo, 0 );
                 bot->last_gear_warn = now;
