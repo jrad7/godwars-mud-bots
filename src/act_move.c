@@ -203,58 +203,7 @@ if (bad_wall)
 	    }
 	}
 
-	if ( in_room->sector_type == SECT_WATER_NOSWIM
-	||   to_room->sector_type == SECT_WATER_NOSWIM )
-	{
-	    OBJ_DATA *obj;
-	    bool found;
-
-	    /*
-	     * Look for a boat.
-	     */
-	    found = FALSE;
-	    if ( !IS_NPC(ch) && IS_CLASS(ch, CLASS_VAMPIRE))
-	    {
-		if ( IS_VAMPAFF(ch, VAM_FLYING) )
-		    found = TRUE;
-		else if ( IS_POLYAFF(ch, POLY_SERPENT) )
-		    found = TRUE;
-		else if ( IS_AFFECTED(ch, AFF_SHADOWPLANE) )
-		    found = TRUE;
-		else if ((mount=ch->mount) != NULL && IS_SET(ch->mounted, IS_RIDING) 
-		    && IS_AFFECTED(mount, AFF_FLYING))
-		    found = TRUE;
-		else
-		{
-		    send_to_char( "You are unable to cross running water.\n\r", ch );
-		    return;
-		}
-	    }
-	    if ( IS_AFFECTED(ch, AFF_FLYING) )
-		found = TRUE;
-	    else if ( !IS_NPC( ch) && IS_DEMAFF(ch, DEM_UNFOLDED) )
-		found = TRUE;
-	else if (!IS_NPC(ch) && (IS_CLASS(ch, CLASS_DROW) &&
-IS_SET(ch->pcdata->powers[1], DPOWER_LEVITATION)))
-		found = TRUE;
-	    if ( !found )
-	    {
-	    	for ( obj = ch->carrying; obj != NULL; obj = obj->next_content )
-	    	{
-		    if ( obj->item_type == ITEM_BOAT )
-		    {
-		    	found = TRUE;
-		    	break;
-		    }
-	    	}
-	    	if ( !found )
-	    	{
-		    send_to_char( "You need a boat to go there.\n\r", ch );
-		    return;
-	    	}
-	    }
-	}
-	else if ( !IS_AFFECTED(ch, AFF_FLYING) && IS_POLYAFF(ch, POLY_FISH) )
+	if ( !IS_AFFECTED(ch, AFF_FLYING) && IS_POLYAFF(ch, POLY_FISH) )
 	{
 	    bool from_ok = FALSE;
 	    bool to_ok = FALSE;
