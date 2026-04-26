@@ -110,6 +110,24 @@ static bool bot_is_own_class_gear_vnum( int class_pref, int vnum )
     }
 }
 
+/* Map ch->class to the BOT_CLASS_* that matches an upgraded character.
+ * Returns -1 if the class has no upgraded variant or doesn't match an
+ * upgrade target (e.g. base werewolf is BOT_CLASS_WEREWOLF, not handled here). */
+static int bot_pref_for_upgraded_class( int ch_class )
+{
+    switch ( ch_class )
+    {
+    case CLASS_SHAPESHIFTER:   return BOT_CLASS_SHAPESHIFTER;
+    case CLASS_TANARRI:        return BOT_CLASS_TANARRI;
+    case CLASS_ANGEL:          return BOT_CLASS_ANGEL;
+    case CLASS_UNDEAD_KNIGHT:  return BOT_CLASS_UNDEAD_KNIGHT;
+    case CLASS_DROID:          return BOT_CLASS_DROID;
+    case CLASS_SAMURAI:        return BOT_CLASS_SAMURAI;
+    case CLASS_LICH:           return BOT_CLASS_LICH;
+    default:                   return -1;
+    }
+}
+
 /* -----------------------------------------------------------------------
  * Per-class gear tables
  *
@@ -550,6 +568,19 @@ void bot_gear_check( CHAR_DATA *ch )
     if ( ch == NULL || ch->pcdata == NULL ) return;
     bot = ch->pcdata->botdata;
     if ( bot == NULL || bot->roster == NULL ) return;
+
+    /* Self-heal stale roster class_pref.  If the bot's in-game class is an
+     * upgraded variant but the roster still has the base class_pref (e.g.
+     * upgraded outside the normal bot_ai upgrade path), correct it so gear
+     * logic uses the right own-class vnum range. */
+    {
+        int upgraded_pref = bot_pref_for_upgraded_class( ch->class );
+        if ( upgraded_pref >= 0 && bot->roster->class_pref != upgraded_pref )
+        {
+            bot->roster->class_pref = upgraded_pref;
+            save_bot_roster();
+        }
+    }
 
     /* Never manage gear mid-combat (POS_FIGHTING=8 < POS_STANDING=9) */
     if ( ch->position == POS_FIGHTING )
