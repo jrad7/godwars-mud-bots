@@ -3207,6 +3207,15 @@ void bot_update( CHAR_DATA *ch )
         int sn = skill_lookup("pass door");
         if ( sn > 0 && ch->pcdata->learned[sn] > 0 && ch->mana >= skill_table[sn].min_mana )
         {
+            /* Shapeshifters in animal form cannot cast spells (magic.c rejects
+             * with "You cannot cast spells in this form.").  Shift to human
+             * first so the next tick can cast pass door. */
+            if ( IS_CLASS(ch, CLASS_SHAPESHIFTER) && ch->pcdata->powers[SHAPE_FORM] != 0 )
+            {
+                bot_watch_msg( ch, "[NAV] shifting human to pre-cast pass door\n\r" );
+                bot_cmd( ch, "shift human" );
+                return;
+            }
             bot_watch_msg( ch, "[NAV] pre-casting pass door before traversal\n\r" );
             bot_cmd( ch, "cast \"pass door\"" );
             return;
