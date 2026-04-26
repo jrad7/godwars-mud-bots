@@ -1238,7 +1238,8 @@ void load_rooms( FILE *fp )
 	pRoomIndex->description		= fread_string( fp );
 	/* Area number */		  fread_number( fp );
 	pRoomIndex->room_flags		= fread_number( fp );
-	pRoomIndex->sector_type		= fread_number( fp );
+	// REMOVE_BIT(pRoomIndex->room_flags, ROOM_DARK); // do this as a last resort
+ 	pRoomIndex->sector_type		= fread_number( fp );
 	pRoomIndex->light		= 0;
 	pRoomIndex->blood		= 0;
 	pRoomIndex->roomtext		= NULL;
@@ -1397,6 +1398,7 @@ void new_load_rooms( FILE *fp )
         pRoomIndex->description         = fread_string( fp );
         /* Area number */                 fread_number( fp );   /* Unused */
         pRoomIndex->room_flags          = fread_number( fp );
+        // REMOVE_BIT(pRoomIndex->room_flags, ROOM_DARK); // do this as a last resort 
         pRoomIndex->sector_type         = fread_number( fp );
         pRoomIndex->light               = 0;
 	pRoomIndex->blood		= 0;
