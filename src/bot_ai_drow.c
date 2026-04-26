@@ -217,24 +217,35 @@ static bool bot_drow_buff_check( CHAR_DATA *ch )
 {
     if ( !IS_CLASS(ch, CLASS_DROW) ) return FALSE;
 
+    /* All toggles below require POS_STANDING (see interp.c).  If we issue
+     * them while sitting/resting they fail silently, which loops the buff
+     * check until stuck-detection recalls the bot. */
+    if ( ch->position != POS_STANDING ) return FALSE;
+
     /* Drowsight: truesight — see invisible and hidden */
     if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWSIGHT)
       && !IS_SET(ch->act, PLR_HOLYLIGHT) )
     { bot_cmd( ch, "drowsight" ); return TRUE; }
 
-    /* Drowhate: +650 max_dam 
-     * Must be disabled during navigation to prevent random attacks. */
+    /* Drowhate: +650 max_dam.  drow_hate() makes the bot do_kill a random
+     * room occupant on each move, which is desirable during grinding (we
+     * want to fight mobs) but disastrous during a PvP hunt (would attack
+     * bystanders and drop the real target).  Drive toward a desired state
+     * based on bot state, not on per-step nav_n -- otherwise the toggle
+     * flips on every room transition and trips stuck-detection. */
     if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE) )
     {
-        bool navigating = (ch->pcdata->botdata != NULL && ch->pcdata->botdata->nav_n > 0);
+        BOT_DATA *bd = ch->pcdata->botdata;
         bool active = IS_SET(ch->newbits, NEW_DROWHATE);
+        bool want_off = ( bd != NULL
+            && (bd->state == BOT_PVP_HUNT || bd->state == BOT_PVP_FLEE) );
 
-        if ( navigating && active )
+        if ( want_off && active )
         {
             bot_cmd( ch, "drowhate" );
             /* Do not return TRUE; we don't want to delay the PvP hunt */
         }
-        else if ( !navigating && !active )
+        else if ( !want_off && !active )
         {
             bot_cmd( ch, "drowhate" );
             return TRUE;
