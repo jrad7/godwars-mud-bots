@@ -2148,12 +2148,10 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bool in_valid_zone = FALSE;
         int  tier_i, route_i, rn;
-        int  matched_tier = -1;
 
         for ( tier_i = 0; tier_i < GRIND_TIER_COUNT; tier_i++ )
         {
             if ( ch->max_hit >= grind_tiers[tier_i].max_hit ) continue;
-            matched_tier = tier_i;
 
             for ( route_i = 0; route_i < grind_tiers[tier_i].num_routes && !in_valid_zone; route_i++ )
             {
@@ -2174,39 +2172,7 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 
         if ( !in_valid_zone )
         {
-            char bugbuf[1024];
-            char allowed[768];
-            int  off = 0;
-
-            allowed[0] = '\0';
-            if ( matched_tier >= 0 )
-            {
-                for ( route_i = 0;
-                      route_i < grind_tiers[matched_tier].num_routes
-                      && off < (int)sizeof(allowed) - 1;
-                      route_i++ )
-                {
-                    const char **route = grind_tiers[matched_tier].routes[route_i];
-                    if ( route == NULL ) continue;
-                    for ( rn = 0; route_names[rn].route != NULL; rn++ )
-                    {
-                        if ( route_names[rn].route != route ) continue;
-                        off += snprintf( allowed + off, sizeof(allowed) - off,
-                            "%s%s", off ? "," : "",
-                            route_names[rn].filename ? route_names[rn].filename : "(null)" );
-                        break;
-                    }
-                }
-            }
-
-            snprintf( bugbuf, sizeof(bugbuf),
-                "[ZONECHK] outside grind zone -- room: %s (%d) in %s [filename=%s] "
-                "-- max_hit=%d tier=%d prev_state=%s allowed=[%s] -- recalling",
-                ch->in_room->name, ch->in_room->vnum,
-                ch->in_room->area->name, ch->in_room->area->filename,
-                ch->max_hit, matched_tier,
-                bot_state_str(bot->prev_state), allowed );
-            do_bug( ch, bugbuf );
+            bot_watch_msg( ch, "[GRIND] outside grind zone -- recalling to restart\n\r" );
             if ( bot_do_recall(ch) )
                 bot_change_state( ch, bot, BOT_IDLE );
             return;
