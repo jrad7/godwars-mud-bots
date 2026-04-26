@@ -948,65 +948,74 @@ static bool bot_generic_buff_check( CHAR_DATA *ch )
     if ( ch->position == POS_FIGHTING )
         return FALSE;
 
-    /* Shapeshifters in animal form cannot cast spells.
-     * Exception: if cursed, revert to human form first so remove curse can
-     * be cast next tick (otherwise recall is permanently blocked). */
-    if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
-      && ch->pcdata != NULL
-      && ch->pcdata->powers[SHAPE_FORM] != 0 )
-    {
-        if ( IS_AFFECTED(ch, AFF_CURSE) )
-        {
-            bot_cmd( ch, "shift human" );
-            return TRUE;    /* caller defers; next tick we cast remove curse */
-        }
-        return FALSE;
-    }
+    bool needs_buff = FALSE;
+    char cmd[64];
+
+    cmd[0] = '\0';
 
     if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
         sn = skill_lookup("remove curse");
         if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
         {
-            bot_cmd( ch, "cast rem self" );
-            return TRUE;
+            needs_buff = TRUE;
+            sprintf(cmd, "cast rem self");
         }
     }
 
-    if ( bot_needs_repair(ch) )
+    if ( !needs_buff && bot_needs_repair(ch) )
     {
         sn = skill_lookup("repair");
         if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
         {
-            bot_cmd( ch, "cast repair" );
-            return TRUE;
+            needs_buff = TRUE;
+            sprintf(cmd, "cast repair");
         }
     }
 
-    /* Target generic buffs */
-    for ( i = 0; buffs[i] != NULL; i++ )
+    if ( !needs_buff )
     {
-        sn = skill_lookup(buffs[i]);
-        if ( sn > 0 && ch->pcdata->learned[sn] > 0 && !is_affected(ch, sn) )
+        /* Target generic buffs */
+        for ( i = 0; buffs[i] != NULL; i++ )
         {
-            /* spell_sanctuary guards via IS_AFFECTED (bitvector), not is_affected
-             * (AFFECT_DATA list), so gear-provided sanctuary won't appear in the
-             * list — check the bitvector directly to avoid an infinite cast loop. */
-            if ( !strcmp(buffs[i], "sanctuary") && IS_AFFECTED(ch, AFF_SANCTUARY) )
-                continue;
-            if ( !strcmp(buffs[i], "fly") && IS_AFFECTED(ch, AFF_FLYING) )
-                continue;
-            if ( !strcmp(buffs[i], "pass door") && IS_AFFECTED(ch, AFF_PASS_DOOR) )
-                continue;
-            char cmd[64];
-            if ( !strcmp(buffs[i], "pass door") )
-                sprintf(cmd, "cast \"pass door\"");
-            else
-                sprintf(cmd, "cast %s", buffs[i]);
-            bot_cmd(ch, cmd);
-            return TRUE;
+            sn = skill_lookup(buffs[i]);
+            if ( sn > 0 && ch->pcdata->learned[sn] > 0 && !is_affected(ch, sn) )
+            {
+                /* spell_sanctuary guards via IS_AFFECTED (bitvector), not is_affected
+                 * (AFFECT_DATA list), so gear-provided sanctuary won't appear in the
+                 * list — check the bitvector directly to avoid an infinite cast loop. */
+                if ( !strcmp(buffs[i], "sanctuary") && IS_AFFECTED(ch, AFF_SANCTUARY) )
+                    continue;
+                if ( !strcmp(buffs[i], "fly") && IS_AFFECTED(ch, AFF_FLYING) )
+                    continue;
+                if ( !strcmp(buffs[i], "pass door") && IS_AFFECTED(ch, AFF_PASS_DOOR) )
+                    continue;
+                
+                needs_buff = TRUE;
+                if ( !strcmp(buffs[i], "pass door") )
+                    sprintf(cmd, "cast \"pass door\"");
+                else
+                    sprintf(cmd, "cast %s", buffs[i]);
+                break;
+            }
         }
     }
+
+    if ( !needs_buff )
+        return FALSE;
+
+    /* Shapeshifters in animal form cannot cast spells.
+     * Revert to human form first. */
+    if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
+      && ch->pcdata != NULL
+      && ch->pcdata->powers[SHAPE_FORM] != 0 )
+    {
+        bot_cmd( ch, "shift human" );
+        return TRUE;
+    }
+
+    bot_cmd(ch, cmd);
+    return TRUE;
 
     return FALSE;
 }
@@ -3210,26 +3219,18 @@ void bot_update( CHAR_DATA *ch )
         }
     }
 
-    /* Ensure pass door is up before stepping through the nav queue -- otherwise
-     * the bot stalls at closed doors en route to the grind zone. */
-    if ( bot->nav_n > 0 && ch->position >= POS_STANDING && !IS_AFFECTED(ch, AFF_PASS_DOOR) )
+    /* Ensure buffs are up before stepping through the nav queue -- otherwise
+     * the bot stalls at closed doors (pass door) or lacks needed effects en route. */
+    if ( bot->nav_n > 0 && ch->position >= POS_STANDING )
     {
-        int sn = skill_lookup("pass door");
-        if ( sn > 0 && ch->pcdata->learned[sn] > 0 && ch->mana >= skill_table[sn].min_mana )
-        {
-            /* Shapeshifters in animal form cannot cast spells (magic.c rejects
-             * with "You cannot cast spells in this form.").  Shift to human
-             * first so the next tick can cast pass door. */
-            if ( IS_CLASS(ch, CLASS_SHAPESHIFTER) && ch->pcdata->powers[SHAPE_FORM] != 0 )
-            {
-                bot_watch_msg( ch, "[NAV] shifting human to pre-cast pass door\n\r" );
-                bot_cmd( ch, "shift human" );
-                return;
-            }
-            bot_watch_msg( ch, "[NAV] pre-casting pass door before traversal\n\r" );
-            bot_cmd( ch, "cast \"pass door\"" );
+        const BOT_CLASS_AI *ai = NULL;
+        if ( bot->roster )
+            ai = bot_class_ai[bot->roster->class_pref];
+
+        if ( bot_generic_buff_check(ch) )
             return;
-        }
+        if ( ai && ai->buff_check && ai->buff_check(ch) )
+            return;
     }
 
     /* Drain navigation queue before normal AI */

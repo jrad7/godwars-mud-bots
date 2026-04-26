@@ -222,10 +222,24 @@ static bool bot_drow_buff_check( CHAR_DATA *ch )
       && !IS_SET(ch->act, PLR_HOLYLIGHT) )
     { bot_cmd( ch, "drowsight" ); return TRUE; }
 
-    /* Drowhate: +650 max_dam */
-    if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE)
-      && !IS_SET(ch->newbits, NEW_DROWHATE) )
-    { bot_cmd( ch, "drowhate" ); return TRUE; }
+    /* Drowhate: +650 max_dam 
+     * Must be disabled during navigation to prevent random attacks. */
+    if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE) )
+    {
+        bool navigating = (ch->pcdata->botdata != NULL && ch->pcdata->botdata->nav_n > 0);
+        bool active = IS_SET(ch->newbits, NEW_DROWHATE);
+
+        if ( navigating && active )
+        {
+            bot_cmd( ch, "drowhate" );
+            /* Do not return TRUE; we don't want to delay the PvP hunt */
+        }
+        else if ( !navigating && !active )
+        {
+            bot_cmd( ch, "drowhate" );
+            return TRUE;
+        }
+    }
 
     /* Darktendrils: extra multi_hit attack + dodge proc each combat round */
     if ( IS_SET(ch->pcdata->powers[1], DPOWER_DARKTENDRILS)
@@ -273,6 +287,14 @@ static void bot_drow_combat_action( CHAR_DATA *ch )
     const char *tname;
 
     if ( target == NULL ) return;
+
+    /* If we arrived from a PvP hunt, drowhate might have been disabled for navigation.
+     * Ensure it is turned back on during combat. */
+    if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE)
+      && !IS_SET(ch->newbits, NEW_DROWHATE) )
+    {
+        bot_cmd( ch, "drowhate" );
+    }
 
     roll  = number_range( 1, 100 );
     tname = target->name;
