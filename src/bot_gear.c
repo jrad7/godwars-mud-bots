@@ -541,6 +541,17 @@ void bot_gear_check( CHAR_DATA *ch )
         return;
     }
 
+    /* Shapeshifters in animal form are blocked by act_obj.c from wearing
+     * anything ("You cannot wear anything in this form").  Shift back to
+     * human first so the next tick can equip gear normally. */
+    if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
+      && IS_AFFECTED(ch, AFF_POLYMORPH)
+      && ch->pcdata->powers[SHAPE_FORM] != 0 )
+    {
+        bot_cmd( ch, "shift human" );
+        return;
+    }
+
     class_pref        = bot->roster->class_pref;
     table             = bot_class_gear[class_pref];
 
