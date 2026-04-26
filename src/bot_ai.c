@@ -2601,7 +2601,11 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
 
     if ( victim->position <= POS_STUNNED )
     {
-        /* Time to finish them -- count this as a win regardless of who initiated */
+        /* Time to finish them -- count this as a win regardless of who initiated.
+         * Issue kill + decap/gensteal in the SAME tick so the bot doesn't miss
+         * the mortal-wound window.  kill drops them from stunned/incap to mortal,
+         * then the immediately-following decap/gensteal finishes them before the
+         * next tick fires. */
         char cmd[256];
         char killmsg[128];
         bool was_grudge = bot_pvp_is_grudge( bot, victim->name );
@@ -2613,6 +2617,11 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
         bot_watch_msg( ch, killmsg );
         if ( was_grudge )
             bot_flame_grudge_kill( ch, victim->name );
+
+        /* Hit them first to ensure they drop to mortal wound */
+        sprintf( cmd, "kill %s", victim->name );
+        bot_cmd( ch, cmd );
+
         if ( ch->class == victim->class && ch->generation >= victim->generation && victim->generation < 7 && victim->generation > 1 )
         {
             sprintf( cmd, "gensteal %s", victim->name );
