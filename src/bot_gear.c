@@ -84,6 +84,32 @@ static bool bot_is_class_gear_vnum( int vnum )
     return FALSE;
 }
 
+/* Returns TRUE if vnum belongs to the player-craftable gear set for the
+ * given BOT_CLASS_*.  Used after class upgrades (e.g. werewolf->shapeshifter)
+ * to distinguish the bot's own class gear from leftover gear of its prior
+ * class — which still passes bot_is_class_gear_vnum but should be replaced. */
+static bool bot_is_own_class_gear_vnum( int class_pref, int vnum )
+{
+    switch ( class_pref )
+    {
+    case BOT_CLASS_MAGE:           return vnum >= 33000 && vnum <= 33014;
+    case BOT_CLASS_MONK:           return vnum >= 33020 && vnum <= 33032;
+    case BOT_CLASS_VAMPIRE:        return vnum >= 33040 && vnum <= 33055;
+    case BOT_CLASS_DROW:           return vnum >= 33060 && vnum <= 33074;
+    case BOT_CLASS_NINJA:          return vnum >= 33080 && vnum <= 33094;
+    case BOT_CLASS_WEREWOLF:       return vnum >= 33100 && vnum <= 33114;
+    case BOT_CLASS_DEMON:          return vnum >= 33120 && vnum <= 33134;
+    case BOT_CLASS_DROID:          return vnum >= 33140 && vnum <= 33153;
+    case BOT_CLASS_SHAPESHIFTER:   return vnum >= 33160 && vnum <= 33177;
+    case BOT_CLASS_ANGEL:          return vnum >= 33180 && vnum <= 33193;
+    case BOT_CLASS_TANARRI:        return vnum >= 33200 && vnum <= 33213;
+    case BOT_CLASS_LICH:           return vnum >= 33220 && vnum <= 33233;
+    case BOT_CLASS_SAMURAI:        return vnum >= 33240 && vnum <= 33255;
+    case BOT_CLASS_UNDEAD_KNIGHT:  return vnum >= 29975 && vnum <= 29991;
+    default:                       return FALSE;
+    }
+}
+
 /* -----------------------------------------------------------------------
  * Per-class gear tables
  *
@@ -575,6 +601,12 @@ void bot_gear_check( CHAR_DATA *ch )
 
             if ( obj->wear_loc != WEAR_NONE ) continue;
             if ( !bot_is_class_gear_vnum( obj->pIndexData->vnum ) ) continue;
+            /* Skip prior-class gear (e.g. moonarmour after werewolf->shapeshifter
+             * upgrade).  Letting step 1.5 wear it puts the bot in a loop:
+             * step 4 sees a class-vnum in the slot and skips, so the proper
+             * shapearmor never gets crafted.  Step 2b will extract instead. */
+            if ( !bot_is_own_class_gear_vnum( class_pref, obj->pIndexData->vnum ) )
+                continue;
 
             /* Find how many gear-table slots are already filled with this vnum,
              * and capture the cmd shared by those entries. */
@@ -696,14 +728,18 @@ void bot_gear_check( CHAR_DATA *ch )
 
         current = get_eq_char( ch, entry->wear_slot );
 
-        /* Already has class gear here — nothing to do */
+        /* Already has matching own-class gear here — nothing to do.  After a
+         * class upgrade the bot may still be wearing prior-class gear (e.g.
+         * moonarmour after werewolf->shapeshifter); fall through to the
+         * upgrade path so it gets replaced with the new class's piece. */
         if ( current != NULL
-          && bot_is_class_gear_vnum( current->pIndexData->vnum ) )
+          && bot_is_own_class_gear_vnum( class_pref, current->pIndexData->vnum ) )
             continue;
 
-        /* Slot has newbiepack gear — try to upgrade if we can afford it */
+        /* Slot has newbiepack or prior-class gear — try to upgrade if we can afford it */
         if ( current != NULL
-          && bot_is_newbiepack_vnum( current->pIndexData->vnum ) )
+          && ( bot_is_newbiepack_vnum( current->pIndexData->vnum )
+            || bot_is_class_gear_vnum( current->pIndexData->vnum ) ) )
         {
             if ( ch->practice >= entry->primal_cost )
             {
