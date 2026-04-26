@@ -265,8 +265,6 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                     "[STUCK] stuck on '%s' -- state: %s -- room: %s (%d) in %s -- recalling",
                     buf, bot_state_str(bot->state), room_name, vnum, area_name );
                 do_bug( ch, logbuf );
-                strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
-                bot_watch_msg( ch, logbuf );
 
                 /* Clear history so we don't spam recalls */
                 bot->cmd_history_count = 0;
@@ -2150,7 +2148,6 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         bool in_valid_zone = FALSE;
         int  tier_i, route_i, rn;
         int  matched_tier = -1;
-        char dbgbuf[512];
 
         for ( tier_i = 0; tier_i < GRIND_TIER_COUNT; tier_i++ )
         {
@@ -2163,35 +2160,51 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 if ( route == NULL ) continue;
                 for ( rn = 0; route_names[rn].route != NULL; rn++ )
                 {
-                    if ( route_names[rn].route == route )
+                    if ( route_names[rn].route == route
+                      && !str_cmp( ch->in_room->area->filename, route_names[rn].filename ) )
                     {
-                        snprintf( dbgbuf, sizeof(dbgbuf),
-                            "[ZONECHK] tier=%d route_i=%d zone='%s' filename='%s' vs room_area='%s' cmp=%d\n\r",
-                            tier_i, route_i, route_names[rn].name,
-                            route_names[rn].filename ? route_names[rn].filename : "(null)",
-                            ch->in_room->area->filename,
-                            str_cmp( ch->in_room->area->filename, route_names[rn].filename ) );
-                        bot_watch_msg( ch, dbgbuf );
-                        if ( !str_cmp( ch->in_room->area->filename, route_names[rn].filename ) )
-                        {
-                            in_valid_zone = TRUE;
-                            break;
-                        }
+                        in_valid_zone = TRUE;
+                        break;
                     }
                 }
             }
             break; /* only check first matching tier */
         }
 
-        snprintf( dbgbuf, sizeof(dbgbuf),
-            "[ZONECHK] result: in_valid_zone=%d matched_tier=%d max_hit=%d room_vnum=%d area_filename='%s'\n\r",
-            in_valid_zone ? 1 : 0, matched_tier, ch->max_hit,
-            ch->in_room->vnum, ch->in_room->area->filename );
-        bot_watch_msg( ch, dbgbuf );
-
         if ( !in_valid_zone )
         {
-            bot_watch_msg( ch, "[GRIND] outside grind zone -- recalling to restart\n\r" );
+            char bugbuf[1024];
+            char allowed[768];
+            int  off = 0;
+
+            allowed[0] = '\0';
+            if ( matched_tier >= 0 )
+            {
+                for ( route_i = 0;
+                      route_i < grind_tiers[matched_tier].num_routes
+                      && off < (int)sizeof(allowed) - 1;
+                      route_i++ )
+                {
+                    const char **route = grind_tiers[matched_tier].routes[route_i];
+                    if ( route == NULL ) continue;
+                    for ( rn = 0; route_names[rn].route != NULL; rn++ )
+                    {
+                        if ( route_names[rn].route != route ) continue;
+                        off += snprintf( allowed + off, sizeof(allowed) - off,
+                            "%s%s", off ? "," : "",
+                            route_names[rn].filename ? route_names[rn].filename : "(null)" );
+                        break;
+                    }
+                }
+            }
+
+            snprintf( bugbuf, sizeof(bugbuf),
+                "[ZONECHK] outside grind zone -- room: %s (%d) in %s [filename=%s] "
+                "-- max_hit=%d tier=%d allowed=[%s] -- recalling",
+                ch->in_room->name, ch->in_room->vnum,
+                ch->in_room->area->name, ch->in_room->area->filename,
+                ch->max_hit, matched_tier, allowed );
+            do_bug( ch, bugbuf );
             if ( bot_do_recall(ch) )
                 bot_change_state( ch, bot, BOT_IDLE );
             return;
