@@ -3147,6 +3147,11 @@ void bot_update( CHAR_DATA *ch )
         }
     }
 
+    /* If incapacitated or worse, the bot has no control over its body and
+     * must wait to either regenerate enough HP to stand up, or die. */
+    if ( ch->position < POS_SLEEPING )
+        return;
+
     /* Safety: eject any bot trapped in a sealed classhq cluster.
      * 93350-93356: spider web area (vampire HQ) -- queen webs/traps.
      * 93420-93426: Hell (demon HQ) -- bots swallowed by spec_eater Satan.
