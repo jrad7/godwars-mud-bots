@@ -600,12 +600,52 @@ void bot_gear_check( CHAR_DATA *ch )
 
     /* Shapeshifters in animal form are blocked by act_obj.c from wearing
      * anything ("You cannot wear anything in this form").  Shift back to
-     * human first so the next tick can equip gear normally. */
+     * human first so the next tick can equip gear normally — but only when
+     * there's actually pending gear work, otherwise we spam 'shift human'
+     * (and hit the SHAPE_COUNTER>35 fatigue cap) every tick after combat
+     * just because the bot is still in BULL/HYDRA form. */
     if ( IS_CLASS(ch, CLASS_SHAPESHIFTER)
       && IS_AFFECTED(ch, AFF_POLYMORPH)
       && ch->pcdata->powers[SHAPE_FORM] != 0 )
     {
-        bot_cmd( ch, "shift human" );
+        bool gear_pending = FALSE;
+        const BOT_GEAR_PIECE *ge;
+        OBJ_DATA *carry;
+
+        /* Pending if any class-gear slot is empty or holds a non-class piece. */
+        for ( ge = bot_class_gear[bot->roster->class_pref];
+              ge->wear_slot != WEAR_NONE; ge++ )
+        {
+            OBJ_DATA *worn = get_eq_char( ch, ge->wear_slot );
+            if ( worn == NULL || !bot_is_own_class_gear_vnum(
+                    bot->roster->class_pref, worn->pIndexData->vnum ) )
+            {
+                gear_pending = TRUE;
+                break;
+            }
+        }
+
+        /* Pending if there's a called-back class piece in inventory to wear. */
+        if ( !gear_pending && !bot->decap_recovery )
+        {
+            for ( carry = ch->carrying; carry != NULL; carry = carry->next_content )
+            {
+                if ( carry->wear_loc != WEAR_NONE ) continue;
+                if ( bot_is_own_class_gear_vnum(
+                        bot->roster->class_pref, carry->pIndexData->vnum ) )
+                {
+                    gear_pending = TRUE;
+                    break;
+                }
+            }
+        }
+
+        if ( gear_pending )
+        {
+            bot_cmd( ch, "shift human" );
+            return;
+        }
+        /* No gear work — leave the bot in form; between_fights handles shifts. */
         return;
     }
 
