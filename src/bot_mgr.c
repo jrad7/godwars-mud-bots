@@ -548,8 +548,13 @@ bool bot_login( BOT_ROSTER_ENTRY *roster )
     bot->idle_chat_timer = number_range( 30, 120 );
     ch->pcdata->botdata  = bot;
 
-    /* Start grinding immediately so the nav queue fires right away */
-    bot_change_state( ch, bot, BOT_GRINDING );
+    /* Mortal bots (e.g. decapped before a copyover that cleared LOST_HEAD)
+     * must train avatar before they can wear class gear -- starting them in
+     * GRINDING leaves them stuck looping on gear they can't equip. */
+    if ( ch->level < 3 )
+        bot_change_state( ch, bot, BOT_TRAINING );
+    else
+        bot_change_state( ch, bot, BOT_GRINDING );
 
     d->connected  = CON_PLAYING;
     d->next       = descriptor_list;
