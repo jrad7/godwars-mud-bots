@@ -2985,7 +2985,7 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
 
     /* Phase 2: faerie fog was cast last tick -- check if it worked.
      * If the room is no longer dark, clear the flag and resume normally.
-     * If still dark, faerie fog failed -- fall through to the recall path. */
+     * If still dark, faerie fog failed -- recall immediately. */
     if ( bot->blind_recovery )
     {
         bot->blind_recovery = FALSE;
@@ -2994,29 +2994,39 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
             bot_watch_msg( ch, "[VISION] faerie fog cleared darkness -- resuming\n\r" );
             return FALSE;   /* darkness gone, continue normal AI */
         }
-        /* Still dark after faerie fog -- fall through to recall below */
+        /* Still dark after faerie fog -- recall immediately */
+        if ( bot->nav_n > 0 )
+        {
+            bot_watch_msg( ch, "[VISION] darkness - aborting nav queue\n\r" );
+            bot->nav_n = 0;
+        }
+        bot_watch_msg( ch, "[VISION] darkness - recalling\n\r" );
+        bot_do_recall(ch);
+        return TRUE;
     }
 
-    /* Darkness: attempt faerie fog first for player-cast ROOM_TOTAL_DARKNESS.
+    /* Darkness: attempt faerie fog first.
      * Faerie fog strips NEW_DARKNESS from Drow/Droid in the room and clears
-     * the ROOM_TOTAL_DARKNESS flag.  Non-dispellable darkness (ROOM_DARK flag,
-     * nighttime) skips straight to recall since faerie fog can't help. */
+     * the ROOM_TOTAL_DARKNESS flag. */
     if ( in_darkness )
     {
         if ( ch->position == POS_FIGHTING )
             return FALSE;   /* Can't cast or recall while fighting */
 
-        /* Try faerie fog for player-cast total darkness */
-        if ( in_total_darkness )
+        /* Try faerie fog for any darkness */
         {
             int sn = skill_lookup( "faerie fog" );
-            bool can_cast = ( sn > 0
-                           && ch->pcdata->learned[sn] > 0
-                           && !( IS_CLASS(ch, CLASS_SHAPESHIFTER)
-                              && ch->pcdata->powers[SHAPE_FORM] != 0 ) );
+            bool can_cast = ( sn > 0 && ch->pcdata->learned[sn] > 0 );
 
             if ( can_cast )
             {
+                if ( IS_CLASS(ch, CLASS_SHAPESHIFTER) && ch->pcdata->powers[SHAPE_FORM] != 0 )
+                {
+                    bot_watch_msg( ch, "[VISION] darkness - shifting human to cast faerie fog\n\r" );
+                    bot_cmd( ch, "shift human" );
+                    return TRUE;
+                }
+
                 bot_watch_msg( ch, "[VISION] darkness - casting faerie fog\n\r" );
                 bot_cmd( ch, "cast 'faerie fog'" );
                 bot->blind_recovery = TRUE;  /* check result next tick */
@@ -3024,7 +3034,7 @@ static bool bot_check_vision( CHAR_DATA *ch, BOT_DATA *bot )
             }
         }
 
-        /* Faerie fog unavailable or non-dispellable darkness -- recall */
+        /* Faerie fog unavailable -- recall */
         if ( bot->nav_n > 0 )
         {
             bot_watch_msg( ch, "[VISION] darkness - aborting nav queue\n\r" );
