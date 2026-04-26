@@ -2149,10 +2149,13 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     {
         bool in_valid_zone = FALSE;
         int  tier_i, route_i, rn;
+        int  matched_tier = -1;
+        char dbgbuf[512];
 
         for ( tier_i = 0; tier_i < GRIND_TIER_COUNT; tier_i++ )
         {
             if ( ch->max_hit >= grind_tiers[tier_i].max_hit ) continue;
+            matched_tier = tier_i;
 
             for ( route_i = 0; route_i < grind_tiers[tier_i].num_routes && !in_valid_zone; route_i++ )
             {
@@ -2160,16 +2163,31 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
                 if ( route == NULL ) continue;
                 for ( rn = 0; route_names[rn].route != NULL; rn++ )
                 {
-                    if ( route_names[rn].route == route
-                      && !str_cmp( ch->in_room->area->filename, route_names[rn].filename ) )
+                    if ( route_names[rn].route == route )
                     {
-                        in_valid_zone = TRUE;
-                        break;
+                        snprintf( dbgbuf, sizeof(dbgbuf),
+                            "[ZONECHK] tier=%d route_i=%d zone='%s' filename='%s' vs room_area='%s' cmp=%d\n\r",
+                            tier_i, route_i, route_names[rn].name,
+                            route_names[rn].filename ? route_names[rn].filename : "(null)",
+                            ch->in_room->area->filename,
+                            str_cmp( ch->in_room->area->filename, route_names[rn].filename ) );
+                        bot_watch_msg( ch, dbgbuf );
+                        if ( !str_cmp( ch->in_room->area->filename, route_names[rn].filename ) )
+                        {
+                            in_valid_zone = TRUE;
+                            break;
+                        }
                     }
                 }
             }
             break; /* only check first matching tier */
         }
+
+        snprintf( dbgbuf, sizeof(dbgbuf),
+            "[ZONECHK] result: in_valid_zone=%d matched_tier=%d max_hit=%d room_vnum=%d area_filename='%s'\n\r",
+            in_valid_zone ? 1 : 0, matched_tier, ch->max_hit,
+            ch->in_room->vnum, ch->in_room->area->filename );
+        bot_watch_msg( ch, dbgbuf );
 
         if ( !in_valid_zone )
         {
