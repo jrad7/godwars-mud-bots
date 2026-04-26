@@ -261,8 +261,8 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                 int         vnum      = ch->in_room ? ch->in_room->vnum : -1;
 
                 snprintf( logbuf, sizeof(logbuf),
-                    "[STUCK] stuck on '%s' -- room: %s (%d) in %s -- recalling",
-                    buf, room_name, vnum, area_name );
+                    "[STUCK] stuck on '%s' -- state: %s -- room: %s (%d) in %s -- recalling",
+                    buf, bot_state_str(bot->state), room_name, vnum, area_name );
                 do_bug( ch, logbuf );
                 strncat( logbuf, "\n\r", sizeof(logbuf) - strlen(logbuf) - 1 );
                 bot_watch_msg( ch, logbuf );
