@@ -236,7 +236,9 @@ static bool bot_drow_buff_check( CHAR_DATA *ch )
     if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE) )
     {
         BOT_DATA *bd = ch->pcdata->botdata;
-        bool active = IS_SET(ch->newbits, NEW_DROWHATE);
+        /* IS_SET returns the masked int; coercing 65536 to bool truncates
+         * to 0, so use an explicit zero-compare. */
+        bool active = IS_SET(ch->newbits, NEW_DROWHATE) != 0;
         bool want_off = ( bd != NULL
             && (bd->state == BOT_PVP_HUNT || bd->state == BOT_PVP_FLEE) );
 
