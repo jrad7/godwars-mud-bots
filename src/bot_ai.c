@@ -247,6 +247,11 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                     break;
                 }
             }
+            /* "chant heal" is legitimately repeated by liches (no natural
+             * HP regen) -- don't treat it as being stuck. */
+            if ( stuck && !str_cmp( bot->cmd_history[0], "chant heal" ) )
+                stuck = FALSE;
+
             if ( stuck )
             {
                 char logbuf[512];
