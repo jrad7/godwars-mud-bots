@@ -463,6 +463,7 @@ void bot_change_state( CHAR_DATA *ch, BOT_DATA *bot, bot_state_t new_state )
         }
     }
 
+    bot->prev_state       = bot->state;
     bot->state            = new_state;
     bot->cmd_delay        = number_range( 1, 2 );
     bot->cmd_history_head  = 0;
@@ -2200,10 +2201,11 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
 
             snprintf( bugbuf, sizeof(bugbuf),
                 "[ZONECHK] outside grind zone -- room: %s (%d) in %s [filename=%s] "
-                "-- max_hit=%d tier=%d allowed=[%s] -- recalling",
+                "-- max_hit=%d tier=%d prev_state=%s allowed=[%s] -- recalling",
                 ch->in_room->name, ch->in_room->vnum,
                 ch->in_room->area->name, ch->in_room->area->filename,
-                ch->max_hit, matched_tier, allowed );
+                ch->max_hit, matched_tier,
+                bot_state_str(bot->prev_state), allowed );
             do_bug( ch, bugbuf );
             if ( bot_do_recall(ch) )
                 bot_change_state( ch, bot, BOT_IDLE );

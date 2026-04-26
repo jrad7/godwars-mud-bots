@@ -202,6 +202,7 @@ typedef struct bot_roster_entry {
 struct bot_data {
     BOT_ROSTER_ENTRY   *roster;             /* Back-pointer to roster      */
     bot_state_t         state;              /* Current AI state            */
+    bot_state_t         prev_state;         /* Previous AI state (debug)   */
     int                 state_timer;        /* Pulses left in this state   */
     int                 state_timer_max;    /* Initial timer value         */
     int                 cmd_delay;          /* Pulses until next command   */
