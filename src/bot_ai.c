@@ -170,6 +170,7 @@ static void bot_set_autostance( CHAR_DATA *ch )
 }
 
 static bool bot_generic_buff_check( CHAR_DATA *ch );
+static const char *bot_state_str( bot_state_t state );
 
 /* -----------------------------------------------------------------------
  * bot_do_recall
@@ -248,12 +249,8 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                 }
             }
             /* "chant heal" is legitimately repeated by liches (no natural
-             * HP regen) -- don't treat it as being stuck.
-             * "drowhate" is spammed by drow during PVP hunts while chasing
-             * targets -- also not a real stuck condition. */
+             * HP regen) -- don't treat it as being stuck. */
             if ( stuck && !str_cmp( bot->cmd_history[0], "chant heal" ) )
-                stuck = FALSE;
-            if ( stuck && !str_cmp( bot->cmd_history[0], "drowhate" ) )
                 stuck = FALSE;
 
             if ( stuck )

@@ -288,13 +288,8 @@ static void bot_drow_combat_action( CHAR_DATA *ch )
 
     if ( target == NULL ) return;
 
-    /* If we arrived from a PvP hunt, drowhate might have been disabled for navigation.
-     * Ensure it is turned back on during combat. */
-    if ( IS_SET(ch->pcdata->powers[1], DPOWER_DROWHATE)
-      && !IS_SET(ch->newbits, NEW_DROWHATE) )
-    {
-        bot_cmd( ch, "drowhate" );
-    }
+    /* drowhate requires POS_STANDING (interp.c) so it cannot be toggled
+     * during combat.  The buff_check vtable handles it between fights. */
 
     roll  = number_range( 1, 100 );
     tname = target->name;
