@@ -168,8 +168,17 @@ static bool bot_shapeshifter_do_train( CHAR_DATA *ch )
 
 static bool bot_shapeshifter_buff_check( CHAR_DATA *ch )
 {
-    if ( !IS_CLASS(ch, CLASS_SHAPESHIFTER) ) return FALSE;
-    return FALSE; /* Currently no active buffs for Shapeshifter out of forms */
+    if ( !IS_CLASS(ch, CLASS_SHAPESHIFTER) || ch->pcdata == NULL ) return FALSE;
+
+    /* Truesight - requires shiftpowers >= 1 */
+    if ( ch->pcdata->powers[SHAPE_POWERS] >= 1
+      && !IS_SET(ch->act, PLR_HOLYLIGHT) )
+    {
+        bot_cmd( ch, "truesight" );
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /*
