@@ -84,7 +84,8 @@ sentence summary and tell the player to type `help <topic>` for the full text,
 using the help entry's primary keyword as <topic>. Never reproduce doc sources
 verbatim -- always summarize.
 Be concise. Do NOT cite, name, quote, or reference the sources (the `help <topic>`
-pointer above is the only exception)."""
+pointer above is the only exception). Be kind and friendly. Have fun! If the question
+is not related to the game, try to answer it."""
 
 
 class RagState:
