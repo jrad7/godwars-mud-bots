@@ -255,15 +255,16 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
 
             if ( stuck )
             {
-                char logbuf[512];
+                char logbuf[2048];
                 const char *area_name = ( ch->in_room && ch->in_room->area )
                                         ? ch->in_room->area->name : "unknown area";
                 const char *room_name = ch->in_room ? ch->in_room->name : "unknown room";
                 int         vnum      = ch->in_room ? ch->in_room->vnum : -1;
+                const char *last_out  = bot->last_cmd_output[0] ? bot->last_cmd_output : "(none)";
 
                 snprintf( logbuf, sizeof(logbuf),
-                    "[STUCK] stuck on '%s' -- state: %s -- room: %s (%d) in %s -- recalling",
-                    buf, bot_state_str(bot->state), room_name, vnum, area_name );
+                    "[STUCK] stuck on '%s' -- state: %s -- room: %s (%d) in %s -- last output: %s -- recalling",
+                    buf, bot_state_str(bot->state), room_name, vnum, area_name, last_out );
                 do_bug( ch, logbuf );
 
                 /* Clear history so we don't spam recalls */
@@ -286,7 +287,22 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
         write_to_buffer( ch->desc->snoop_by, echo, 0 );
     }
 
-    interpret( ch, buf );
+    {
+        int out_before = ( ch->desc != NULL ) ? ch->desc->outtop : 0;
+        interpret( ch, buf );
+
+        if ( ch->pcdata != NULL && ch->pcdata->botdata != NULL
+          && ch->desc != NULL && ch->desc->outbuf != NULL
+          && ch->desc->outtop > out_before )
+        {
+            BOT_DATA *bd = ch->pcdata->botdata;
+            int delta = ch->desc->outtop - out_before;
+            int cap   = (int)sizeof(bd->last_cmd_output) - 1;
+            if ( delta > cap ) delta = cap;
+            memcpy( bd->last_cmd_output, ch->desc->outbuf + out_before, delta );
+            bd->last_cmd_output[delta] = '\0';
+        }
+    }
 }
 
 /* -----------------------------------------------------------------------
