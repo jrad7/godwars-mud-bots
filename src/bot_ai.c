@@ -1914,6 +1914,46 @@ static CHAR_DATA *bot_find_mob_target( CHAR_DATA *ch )
     return NULL;
 }
 
+/* Build a target spec ("keyword" or "N.keyword") that resolves to victim
+ * via get_char_room from ch's perspective.  do_kill only consumes the
+ * first argument, so a multi-word victim->name like "giant hill" collapses
+ * to "giant", which can collide with the bot's own name/morph (e.g. a
+ * spiderformed drow whose morph is "the giant mylochar") or another mob
+ * sharing that keyword.  Walk the room and use ordinal disambiguation. */
+static void bot_build_target_spec( CHAR_DATA *ch, CHAR_DATA *victim, char *out, size_t outsz )
+{
+    char keyword[MAX_INPUT_LENGTH];
+    CHAR_DATA *rch;
+    int count = 0;
+    int target_index = 0;
+
+    one_argument( victim->name, keyword );
+    if ( keyword[0] == '\0' )
+    {
+        snprintf( out, outsz, "%s", victim->name );
+        return;
+    }
+
+    for ( rch = ch->in_room->people; rch != NULL; rch = rch->next_in_room )
+    {
+        if ( !IS_NPC(rch) && IS_HEAD(rch, LOST_HEAD) ) continue;
+        if ( !IS_NPC(rch) && IS_EXTRA(rch, EXTRA_OSWITCH) ) continue;
+        if ( !can_see( ch, rch ) ) continue;
+        if ( !is_name( keyword, rch->name )
+          && (IS_NPC(rch) || !is_name( keyword, rch->pcdata->switchname ))
+          && (IS_NPC(rch) || !is_name( keyword, rch->morph )) )
+            continue;
+        count++;
+        if ( rch == victim )
+            target_index = count;
+    }
+
+    if ( target_index <= 1 )
+        snprintf( out, outsz, "%s", keyword );
+    else
+        snprintf( out, outsz, "%d.%s", target_index, keyword );
+}
+
 /* -----------------------------------------------------------------------
  * STATE HANDLERS
  * ----------------------------------------------------------------------- */
@@ -2288,13 +2328,15 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     if ( victim != NULL )
     {
         char cmd[MAX_INPUT_LENGTH];
+        char spec[MAX_INPUT_LENGTH];
         /* Don't start combat while still equipping newbiepack items */
         if ( bot_is_gearing( ch ) )
         {
             bot_watch_msg( ch, "[GEAR] still equipping — holding attack\n\r" );
             return;
         }
-        sprintf( cmd, "kill %s", victim->name );
+        bot_build_target_spec( ch, victim, spec, sizeof(spec) );
+        sprintf( cmd, "kill %s", spec );
         bot_cmd( ch, cmd );
         bot->grind_attempts = 0;
         return;
