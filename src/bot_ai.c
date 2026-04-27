@@ -1946,13 +1946,10 @@ static void bot_state_idle( CHAR_DATA *ch, BOT_DATA *bot )
     if ( bot->state_timer <= 0 )
     {
         /* Decapped bots are level-2 mortals with no HP regen -- training takes
-         * priority over resting since resting will never resolve.  Also catches
-         * fresh bots spawned with class pre-set but never avatared (need to
-         * train hp first if still under the 2000 hp avatar gate). */
-        if ( ch->level == 2
-          && ( ch->max_hit >= 2000 || ch->exp >= ch->max_hit + 1 ) )
+         * priority over resting since resting will never resolve. */
+        if ( ch->level == 2 && ch->max_hit >= 2000 )
         {
-            bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar/hp\n\r" );
+            bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar\n\r" );
             bot_change_state( ch, bot, BOT_TRAINING );
             return;
         }
@@ -2135,14 +2132,14 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
     CHAR_DATA *victim;
 
     /* Decapped bots are mortals (level 2) and can't wear their class gear,
-     * which leaves them stuck re-trying the newbiepack forever.  Also catches
-     * fresh bots spawned with class pre-set but never avatared.  Bounce to
-     * training so 'train avatar' (or 'train hp' if still under 2000 hp) makes
-     * progress instead of looping in grind. */
-    if ( ch->level == 2
-      && ( ch->max_hit >= 2000 || ch->exp >= ch->max_hit + 1 ) )
+     * which leaves them stuck re-trying the newbiepack forever.  Bounce to
+     * training so 'train avatar' restores their class before grinding.
+     * Sub-2000 mortals (fresh-spawn pre-classed bots) are handled by the
+     * normal state-timer bot_should_train check below -- bouncing here on
+     * every kill would thrash between grind and train for a single +1 hp. */
+    if ( ch->level == 2 && ch->max_hit >= 2000 )
     {
-        bot_watch_msg( ch, "[REASON] mortal in grind state, needs train avatar/hp\n\r" );
+        bot_watch_msg( ch, "[REASON] mortal in grind state, needs train avatar\n\r" );
         bot_change_state( ch, bot, BOT_TRAINING );
         return;
     }
@@ -2717,12 +2714,10 @@ static void bot_state_resting( CHAR_DATA *ch, BOT_DATA *bot )
     }
 
     /* Decapped bots are mortals (level 2) with no HP regen -- skip waiting and
-     * go straight to training so they can 'train avatar' back to their class
-     * (or 'train hp' first if still under the 2000 hp avatar gate). */
-    if ( ch->level == 2
-      && ( ch->max_hit >= 2000 || ch->exp >= ch->max_hit + 1 ) )
+     * go straight to training so they can 'train avatar' back to their class. */
+    if ( ch->level == 2 && ch->max_hit >= 2000 )
     {
-        bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar/hp\n\r" );
+        bot_watch_msg( ch, "[REASON] mortal after decap, needs train avatar\n\r" );
         bot_change_state( ch, bot, BOT_TRAINING );
         return;
     }
