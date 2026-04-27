@@ -287,22 +287,12 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
         write_to_buffer( ch->desc->snoop_by, echo, 0 );
     }
 
-    {
-        int out_before = ( ch->desc != NULL ) ? ch->desc->outtop : 0;
-        interpret( ch, buf );
+    /* Reset last_cmd_output so write_to_buffer captures only this command's
+     * output for stuck-detection diagnostics. */
+    if ( ch->pcdata != NULL && ch->pcdata->botdata != NULL )
+        ch->pcdata->botdata->last_cmd_output[0] = '\0';
 
-        if ( ch->pcdata != NULL && ch->pcdata->botdata != NULL
-          && ch->desc != NULL && ch->desc->outbuf != NULL
-          && ch->desc->outtop > out_before )
-        {
-            BOT_DATA *bd = ch->pcdata->botdata;
-            int delta = ch->desc->outtop - out_before;
-            int cap   = (int)sizeof(bd->last_cmd_output) - 1;
-            if ( delta > cap ) delta = cap;
-            memcpy( bd->last_cmd_output, ch->desc->outbuf + out_before, delta );
-            bd->last_cmd_output[delta] = '\0';
-        }
-    }
+    interpret( ch, buf );
 }
 
 /* -----------------------------------------------------------------------

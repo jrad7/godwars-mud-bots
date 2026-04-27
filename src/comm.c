@@ -1872,6 +1872,24 @@ void write_to_buffer( DESCRIPTOR_DATA *d, const char *txt, int length)
   if (length <= 0)
     length = strlen(txt);
 
+  /* For any bot, mirror this output into last_cmd_output for stuck-detection
+   * diagnostics.  bot_cmd resets the accumulator before each interpret(). */
+  if ( d->descriptor < 0 && d->character != NULL && !IS_NPC(d->character)
+    && d->character->pcdata != NULL
+    && d->character->pcdata->botdata != NULL )
+  {
+      BOT_DATA *bd = d->character->pcdata->botdata;
+      int used = (int)strlen( bd->last_cmd_output );
+      int cap  = (int)sizeof(bd->last_cmd_output) - 1;
+      int room = cap - used;
+      if ( room > 0 )
+      {
+          int copy = (length < room) ? length : room;
+          memcpy( bd->last_cmd_output + used, txt, copy );
+          bd->last_cmd_output[used + copy] = '\0';
+      }
+  }
+
   /* Bot with no snooper: output is never read from the buffer, discard now
    * to prevent the buffer filling up and triggering a spurious close_socket. */
   if ( d->descriptor < 0 && d->snoop_by == NULL )
