@@ -76,8 +76,9 @@ typedef struct {
 
 /* Population settings */
 #define BOT_COUNT_PERM      14
-#define BOT_COUNT_LONG      28
-#define BOT_COUNT_SHORT     28
+#define BOT_COUNT_LONG      14
+#define BOT_COUNT_MEDIUM    28
+#define BOT_COUNT_SHORT     42
 #define MAX_BOT_ROSTER      128
 #define BOT_MIN_ONLINE      15
 #define BOT_MAX_ONLINE      45
@@ -114,8 +115,9 @@ typedef struct {
 #define BOT_TIMER_DEFAULT_MAX    120
 
 /* Retirement thresholds in seconds of total playtime */
-#define BOT_RETIRE_SHORT   ( 4 * 3600)   /* 4 hours */
-#define BOT_RETIRE_LONG    (72 * 3600)   /* 3 days  */
+#define BOT_RETIRE_SHORT   (  4 * 3600)        /* 4 hours */
+#define BOT_RETIRE_MEDIUM  ( 72 * 3600)        /* 3 days  */
+#define BOT_RETIRE_LONG    (  7 * 24 * 3600)   /* 1 week  */
 
 /*
  * Bot AI states
@@ -144,9 +146,10 @@ extern int global_bot_pvp_mode;
  * Bot lifespan types
  */
 typedef enum {
-    BOT_LIFE_PERMANENT = 0,  /* Never retires, always comes back */
-    BOT_LIFE_LONG      = 1,  /* Retires after ~3 days of playtime */
-    BOT_LIFE_SHORT     = 2   /* Retires after ~4 hours of playtime */
+    BOT_LIFE_PERMANENT = 0,  /* Never retires, always comes back  */
+    BOT_LIFE_LONG      = 1,  /* Retires after ~1 week of playtime */
+    BOT_LIFE_MEDIUM    = 2,  /* Retires after ~3 days of playtime */
+    BOT_LIFE_SHORT     = 3   /* Retires after ~4 hours of playtime */
 } bot_life_t;
 
 /*

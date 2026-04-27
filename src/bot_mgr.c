@@ -244,7 +244,7 @@ void load_bot_roster( void )
     /* No file or empty - generate a fresh roster dynamically */
     bot_roster_count = 0;
 
-    /* 56 Permanent */
+    /* Permanent */
     for ( i = 0; i < BOT_COUNT_PERM; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
@@ -260,7 +260,7 @@ void load_bot_roster( void )
         r->offline_until = 0;
     }
 
-    /* 28 Long-lived */
+    /* Long-lived */
     for ( i = 0; i < BOT_COUNT_LONG; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
@@ -276,7 +276,23 @@ void load_bot_roster( void )
         r->offline_until = 0;
     }
 
-    /* 28 Short-lived */
+    /* Medium-lived */
+    for ( i = 0; i < BOT_COUNT_MEDIUM; i++ )
+    {
+        BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
+        memset( r, 0, sizeof(*r) );
+        r->class_pref   = i % (BOT_TEST_ADVANCED_CLASSES ? BOT_CLASS_COUNT : 7);
+        bot_generate_unique_name(r->class_pref, r->name, sizeof(r->name));
+        r->lifespan     = BOT_LIFE_MEDIUM;
+        r->chattiness   = number_range(30, 90);
+        r->aggression   = number_range(30, 90);
+        r->explorer     = number_range(30, 90);
+        r->retired      = FALSE;
+        r->online       = FALSE;
+        r->offline_until = 0;
+    }
+
+    /* Short-lived */
     for ( i = 0; i < BOT_COUNT_SHORT; i++ )
     {
         BOT_ROSTER_ENTRY *r = &bot_roster[bot_roster_count++];
@@ -731,6 +747,10 @@ void bot_logout( CHAR_DATA *ch )
         {
         case BOT_LIFE_SHORT:
             if ( bot->roster->total_playtime >= BOT_RETIRE_SHORT )
+                retiring = TRUE;
+            break;
+        case BOT_LIFE_MEDIUM:
+            if ( bot->roster->total_playtime >= BOT_RETIRE_MEDIUM )
                 retiring = TRUE;
             break;
         case BOT_LIFE_LONG:
