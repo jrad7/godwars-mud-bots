@@ -769,10 +769,14 @@ void bot_gear_check( CHAR_DATA *ch )
 
     force_newbiepack  = FALSE;
 
-    /* Step 3: unclassed bot or decap recovery — fill newbiepack slots only.
-     * During decap_recovery the bot is re-training; class gear must not be
-     * created or worn until call all has been issued and the flag cleared. */
-    if ( ch->class == 0 || bot->decap_recovery )
+    /* Step 3: unclassed bot, mortal (level < 3), or decap recovery — fill
+     * newbiepack slots only.  A bot can have class set but still be at level 2
+     * if it was spawned/migrated with class pre-assigned without training
+     * avatar; class gear (e.g. werewolf klaive) must not be created until
+     * the bot has reached avatar (level 3).  During decap_recovery the bot is
+     * re-training; class gear must not be created or worn until call all has
+     * been issued and the flag cleared. */
+    if ( ch->class == 0 || ch->level < 3 || bot->decap_recovery )
     {
         for ( i = 0; newbie_slots[i].wear_slot >= 0; i++ )
         {
