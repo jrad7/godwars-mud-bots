@@ -956,9 +956,17 @@ void game_loop_unix( int control )
 	    /* Bot: discard output, no real socket to write to */
 	    if ( d->descriptor < 0 )
 	    {
-		/* If someone is watching this bot, mirror output to them first */
+		/* If someone is watching this bot, mirror output to them first.
+		 * Bot outbuf can grow past MAX_STRING_LENGTH in a single tick
+		 * (long room descs + combat spam); truncate to keep
+		 * write_to_buffer happy. */
 		if ( d->snoop_by != NULL && d->outtop > 0 )
-		    write_to_buffer( d->snoop_by, d->outbuf, d->outtop );
+		{
+		    int relay = d->outtop;
+		    if ( relay >= MAX_STRING_LENGTH )
+			relay = MAX_STRING_LENGTH - 1;
+		    write_to_buffer( d->snoop_by, d->outbuf, relay );
+		}
 		d->outtop   = 0;
 		d->fcommand = FALSE;
 		continue;
@@ -1829,8 +1837,11 @@ mana_str, move_str );
      */
     if ( d->snoop_by != NULL )
     {
+	int relay = d->outtop;
+	if ( relay >= MAX_STRING_LENGTH )
+	    relay = MAX_STRING_LENGTH - 1;
 	write_to_buffer( d->snoop_by, "% ", 2 );
-	write_to_buffer( d->snoop_by, d->outbuf, d->outtop );
+	write_to_buffer( d->snoop_by, d->outbuf, relay );
     }
 
     /*
