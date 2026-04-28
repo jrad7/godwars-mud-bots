@@ -198,7 +198,18 @@ static bool bot_do_recall( CHAR_DATA *ch )
             bot_cmd( ch, "cast 'remove curse' self" );
             return FALSE;   /* curing curse this tick; recall next tick */
         }
-        /* Unpracticed -- fall through and try recall anyway. */
+        /* Fresh bot hasn't practiced remove curse yet -- practice it now so
+         * we can self-decurse next tick.  Without this the bot is stuck:
+         * AFF_CURSE blocks recall (act_move.c) and the spam-cast above never
+         * succeeds, so it never reaches BOT_TRAINING where practice happens. */
+        if ( sn > 0 && ch->level >= skill_table[sn].skill_level
+          && ch->exp >= 5000 )
+        {
+            bot_cmd( ch, "practice remove curse" );
+            return FALSE;   /* practiced; cast next tick */
+        }
+        /* Can't practice (no exp / wrong level) -- fall through and try
+         * recall anyway; it'll fail but we've nothing better to do. */
     }
 
     bot_cmd( ch, "recall" );
