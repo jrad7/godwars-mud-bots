@@ -192,8 +192,13 @@ static bool bot_do_recall( CHAR_DATA *ch )
 
     if ( IS_AFFECTED(ch, AFF_CURSE) )
     {
-        bot_cmd( ch, "cast 'remove curse' self" );
-        return FALSE;   /* curing curse this tick; recall next tick */
+        int sn = skill_lookup("remove curse");
+        if ( sn > 0 && ch->pcdata->learned[sn] > 0 )
+        {
+            bot_cmd( ch, "cast 'remove curse' self" );
+            return FALSE;   /* curing curse this tick; recall next tick */
+        }
+        /* Unpracticed -- fall through and try recall anyway. */
     }
 
     bot_cmd( ch, "recall" );
