@@ -80,14 +80,14 @@ typedef struct {
 #define BOT_COUNT_MEDIUM    28
 #define BOT_COUNT_SHORT     42
 #define MAX_BOT_ROSTER      128
-#define BOT_MIN_ONLINE      15
-#define BOT_MAX_ONLINE      45
+#define BOT_MIN_ONLINE      20
+#define BOT_MAX_ONLINE      50
 
 /* Session lengths in seconds */
-#define BOT_SESSION_MIN  (30  * 60)   /* 30 minutes */
-#define BOT_SESSION_MAX  (240 * 60)   /* 4 hours    */
-#define BOT_OFFLINE_MIN  (10  * 60)   /* 10 minutes */
-#define BOT_OFFLINE_MAX  (120 * 60)   /* 2 hours    */
+#define BOT_SESSION_MIN  (60  * 60)   /* 1 hours */
+#define BOT_SESSION_MAX  (240 * 60)   /* 4 hours  */
+#define BOT_OFFLINE_MIN  (60 * 60)   /* 1 hours */
+#define BOT_OFFLINE_MAX  (480 * 60)   /* 8 hours */
 
 /* Pulse timer for bot manager (~30 seconds at 4 pulses/sec) */
 #define PULSE_BOT_MANAGER  (30 * 4)
