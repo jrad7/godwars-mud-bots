@@ -3031,13 +3031,16 @@ void spell_remove_curse( int sn, int level, CHAR_DATA *ch, void *vo )
 
     one_argument( target_name, arg );
 
-    if ( arg[0] == '\0')
+    if ( arg[0] == '\0' || !str_cmp( arg, "self" ) || !str_cmp( arg, "me" ) )
     {
-	send_to_char( "Remove curse on what?\n\r", ch );
-	return;
+	victim = ch;
+    }
+    else
+    {
+	victim = get_char_world( ch, target_name );
     }
 
-    if ( ( victim = get_char_world( ch, target_name ) ) != NULL )
+    if ( victim != NULL )
     {
 	if ( is_affected( victim, gsn_curse ) )
     	{
