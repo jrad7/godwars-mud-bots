@@ -3042,9 +3042,18 @@ void spell_remove_curse( int sn, int level, CHAR_DATA *ch, void *vo )
 
     if ( victim != NULL )
     {
-	if ( is_affected( victim, gsn_curse ) )
+	if ( IS_AFFECTED( victim, AFF_CURSE ) || is_affected( victim, gsn_curse ) )
     	{
-	    affect_strip( victim, gsn_curse );
+	    AFFECT_DATA *paf;
+	    AFFECT_DATA *paf_next;
+
+	    for ( paf = victim->affected; paf != NULL; paf = paf_next )
+	    {
+		paf_next = paf->next;
+		if ( paf->bitvector == AFF_CURSE )
+		    affect_remove( victim, paf );
+	    }
+	    REMOVE_BIT( victim->affected_by, AFF_CURSE );
 	    send_to_char( "You feel better.\n\r", victim );
 	    if ( ch != victim )
 		send_to_char( "Ok.\n\r", ch );
