@@ -2280,8 +2280,12 @@ static void bot_state_grinding( CHAR_DATA *ch, BOT_DATA *bot )
         if ( bot->roster )
             ai = bot_class_ai[bot->roster->class_pref];
 
-        /* Already fighting */
-        if ( ch->position == POS_FIGHTING )
+        /* Already fighting -- check ch->fighting (the authoritative combat
+         * flag) rather than position.  update_pos() pops a stunned-but-healing
+         * combatant back to POS_STANDING while ch->fighting still points at
+         * the mob; using POS_FIGHTING alone caused bots to spam "kill <mob>"
+         * after recovering from stun against e.g. mimics. */
+        if ( ch->fighting != NULL )
         {
             if ( ai && ai->combat_action )
                 ai->combat_action( ch );
@@ -2724,19 +2728,22 @@ static void bot_state_pvp_fight( CHAR_DATA *ch, BOT_DATA *bot )
         return;
     }
 
-    /* Keep attacking if not fighting */
-    if ( ch->position != POS_FIGHTING )
+    /* Keep attacking if not already engaged.  Use ch->fighting as the gate
+     * because ch->position can drop to POS_STANDING after a stun heals while
+     * ch->fighting still points at the mob -- do_kill in that case answers
+     * "You do the best you can!" and the bot loops the command. */
+    if ( ch->fighting == NULL )
     {
         char cmd[256];
         sprintf( cmd, "kill %s", victim->name );
         bot_cmd( ch, cmd );
     }
-    
+
     /* Execute class combat action */
     {
         const BOT_CLASS_AI *ai = NULL;
         if ( bot->roster ) ai = bot_class_ai[bot->roster->class_pref];
-        if ( ch->position == POS_FIGHTING && ai && ai->combat_action )
+        if ( ch->fighting != NULL && ai && ai->combat_action )
             ai->combat_action( ch );
     }
 }
