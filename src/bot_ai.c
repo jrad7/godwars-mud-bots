@@ -245,6 +245,18 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
         BOT_DATA *bot = ch->pcdata->botdata;
         int slot = bot->cmd_history_head;
 
+        /* If the bot has killed a mob since the history started, it's making
+         * progress -- reset.  Without this, a bot grinding a room of 10+
+         * mimics legitimately issues "kill mimic" 10 times in a row (each
+         * targeting a fresh mob between fights) and trips stuck protection. */
+        if ( ch->mkill != bot->stuck_baseline_mkill )
+        {
+            bot->cmd_history_count   = 0;
+            bot->cmd_history_head    = 0;
+            slot                     = 0;
+            bot->stuck_baseline_mkill = ch->mkill;
+        }
+
         strncpy( bot->cmd_history[slot], buf, sizeof(bot->cmd_history[0])-1 );
         bot->cmd_history[slot][sizeof(bot->cmd_history[0])-1] = '\0';
         bot->cmd_history_head = (slot + 1) % 10;
@@ -284,8 +296,9 @@ void bot_cmd( CHAR_DATA *ch, const char *cmd )
                 do_bug( ch, logbuf );
 
                 /* Clear history so we don't spam recalls */
-                bot->cmd_history_count = 0;
-                bot->cmd_history_head  = 0;
+                bot->cmd_history_count   = 0;
+                bot->cmd_history_head    = 0;
+                bot->stuck_baseline_mkill = ch->mkill;
                 if ( bot_do_recall(ch) )
                     bot_change_state( ch, bot, BOT_IDLE );
                 return;
