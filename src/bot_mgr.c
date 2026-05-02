@@ -765,24 +765,27 @@ void bot_logout( CHAR_DATA *ch )
         {
             char bot_file[256];
 
-            /* Long-life retirement obituary */
-            if ( bot->roster->lifespan == BOT_LIFE_LONG )
+            /* Long/medium-life retirement obituary */
+            if ( bot->roster->lifespan == BOT_LIFE_LONG
+              || bot->roster->lifespan == BOT_LIFE_MEDIUM )
             {
                 FILE *rfp;
                 time_t now = time(NULL);
                 struct tm *tm_info = localtime(&now);
                 char tbuf[64];
                 int  pt = bot->roster->total_playtime;
+                const char *life_tag =
+                    ( bot->roster->lifespan == BOT_LIFE_LONG ) ? "long" : "medium";
 
                 strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
                 fclose( fpReserve );
                 if ( ( rfp = fopen( "../txt/retire.txt", "a" ) ) != NULL )
                 {
                     fprintf( rfp,
-                        "[%s] %s retired: %s gen %d upgrade L%d  "
+                        "[%s] %s retired (%s): %s gen %d upgrade L%d  "
                         "pvp %d/%d (ratio %d)  mkill %d  hp %d  qp %d (total %d)  "
                         "played %dd %dh %dm\n",
-                        tbuf, ch->name,
+                        tbuf, ch->name, life_tag,
                         player_class_name( ch ),
                         ch->generation,
                         ch->pcdata->upgrade_level,
