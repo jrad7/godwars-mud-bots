@@ -764,6 +764,38 @@ void bot_logout( CHAR_DATA *ch )
         if ( retiring )
         {
             char bot_file[256];
+
+            /* Long-life retirement obituary */
+            if ( bot->roster->lifespan == BOT_LIFE_LONG )
+            {
+                FILE *rfp;
+                time_t now = time(NULL);
+                struct tm *tm_info = localtime(&now);
+                char tbuf[64];
+                int  pt = bot->roster->total_playtime;
+
+                strftime(tbuf, sizeof(tbuf), "%Y-%m-%d %H:%M:%S", tm_info);
+                fclose( fpReserve );
+                if ( ( rfp = fopen( "../txt/retire.txt", "a" ) ) != NULL )
+                {
+                    fprintf( rfp,
+                        "[%s] %s retired: %s gen %d upgrade L%d  "
+                        "pvp %d/%d (ratio %d)  mkill %d  hp %d  qp %d (total %d)  "
+                        "played %dd %dh %dm\n",
+                        tbuf, ch->name,
+                        player_class_name( ch ),
+                        ch->generation,
+                        ch->pcdata->upgrade_level,
+                        ch->pkill, ch->pdeath, get_ratio( ch ),
+                        ch->mkill,
+                        ch->max_hit,
+                        ch->pcdata->quest, ch->pcdata->questtotal,
+                        pt / 86400, (pt % 86400) / 3600, (pt % 3600) / 60 );
+                    fclose( rfp );
+                }
+                fpReserve = fopen( NULL_FILE, "r" );
+            }
+
             snprintf(bot_file, sizeof(bot_file), "%s%s", BOT_DIR, capitalize(ch->name));
             unlink(bot_file);
             snprintf(bot_file, sizeof(bot_file), "%sbackup/%s", BOT_DIR, capitalize(ch->name));
