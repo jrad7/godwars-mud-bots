@@ -6917,7 +6917,14 @@ void do_copyover (CHAR_DATA *ch, char * argument)
 
   for (gch = char_list; gch != NULL; gch = gch->next)
   {
-    if (!IS_NPC(gch) && (IS_HEAD(gch,LOST_HEAD) || IS_SET(gch->extra, EXTRA_OSWITCH)))
+    bool ghost_head;
+    if (IS_NPC(gch)) continue;
+    /* Ghost-head: AFF_POLYMORPH + "severed head" morph but LOST_HEAD already
+     * cleared. Without this the original LOST_HEAD-only check skipped them
+     * and they'd save corrupted, stuck displaying as a head forever. */
+    ghost_head = (gch->morph != NULL
+               && !str_prefix("the severed head of", gch->morph));
+    if (IS_HEAD(gch,LOST_HEAD) || IS_SET(gch->extra, EXTRA_OSWITCH) || ghost_head)
     {
       if (IS_HEAD(gch,LOST_HEAD)) REMOVE_BIT(gch->loc_hp[0],LOST_HEAD);
       REMOVE_BIT(gch->affected_by,AFF_POLYMORPH);

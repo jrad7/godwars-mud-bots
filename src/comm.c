@@ -1640,17 +1640,24 @@ void crashrecov (int iSignal)
   {
     if (IS_NPC(gch)) continue;
 
-    /* Fix any possibly head/object forms */
-    if (IS_HEAD(gch,LOST_HEAD) || IS_SET(gch->extra, EXTRA_OSWITCH))
+    /* Fix any possibly head/object forms.
+     * Also catches "ghost head" — AFF_POLYMORPH + severed-head morph but
+     * LOST_HEAD already cleared. The original LOST_HEAD-only check missed
+     * this and the corrupted state would persist across the recovery. */
     {
-      REMOVE_BIT(gch->loc_hp[0], LOST_HEAD);
-      REMOVE_BIT(gch->affected_by, AFF_POLYMORPH);
-      REMOVE_BIT(gch->extra, EXTRA_OSWITCH);
-      gch->morph = str_dup("");
-      gch->pcdata->chobj = NULL;
-      gch->pcdata->obj_vnum = 0;
-      char_from_room(gch);
-      char_to_room(gch,get_room_index(ROOM_VNUM_ALTAR));
+      bool ghost_head = (gch->morph != NULL
+                      && !str_prefix("the severed head of", gch->morph));
+      if (IS_HEAD(gch,LOST_HEAD) || IS_SET(gch->extra, EXTRA_OSWITCH) || ghost_head)
+      {
+        REMOVE_BIT(gch->loc_hp[0], LOST_HEAD);
+        REMOVE_BIT(gch->affected_by, AFF_POLYMORPH);
+        REMOVE_BIT(gch->extra, EXTRA_OSWITCH);
+        gch->morph = str_dup("");
+        gch->pcdata->chobj = NULL;
+        gch->pcdata->obj_vnum = 0;
+        char_from_room(gch);
+        char_to_room(gch,get_room_index(ROOM_VNUM_ALTAR));
+      }
     }
 
     /* Make sure the player is saved with all his eq */

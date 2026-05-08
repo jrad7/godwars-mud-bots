@@ -228,6 +228,12 @@ void load_bot_roster( void )
                     else if ( !str_cmp(key,"Retired")      ) { int v=0; fscanf(fp,"%d",&v); r->retired=(bool)v; }
                 }
                 r->online = FALSE;
+                /* Sanitize a stale advanced class_pref left over from when
+                 * BOT_TEST_ADVANCED_CLASSES was enabled.  Without this, a bot
+                 * such as one with ClassPref=7 (TANARRI) will spin forever in
+                 * bot_do_train trying "selfclass tanarri", which do_classself
+                 * silently rejects when upgrades are gated. */
+                r->class_pref = bot_base_class_pref( r->class_pref );
                 bot_roster_count++;
             }
         }
